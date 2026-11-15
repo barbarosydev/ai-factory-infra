@@ -1,0 +1,9 @@
+# Thin task runner: every task calls a script in scripts/.
+# Phase 0 ships only the prerequisites check; later phases add up, down, doctor and the rest.
+version: "3"
+
+tasks:
+  doctor:prereqs:
+    desc: Check tools, versions, Docker resources, Ollama models, proxy and free ports
+    cmds:
+      - ./scripts/doctor-prereqs.sh {{.CLI_ARGS}}
