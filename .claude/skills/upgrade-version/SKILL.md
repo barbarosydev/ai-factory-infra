@@ -15,6 +15,6 @@ Every version in this repo is pinned exactly. An upgrade is a deliberate, checke
    - PostgreSQL: a major version the Temporal server version supports.
    - Charts: read the release notes for breaking value changes between the two versions.
    - Providers: read the upgrade guide for a major bump.
-4. Bump every place found in step 1 in one change. For providers, run `terraform -chdir=terraform/environments/local init -upgrade` to refresh the lock file.
+4. Bump every place found in step 1 in one change. For providers, run `terraform -chdir=terraform/environments/local init -upgrade` and then `terraform -chdir=terraform/environments/local providers lock -platform=darwin_arm64 -platform=linux_amd64 -platform=linux_arm64` so the lock file works on both macOS and Linux CI.
 5. For the k3s image, run `task clean` then `task up` and `task smoke:cluster` (asks first: data is lost). Otherwise run `task lint`, then `task plan` and show the diff. Ask before `task apply`.
 6. After apply, run `task doctor`. Record the new version and date in the matching docs table.

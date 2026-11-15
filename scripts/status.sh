@@ -30,6 +30,7 @@ else
 fi
 
 printf '\n== URLs\n'
-echo "web pages (Traefik):  http://localhost:8080 (litellm.localhost and temporal.localhost from phases 4 and 5)"
+echo "LiteLLM gateway & UI: http://litellm.localhost:8080 (Admin UI: http://litellm.localhost:8080/ui)"
+echo "Temporal Web UI:      http://temporal.localhost:8080 (phase 5)"
 echo "Temporal gRPC:        localhost:7233 (phase 5)"
 echo "Ollama:               $OLLAMA_URL"

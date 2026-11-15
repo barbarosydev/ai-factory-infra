@@ -29,4 +29,9 @@ else
     info "waiting for PostgreSQL cluster ai-postgres-cluster to be Ready"
     kc wait --for=condition=Ready cluster.postgresql.cnpg.io/ai-postgres-cluster -n ai-platform --timeout=300s
   fi
+  if kc get deployment/litellm -n ai-platform >/dev/null 2>&1; then
+    info "waiting for LiteLLM deployment and virtual key bootstrap"
+    kc rollout status deployment/litellm -n ai-platform --timeout=300s
+    kc wait --for=condition=complete job -l app.kubernetes.io/instance=litellm -n ai-platform --timeout=300s >/dev/null 2>&1 || true
+  fi
 fi

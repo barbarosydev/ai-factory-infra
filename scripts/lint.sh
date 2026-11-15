@@ -33,6 +33,11 @@ else
     [[ -n "$(find "$env_dir" -maxdepth 1 -name '*.tf' | head -n1)" ]] || continue
     run "terraform validate ${env_dir%/}" bash -c \
       "terraform -chdir='$env_dir' init -backend=false -input=false >/dev/null && terraform -chdir='$env_dir' validate -no-color"
+    lock_file="${env_dir}.terraform.lock.hcl"
+    if [[ -f "$lock_file" ]]; then
+      run "terraform lockfile platforms ${env_dir%/}" bash -c \
+        "grep -q 'zh:' '$lock_file' && (( \$(grep -c 'provider \"registry.terraform.io/' '$lock_file') * 3 <= \$(grep -c 'h1:' '$lock_file') ))"
+    fi
   done
 
   run "tflint init" tflint --init --config "$REPO_ROOT/.tflint.hcl"
