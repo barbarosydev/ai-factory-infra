@@ -1,0 +1,58 @@
+# CloudNativePG cluster (chart 0.9.0).
+version:
+  postgresql: "${postgres_version}"
+
+mode: standalone
+
+cluster:
+  instances: 1
+  enablePDB: false
+
+  storage:
+    size: "${storage_size}"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  enableSuperuserAccess: true
+
+  postgresql:
+    # Restrict each role to its own database(s) before CNPG's default fallback rule.
+    pg_hba:
+      - host temporal,temporal_visibility temporal all scram-sha-256
+      - host all temporal all reject
+      - host litellm litellm all scram-sha-256
+      - host all litellm all reject
+
+  roles:
+    - name: temporal
+      ensure: present
+      login: true
+      superuser: false
+      passwordSecret:
+        name: "${cluster_name}-temporal-credentials"
+    - name: litellm
+      ensure: present
+      login: true
+      superuser: false
+      passwordSecret:
+        name: "${cluster_name}-litellm-credentials"
+
+databases:
+  - name: temporal
+    ensure: present
+    owner: temporal
+    databaseReclaimPolicy: retain
+  - name: temporal_visibility
+    ensure: present
+    owner: temporal
+    databaseReclaimPolicy: retain
+  - name: litellm
+    ensure: present
+    owner: litellm
+    databaseReclaimPolicy: retain

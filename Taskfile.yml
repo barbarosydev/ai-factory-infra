@@ -10,9 +10,19 @@ tasks:
     silent: true
 
   up:
-    desc: Start Ollama, check prerequisites, then create or resume the cluster (Terraform joins in phase 3)
+    desc: Start Ollama, check prerequisites, create or resume the cluster, and apply Terraform
     cmds:
       - ./scripts/up.sh
+
+  plan:
+    desc: Run Terraform plan for the local environment
+    cmds:
+      - ./scripts/terraform.sh plan {{.CLI_ARGS}}
+
+  apply:
+    desc: Apply Terraform for the local environment
+    cmds:
+      - ./scripts/terraform.sh apply {{.CLI_ARGS}}
 
   down:
     desc: Stop the cluster and unload Ollama models; all data is kept

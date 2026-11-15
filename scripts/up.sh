@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Bring the stack up: Ollama, the prerequisites check, then the cluster.
+# Bring the stack up: Ollama, the prerequisites check, the cluster, then Terraform.
 # Usage: scripts/up.sh      (task up)
 # Safe to repeat: a running stack is left as it is.
-# Phase 3 adds terraform apply after the cluster; phase 6 adds the full doctor.
+# Phase 6 adds the full doctor.
 set -euo pipefail
 
 # shellcheck source=scripts/lib/common.sh
@@ -19,5 +19,6 @@ grep -E '^(WARN|FAIL)' <<<"$report" >&2 || true
 (( prereqs_ok )) || die "prerequisites failed: run task doctor:prereqs for the full report"
 
 "$REPO_ROOT/scripts/cluster-setup.sh"
+"$REPO_ROOT/scripts/terraform.sh" apply
 
-info "up: cluster $CLUSTER_NAME and Ollama are running (task status)"
+info "up: cluster $CLUSTER_NAME, Ollama and Terraform are up (task status)"
