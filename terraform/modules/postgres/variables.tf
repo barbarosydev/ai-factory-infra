@@ -47,6 +47,13 @@ variable "postgres_version" {
   }
 }
 
+variable "postgres_image_name" {
+  description = "Optional explicit PostgreSQL container image (tag or tag@sha256:digest). Empty uses the CloudNativePG default for postgres_version."
+  type        = string
+  default     = ""
+  nullable    = false
+}
+
 variable "storage_size" {
   description = "Persistent volume size for the PostgreSQL data directory."
   type        = string

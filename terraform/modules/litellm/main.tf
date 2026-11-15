@@ -68,17 +68,18 @@ resource "helm_release" "litellm" {
 
   values = [
     templatefile("${path.module}/values.yaml.tftpl", {
-      release_name          = var.release_name
-      chart_version         = var.chart_version
-      masterkey_secret_name = kubernetes_secret_v1.master_key.metadata[0].name
-      db_endpoint           = var.db_endpoint
-      db_name               = var.db_name
-      db_secret_name        = var.db_secret_name
-      ollama_api_base       = var.ollama_api_base
-      model_routes          = var.model_routes
-      ingress_host          = var.ingress_host
-      agent_max_budget      = var.agent_max_budget
-      secret_version        = var.secret_version
+      release_name                = var.release_name
+      chart_version               = var.chart_version
+      masterkey_secret_name       = kubernetes_secret_v1.master_key.metadata[0].name
+      db_endpoint                 = var.db_endpoint
+      db_name                     = var.db_name
+      db_secret_name              = var.db_secret_name
+      ollama_api_base             = var.ollama_api_base
+      model_routes                = var.model_routes
+      ingress_host                = var.ingress_host
+      agent_max_budget            = var.agent_max_budget
+      store_prompts_in_spend_logs = var.store_prompts_in_spend_logs
+      secret_version              = var.secret_version
     })
   ]
 

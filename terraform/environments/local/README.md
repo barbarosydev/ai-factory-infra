@@ -43,9 +43,14 @@ task apply
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_cnpg_cluster_chart_version"></a> [cnpg\_cluster\_chart\_version](#input\_cnpg\_cluster\_chart\_version) | Pinned CloudNativePG cluster Helm chart version. | `string` | `"0.9.0"` | no |
+| <a name="input_cnpg_operator_chart_version"></a> [cnpg\_operator\_chart\_version](#input\_cnpg\_operator\_chart\_version) | Pinned CloudNativePG operator Helm chart version. | `string` | `"0.29.1"` | no |
 | <a name="input_kube_context"></a> [kube\_context](#input\_kube\_context) | Kubeconfig context name for the local k3d cluster. | `string` | `"k3d-ai-factory"` | no |
+| <a name="input_litellm_chart_version"></a> [litellm\_chart\_version](#input\_litellm\_chart\_version) | Pinned LiteLLM Helm chart and container image version. | `string` | `"1.109.1"` | no |
+| <a name="input_litellm_store_prompts"></a> [litellm\_store\_prompts](#input\_litellm\_store\_prompts) | Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI. | `bool` | `true` | no |
 | <a name="input_model_routes"></a> [model\_routes](#input\_model\_routes) | Map of agent route name to Ollama model tag. | `map(string)` | <pre>{<br/>  "dev-agent": "gemma4:e4b",<br/>  "pm-agent": "gemma4:12b",<br/>  "sec-agent": "gemma4:e4b"<br/>}</pre> | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Kubernetes namespace for the AI platform stack. | `string` | `"ai-platform"` | no |
+| <a name="input_postgres_image_name"></a> [postgres\_image\_name](#input\_postgres\_image\_name) | Optional explicit PostgreSQL container image (tag or tag@sha256:digest). Empty uses the CloudNativePG default for postgres\_version. | `string` | `""` | no |
 | <a name="input_postgres_version"></a> [postgres\_version](#input\_postgres\_version) | PostgreSQL major version supported by Temporal 1.32 and CloudNativePG. | `string` | `"16"` | no |
 
 ## Outputs

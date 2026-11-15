@@ -22,6 +22,22 @@ variable "namespace" {
   }
 }
 
+# --- Centralized component versions & image overrides ----------------------
+
+variable "cnpg_operator_chart_version" {
+  description = "Pinned CloudNativePG operator Helm chart version."
+  type        = string
+  default     = "0.29.1"
+  nullable    = false
+}
+
+variable "cnpg_cluster_chart_version" {
+  description = "Pinned CloudNativePG cluster Helm chart version."
+  type        = string
+  default     = "0.9.0"
+  nullable    = false
+}
+
 variable "postgres_version" {
   description = "PostgreSQL major version supported by Temporal 1.32 and CloudNativePG."
   type        = string
@@ -32,6 +48,27 @@ variable "postgres_version" {
     condition     = contains(["15", "16", "17"], var.postgres_version)
     error_message = "PostgreSQL major version must be 15, 16, or 17."
   }
+}
+
+variable "postgres_image_name" {
+  description = "Optional explicit PostgreSQL container image (tag or tag@sha256:digest). Empty uses the CloudNativePG default for postgres_version."
+  type        = string
+  default     = ""
+  nullable    = false
+}
+
+variable "litellm_chart_version" {
+  description = "Pinned LiteLLM Helm chart and container image version."
+  type        = string
+  default     = "1.109.1"
+  nullable    = false
+}
+
+variable "litellm_store_prompts" {
+  description = "Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI."
+  type        = bool
+  default     = true
+  nullable    = false
 }
 
 variable "model_routes" {

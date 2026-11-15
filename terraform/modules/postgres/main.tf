@@ -71,9 +71,10 @@ resource "helm_release" "cnpg_cluster" {
 
   values = [
     templatefile("${path.module}/values.yaml.tftpl", {
-      cluster_name     = var.cluster_name
-      postgres_version = var.postgres_version
-      storage_size     = var.storage_size
+      cluster_name        = var.cluster_name
+      postgres_version    = var.postgres_version
+      postgres_image_name = var.postgres_image_name
+      storage_size        = var.storage_size
     })
   ]
 

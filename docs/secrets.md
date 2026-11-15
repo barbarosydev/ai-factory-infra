@@ -12,7 +12,7 @@ No secret reaches git, Terraform state or a Claude conversation. Four layers enf
 AI-specific controls:
 
 - **One virtual key per agent.** `pm-agent`, `dev-agent` and `sec-agent` each hold their own virtual key in `litellm-<agent>-key`, scoped strictly to `models: ["<agent>"]` and a budget (`max_budget: 100`).
-- **Prompts are not logged.** LiteLLM runs with `turn_off_message_logging: true` and `store_prompts_in_spend_logs: false`, storing request metadata only.
+- **Prompt logging is controlled by one variable.** In the local sandbox `litellm_store_prompts` defaults to `true` so request and response payloads can be inspected in the LiteLLM Admin UI (`http://litellm.localhost:8080/ui` → Logs). Set `litellm_store_prompts = false` in `terraform/environments/local/variables.tf` to log metadata only (`turn_off_message_logging: true`, `store_prompts_in_spend_logs: false`).
 - **Keys enter at run time, not through files or chat.** A future cloud key lives in the macOS Keychain and enters Terraform as an environment variable at run time. Never type it into a Claude conversation.
 - **Scripts print secret names, never values.**
 - If a secret leaks, follow "A secret leaked" in the [runbook](runbook.md).

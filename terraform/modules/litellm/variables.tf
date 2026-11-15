@@ -108,6 +108,13 @@ variable "agent_max_budget" {
   }
 }
 
+variable "store_prompts_in_spend_logs" {
+  description = "Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI."
+  type        = bool
+  default     = true
+  nullable    = false
+}
+
 variable "secret_version" {
   description = "Increment to rotate the LiteLLM master key and agent virtual keys."
   type        = number

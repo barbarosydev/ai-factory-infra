@@ -18,7 +18,7 @@ for arg in "$@"; do
 done
 
 NS="ai-platform"
-LITELLM_IMAGE="ghcr.io/berriai/litellm:1.109.1"
+LITELLM_IMAGE="$LITELLM_PROBE_IMAGE"
 
 # --- Service & Deployment --------------------------------------------------
 

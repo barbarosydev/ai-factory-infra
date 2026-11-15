@@ -18,7 +18,7 @@ for arg in "$@"; do
 done
 
 NS="ai-platform"
-PG_IMAGE="ghcr.io/cloudnative-pg/postgresql:16"
+PG_IMAGE="$POSTGRES_PROBE_IMAGE"
 
 # --- Operator & Cluster ----------------------------------------------------
 
