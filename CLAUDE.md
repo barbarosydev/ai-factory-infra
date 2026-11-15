@@ -19,7 +19,10 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 | `task down` | Stop the cluster and unload Ollama models; data is kept |
 | `task status` | Cluster, pods, loaded models and URLs |
 | `task access` | UIs, secret names, API curl examples, and `-- --copy <target>` to clipboard |
+| `task plan` / `task apply` | Terraform plan or apply for `terraform/environments/local` |
 | `task smoke:cluster` | Cluster smoke test; `-- --lifecycle` also runs down and up |
+| `task smoke:postgres` | PostgreSQL cluster, databases and per-role login isolation check |
+| `task smoke:litellm` | LiteLLM gateway, Admin UI, model completions and virtual key scope check |
 | `task doctor:prereqs` | Check the Mac before anything else |
 | `task lint` | fmt, validate, tflint, shellcheck, JSON and YAML |
 | `task ci` | lint, hook tests and gitleaks; must pass before every commit |
@@ -42,7 +45,7 @@ Also `task restart`, `stop:cluster`, `stop:ollama` and `clean` (deletes the clus
 - Helm provider 3.x and Kubernetes provider 3.x syntax: `set` and `set_sensitive` are lists of objects, and `kubernetes {}` inside the helm provider is an attribute (`kubernetes = { ... }`). Older tutorials use the 2.x block syntax and fail to validate. Use the Terraform MCP server for current docs.
 - Write-only Secrets: `kubernetes_secret_v1` in provider 3.5 uses `data_wo` and `data_wo_revision` (not `data_wo_version`), paired with `ephemeral "random_password"`, so secret values stay `null` in `terraform.tfstate`.
 - Lockfile platforms: whenever providers change, run `terraform -chdir=terraform/environments/local providers lock -platform=darwin_arm64 -platform=linux_amd64 -platform=linux_arm64` so Linux CI and macOS stay in sync (`task lint` checks this).
-- Each module has `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf` and (when deploying a Helm chart) `values.yaml.tftpl`.
+- Each module has `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf` and (when deploying a Helm chart) `values.yaml.tftpl`. Variables set `nullable = false` and `validation {}` blocks; Helm releases set `cleanup_on_fail = true` and `max_history = 5`; Kubernetes resources carry `app.kubernetes.io/part-of = "ai-factory"` and `app.kubernetes.io/managed-by = "terraform"` labels; `README.md` tables are generated with `terraform-docs` and checked by `task lint`.
 - Providers read `config_path = ".kube/config"` and `config_context = "k3d-ai-factory"`, never the default kubeconfig.
 
 ## Workflow
@@ -69,4 +72,4 @@ Diagrams in docs are Mermaid (```mermaid blocks), so GitHub renders them. No ASC
 
 ## Harness
 
-Hooks in `.claude/hooks/` block cluster commands that bypass the project kubeconfig, block commits and pushes on main, block secrets in written files, format Terraform after each edit, and report the branch when a session starts. `tests/hooks/run.sh` tests them; change a hook only together with its tests. Skills: debug-stack, add-model-route, upgrade-version. Agents: terraform-reviewer, k8s-troubleshooter. `docs/harness.md` explains each piece.
+Hooks in `.claude/hooks/` block cluster commands that bypass the project kubeconfig, block commits and pushes on main, block secrets in written files, format Terraform after each edit, and report the branch when a session starts. `tests/hooks/run.sh` tests them; change a hook only together with its tests. Skills: debug-stack, add-model-route, upgrade-version. Agents: terraform-reviewer, k8s-troubleshooter, version-security-auditor. `docs/harness.md` explains each piece.

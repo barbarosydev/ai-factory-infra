@@ -87,6 +87,7 @@ An agent (subagent) is a separate Claude with its own instructions and tool list
 | --- | --- |
 | `terraform-reviewer` | Reviews a Terraform change against the module conventions, pinned versions, provider 3.x syntax and the secret rules |
 | `k8s-troubleshooter` | Diagnoses a failing pod with `task kube -- get/describe/logs` only |
+| `version-security-auditor` | Audits pinned versions across Terraform, Helm charts, images and scripts against upstream stable releases, and checks secret/lockfile security posture |
 
 ## MCP server: .mcp.json
 

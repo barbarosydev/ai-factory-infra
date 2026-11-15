@@ -7,7 +7,7 @@ description: Upgrade a pinned version (Terraform, a provider, a Helm chart, k3d,
 
 Every version in this repo is pinned exactly. An upgrade is a deliberate, checked change.
 
-1. Find where it is pinned: `grep -rn "<old version>" --exclude-dir=.terraform .` (places include `.terraform-version`, `versions.tf`, module `main.tf` chart versions, `cluster/k3d-config.yaml`, `scripts/lib/common.sh` (probe image), `scripts/doctor-prereqs.sh`, `Brewfile` comments, `.mcp.json` (tag and digest), `.github/workflows/ci.yml`, `docs/`).
+1. Find where it is pinned: `grep -rn "<old version>" --exclude-dir=.terraform .` (component chart and image versions are centralized in `terraform/environments/local/variables.tf` with matching defaults in `terraform/modules/*/variables.tf` and probe images in `scripts/lib/common.sh`; other places include `.terraform-version`, `versions.tf`, `cluster/k3d-config.yaml`, `scripts/doctor-prereqs.sh`, `Brewfile` comments, `.mcp.json` (tag and digest), `.github/workflows/ci.yml`, `docs/`). You can delegate a full audit to the `version-security-auditor` agent.
 2. Find the newest stable release from the official source (GitHub releases, the Terraform registry through the Terraform MCP server, the chart's index). Skip pre-releases.
 3. Check compatibility before choosing:
    - k3s image: within one minor version of the local kubectl; prefer the k3s stable channel (`https://update.k3s.io/v1-release/channels`).

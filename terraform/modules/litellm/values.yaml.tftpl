@@ -3,10 +3,13 @@ replicaCount: 1
 nameOverride: "${release_name}"
 fullnameOverride: "${release_name}"
 
+podAnnotations:
+  checksum/config: "${sha256(jsonencode({ model_routes = model_routes, ollama_api_base = ollama_api_base, store_prompts = store_prompts_in_spend_logs }))}"
+
 image:
   repository: ghcr.io/berriai/litellm
   pullPolicy: IfNotPresent
-  tag: "1.109.1"
+  tag: "${chart_version}"
 
 masterkeySecretName: "${masterkey_secret_name}"
 masterkeySecretKey: "masterkey"
@@ -56,10 +59,10 @@ proxy_config:
         api_base: ${ollama_api_base}
 %{ endfor ~}
   litellm_settings:
-    turn_off_message_logging: true
+    turn_off_message_logging: ${!store_prompts_in_spend_logs}
   general_settings:
     master_key: os.environ/PROXY_MASTER_KEY
-    store_prompts_in_spend_logs: false
+    store_prompts_in_spend_logs: ${store_prompts_in_spend_logs}
     store_model_in_db: true
 
 extraResources:
@@ -75,7 +78,7 @@ extraResources:
           restartPolicy: OnFailure
           containers:
             - name: bootstrap-keys
-              image: ghcr.io/berriai/litellm:1.109.1
+              image: "ghcr.io/berriai/litellm:${chart_version}"
               imagePullPolicy: IfNotPresent
               env:
                 - name: PROXY_URL

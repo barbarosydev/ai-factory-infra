@@ -66,6 +66,16 @@ tasks:
     cmds:
       - ./tests/smoke/cluster.sh {{.CLI_ARGS}}
 
+  smoke:postgres:
+    desc: PostgreSQL operator, cluster, databases and per-role login isolation check
+    cmds:
+      - ./tests/smoke/postgres.sh {{.CLI_ARGS}}
+
+  smoke:litellm:
+    desc: LiteLLM gateway, Admin UI, model completions and per-agent virtual key scope check
+    cmds:
+      - ./tests/smoke/litellm.sh {{.CLI_ARGS}}
+
   doctor:prereqs:
     desc: Check tools, versions, Docker resources, Ollama models, proxy and free ports
     cmds:

@@ -41,7 +41,10 @@ expect $k 2 "$REPO_ROOT" 'kubectl --kubeconfig .kube/config config use-context o
 expect $k 2 "$REPO_ROOT" 'KUBE_CONFIG_PATH=~/.kube/config terraform plan'
 expect $k 2 "$REPO_ROOT" 'terraform -chdir=terraform/environments/local state list'
 expect $k 2 "$REPO_ROOT" 'task kube -- get secret db -o yaml'
+expect $k 2 "$REPO_ROOT" 'task kube -- get -n ai-platform secret db -o yaml'
+expect $k 2 "$REPO_ROOT" 'task kube -- get secret/db --template={{.data}}'
 expect $k 2 "$REPO_ROOT" 'cat terraform/environments/local/terraform.tfstate'
+expect $k 2 "$REPO_ROOT" 'python3 -c "open(\"terraform/environments/local/terraform.tfstate\")"'
 expect $k 2 "$REPO_ROOT" 'grep token .env'
 expect $k 0 "$REPO_ROOT" 'cat .env.example'
 # Nested commands

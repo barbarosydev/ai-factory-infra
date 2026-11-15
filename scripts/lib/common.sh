@@ -87,8 +87,12 @@ require_cmd() {
 # kc ARGS...: kubectl pinned to the project kubeconfig and context.
 kc() { kubectl --kubeconfig "$KUBECONFIG" --context "$KUBE_CONTEXT" "$@"; }
 
-# Pinned image for short-lived probe pods: official busybox, for nslookup and wget.
+# Pinned images for short-lived probe and smoke-test pods.
+# Keep POSTGRES_PROBE_IMAGE and LITELLM_PROBE_IMAGE aligned with terraform/environments/local/variables.tf.
 PROBE_IMAGE="busybox:1.37.0@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec"
+POSTGRES_PROBE_IMAGE="ghcr.io/cloudnative-pg/postgresql:16"
+LITELLM_PROBE_IMAGE="ghcr.io/berriai/litellm:1.109.1"
+export PROBE_IMAGE POSTGRES_PROBE_IMAGE LITELLM_PROBE_IMAGE
 
 # probe_pod NAME SCRIPT [TIMEOUT]: run SCRIPT with sh in a throwaway pod in
 # namespace default, wait for it to finish (default 240 s), print its log and
