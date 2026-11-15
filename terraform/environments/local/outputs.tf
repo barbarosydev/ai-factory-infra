@@ -22,3 +22,23 @@ output "postgres_user_secrets" {
   description = "Kubernetes Secret names holding the PostgreSQL user credentials."
   value       = module.postgres.user_secret_names
 }
+
+output "ollama_service" {
+  description = "Kubernetes Service name routing to Ollama on the Mac."
+  value       = module.model_backend.service_name
+}
+
+output "litellm_url" {
+  description = "Local HTTP URL for LiteLLM via Traefik."
+  value       = module.litellm.ingress_url
+}
+
+output "litellm_masterkey_secret" {
+  description = "Kubernetes Secret name holding the LiteLLM master key."
+  value       = module.litellm.masterkey_secret_name
+}
+
+output "litellm_agent_key_secrets" {
+  description = "Map of agent route name to the Kubernetes Secret holding its virtual key."
+  value       = module.litellm.agent_key_secret_names
+}

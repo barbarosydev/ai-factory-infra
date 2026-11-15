@@ -1,3 +1,3 @@
 # terraform/modules/litellm
 
-Arrives in phase 4: the LiteLLM chart 1.109.1, the model routes for pm-agent, dev-agent and sec-agent, the master key and one virtual key per agent.
+Installs the official LiteLLM Helm chart (`oci://ghcr.io/berriai/litellm-helm`, version `1.109.1`) backed by PostgreSQL, configures the Ollama model routes (`pm-agent`, `dev-agent`, `sec-agent`), exposes `http://litellm.localhost:8080` through Traefik, and provisions the master key and one virtual key per agent without storing any key in Terraform state.

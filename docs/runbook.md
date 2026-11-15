@@ -11,6 +11,7 @@
 | Stop and start again | `task restart` |
 | Stop only one part | `task stop:cluster` or `task stop:ollama` |
 | See what runs | `task status` |
+| UIs, secret names and API commands | `task access` (`task access -- --copy master` copies Admin UI password) |
 | Check the cluster | `task smoke:cluster` (add `-- --lifecycle` to also test down and up) |
 | Look at the cluster | `task kube -- get pods -A` |
 | Health check | `task doctor` (phase 6) |
@@ -46,6 +47,44 @@ Each wait names what it waited for and the command that shows why. The common on
 ## Ollama pulls fail
 
 `proxyconnect ... connection refused` means Ollama kept a proxy from when it started. Run `task stop:ollama`, then `task up`. `task doctor:prereqs` warns on `ollama-proxy`.
+
+## Web UIs and API access
+
+| Service | URL | Authentication |
+| --- | --- | --- |
+| LiteLLM Admin UI | `http://litellm.localhost:8080/ui` | Username: `admin`, Password: the `masterkey` value in Secret `litellm-masterkey` |
+| LiteLLM OpenAI-compatible API | `http://litellm.localhost:8080/v1` | `Authorization: Bearer <key>` using an agent virtual key (`litellm-<agent>-key`) or the master key |
+| LiteLLM Swagger / OpenAPI docs | `http://litellm.localhost:8080/` | Master key or virtual key in the Swagger **Authorize** dialog |
+| Temporal Web UI (phase 5) | `http://temporal.localhost:8080` | None (local sandbox) |
+
+### Log in to the LiteLLM Admin UI (`http://litellm.localhost:8080/ui`)
+
+Run `task access` to see all UIs, secret names and sample commands. Because secrets are never stored in files or Terraform state, copy the master key straight from the cluster Secret into your macOS clipboard (nothing is printed to the terminal):
+
+```bash
+task access -- --copy master
+```
+
+Then open `http://litellm.localhost:8080/ui` and sign in with:
+- **Username:** `admin`
+- **Password:** paste (`Cmd+V`)
+
+### Call the LiteLLM API from your Mac
+
+Each agent has its own scoped virtual key in Kubernetes (`litellm-pm-agent-key`, `litellm-dev-agent-key`, `litellm-sec-agent-key`). Copy an agent key to your clipboard and call `/v1/chat/completions`:
+
+```bash
+task access -- --copy pm-agent # or dev-agent, sec-agent
+
+curl -sS --noproxy '*' http://litellm.localhost:8080/v1/chat/completions \
+  -H "Authorization: Bearer $(pbpaste)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "pm-agent",
+    "messages": [{"role": "user", "content": "Hello! Reply in one short sentence."}],
+    "max_tokens": 128
+  }' | jq -r '.choices[0].message.content'
+```
 
 ## A secret leaked
 

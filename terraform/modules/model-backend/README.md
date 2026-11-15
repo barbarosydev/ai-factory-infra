@@ -1,3 +1,3 @@
 # terraform/modules/model-backend
 
-Arrives in phase 4: the `ollama` Service that points at Ollama on the Mac, so LiteLLM has one stable address for models.
+Creates the `ollama` ExternalName Kubernetes Service pointing at `host.k3d.internal:11434`, giving LiteLLM one stable in-cluster address (`http://ollama:11434`) for models running natively on the Mac.

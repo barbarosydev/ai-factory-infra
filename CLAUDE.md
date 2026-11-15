@@ -18,6 +18,7 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 | `task up` | Start Ollama, check prerequisites, create or resume the cluster |
 | `task down` | Stop the cluster and unload Ollama models; data is kept |
 | `task status` | Cluster, pods, loaded models and URLs |
+| `task access` | UIs, secret names, API curl examples, and `-- --copy <target>` to clipboard |
 | `task smoke:cluster` | Cluster smoke test; `-- --lifecycle` also runs down and up |
 | `task doctor:prereqs` | Check the Mac before anything else |
 | `task lint` | fmt, validate, tflint, shellcheck, JSON and YAML |
@@ -39,7 +40,9 @@ Also `task restart`, `stop:cluster`, `stop:ollama` and `clean` (deletes the clus
 ## Terraform conventions
 
 - Helm provider 3.x and Kubernetes provider 3.x syntax: `set` and `set_sensitive` are lists of objects, and `kubernetes {}` inside the helm provider is an attribute (`kubernetes = { ... }`). Older tutorials use the 2.x block syntax and fail to validate. Use the Terraform MCP server for current docs.
-- Each module has `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf` and `values.yaml.tftpl` for its Helm values.
+- Write-only Secrets: `kubernetes_secret_v1` in provider 3.5 uses `data_wo` and `data_wo_revision` (not `data_wo_version`), paired with `ephemeral "random_password"`, so secret values stay `null` in `terraform.tfstate`.
+- Lockfile platforms: whenever providers change, run `terraform -chdir=terraform/environments/local providers lock -platform=darwin_arm64 -platform=linux_amd64 -platform=linux_arm64` so Linux CI and macOS stay in sync (`task lint` checks this).
+- Each module has `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf` and (when deploying a Helm chart) `values.yaml.tftpl`.
 - Providers read `config_path = ".kube/config"` and `config_context = "k3d-ai-factory"`, never the default kubeconfig.
 
 ## Workflow
@@ -58,6 +61,7 @@ Found in phases 0 to 2. Check these before debugging from scratch:
 - **A Docker Desktop sign-in can block images.** A work organization's registry rules refused `curlimages/curl` (`image access restricted`). Signing out lifts them; `task doctor:prereqs` warns while signed in. Probe pods use the official `busybox` image.
 - **Docker Desktop's "system" proxy and the macOS PAC proxy are harmless.** In-cluster image pulls work through them.
 - **Model sizes.** `gemma4:e4b` is 9.5 GB on disk (larger than its name suggests) and `gemma4:12b` 7.6 GB. Do not add models above about 10 GB while the cluster runs.
+- **`gemma4` models use thinking tokens by default.** With `max_tokens: 16`, `gemma4:12b` and `gemma4:e4b` spend all 16 tokens in `thinking` and return an empty `content`. Completion probes should pass `max_tokens: 128` (or check `reasoning_content` / disable thinking).
 
 ## Docs
 

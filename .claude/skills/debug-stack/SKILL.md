@@ -18,7 +18,7 @@ Work from evidence, read-only, until you can name the cause. Propose the fix; do
    - Image pull errors with `image access restricted`: Docker Desktop is signed in to an organization whose registry rules block the image (`task doctor:prereqs` warns on `docker-signin`). Ask the user to sign out of Docker Desktop; do not swap images to work around it without asking.
    - Other image pull errors: a proxy variable came back (`task doctor:prereqs` warns). Docker Desktop's "system" proxy and the macOS PAC proxy were checked and are harmless.
    - Pods cannot resolve `host.k3d.internal` right after a resume: normal for about 90 s; `task up` waits for it. Only a failure after that wait is a real problem.
-   - LiteLLM cannot reach models: Ollama not running on the Mac, a model missing (`ollama list`), or Ollama kept an old proxy (`task stop:ollama`, then `task up`).
+   - LiteLLM cannot reach models: Ollama not running on the Mac, a model missing (`ollama list`), or Ollama kept an old proxy (`task stop:ollama`, then `task up`). Note that `gemma4` models spend their first tokens in `thinking`, so probes with `max_tokens: 16` return empty `content`; use `max_tokens: 128`.
    - Temporal schema jobs hang: check the job logs; the chart runs with `useHelmHooks: false`.
    - Postgres: check the CloudNativePG `Cluster` status with `task kube -- get cluster -n ai-platform`.
 5. Report: the failing check, the evidence (one or two log lines, never Secret values), the cause, and the fix as a Terraform change or a task command. Then run `task doctor` again after the fix is applied.

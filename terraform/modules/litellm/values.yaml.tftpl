@@ -1,0 +1,148 @@
+# LiteLLM proxy (chart 1.109.1).
+replicaCount: 1
+nameOverride: "${release_name}"
+fullnameOverride: "${release_name}"
+
+image:
+  repository: ghcr.io/berriai/litellm
+  pullPolicy: IfNotPresent
+  tag: "1.109.1"
+
+masterkeySecretName: "${masterkey_secret_name}"
+masterkeySecretKey: "masterkey"
+
+db:
+  useExisting: true
+  deployStandalone: false
+  endpoint: "${db_endpoint}"
+  database: "${db_name}"
+  secret:
+    name: "${db_secret_name}"
+    usernameKey: username
+    passwordKey: password
+
+migrationJob:
+  enabled: true
+  ttlSecondsAfterFinished: 300
+  hooks:
+    argocd:
+      enabled: false
+    helm:
+      enabled: false
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+
+ingress:
+  enabled: true
+  className: traefik
+  hosts:
+    - host: "${ingress_host}"
+      paths:
+        - path: /
+          pathType: Prefix
+
+proxy_config:
+  model_list:
+%{ for agent, model in model_routes ~}
+    - model_name: ${agent}
+      litellm_params:
+        model: ollama/${model}
+        api_base: ${ollama_api_base}
+%{ endfor ~}
+  litellm_settings:
+    turn_off_message_logging: true
+  general_settings:
+    master_key: os.environ/PROXY_MASTER_KEY
+    store_prompts_in_spend_logs: false
+    store_model_in_db: true
+
+extraResources:
+  - apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: "${release_name}-bootstrap-keys-v${secret_version}"
+    spec:
+      backoffLimit: 6
+      ttlSecondsAfterFinished: 600
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: bootstrap-keys
+              image: ghcr.io/berriai/litellm:1.109.1
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: PROXY_URL
+                  value: "http://${release_name}:4000"
+                - name: PROXY_MASTER_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: "${masterkey_secret_name}"
+                      key: masterkey
+%{ for agent, _ in model_routes ~}
+                - name: "KEY_${upper(replace(agent, "-", "_"))}"
+                  valueFrom:
+                    secretKeyRef:
+                      name: "${release_name}-${agent}-key"
+                      key: api_key
+%{ endfor ~}
+              command:
+                - python3
+                - -c
+                - |
+                  import json, os, sys, time, urllib.error, urllib.parse, urllib.request
+
+                  base = os.environ["PROXY_URL"]
+                  master = os.environ["PROXY_MASTER_KEY"]
+                  headers = {
+                      "Authorization": f"Bearer {master}",
+                      "Content-Type": "application/json",
+                  }
+
+                  deadline = time.time() + 240
+                  while True:
+                      try:
+                          req = urllib.request.Request(f"{base}/health/readiness", headers=headers)
+                          with urllib.request.urlopen(req, timeout=5) as resp:
+                              if resp.status == 200:
+                                  break
+                      except Exception:
+                          pass
+                      if time.time() >= deadline:
+                          print("timed out waiting for LiteLLM readiness", file=sys.stderr)
+                          sys.exit(1)
+                      time.sleep(3)
+
+                  agents = ${jsonencode(keys(model_routes))}
+                  for agent in agents:
+                      env_name = "KEY_" + agent.upper().replace("-", "_")
+                      key_val = os.environ[env_name]
+                      info_url = f"{base}/key/info?key={urllib.parse.quote(key_val)}"
+                      exists = False
+                      try:
+                          req = urllib.request.Request(info_url, headers=headers)
+                          with urllib.request.urlopen(req, timeout=10) as resp:
+                              exists = (resp.status == 200)
+                      except urllib.error.HTTPError as e:
+                          if e.code not in (400, 404):
+                              raise
+
+                      endpoint = "/key/update" if exists else "/key/generate"
+                      payload = json.dumps({
+                          "key": key_val,
+                          "key_alias": agent,
+                          "models": [agent],
+                          "max_budget": ${agent_max_budget},
+                      }).encode("utf-8")
+                      req = urllib.request.Request(f"{base}{endpoint}", data=payload, headers=headers, method="POST")
+                      with urllib.request.urlopen(req, timeout=15) as resp:
+                          if resp.status != 200:
+                              print(f"failed to provision key for {agent}: HTTP {resp.status}", file=sys.stderr)
+                              sys.exit(1)
+                      print(f"provisioned virtual key for {agent}")
