@@ -66,7 +66,7 @@ ollama pull gemma4:12b
 ollama pull gemma4:e4b
 ```
 
-`gemma4:12b` serves pm-agent (about 7.6 GB). `gemma4:e4b` serves dev-agent and sec-agent (about 6.6 GB). Avoid loading very large models (around 19 GB) while the cluster runs: on a 36 GB Mac they starve everything else.
+`gemma4:12b` serves pm-agent (about 7.6 GB). `gemma4:e4b` serves dev-agent and sec-agent (about 9.5 GB). Avoid loading very large models (around 19 GB) while the cluster runs: on a 36 GB Mac they starve everything else.
 
 ## Proxy
 
