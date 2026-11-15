@@ -38,6 +38,10 @@ Later phases add `task up`, `down`, `status`, `doctor`, `plan`, `apply` and `cle
 - Each module has `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf` and `values.yaml.tftpl` for its Helm values.
 - Providers read `config_path = ".kube/config"` and `config_context = "k3d-ai-factory"`, never the default kubeconfig.
 
+## Docs
+
+Diagrams in docs are Mermaid (```mermaid blocks), so GitHub renders them. No ASCII art or image files for diagrams.
+
 ## Harness
 
 Hooks in `.claude/hooks/` block cluster commands that bypass the project kubeconfig, block secrets in written files, and format Terraform after each edit. Skills: debug-stack, add-model-route, upgrade-version. Agents: terraform-reviewer, k8s-troubleshooter. `docs/harness.md` explains each piece.

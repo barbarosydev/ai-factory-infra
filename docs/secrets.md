@@ -8,7 +8,7 @@ No secret reaches git, Terraform state or a Claude conversation. Four layers enf
 | --- | --- | --- |
 | 1. Fewer secrets | No external API keys. CloudNativePG generates database passwords inside the cluster. Only the LiteLLM master key is created by Terraform | phases 3, 4 |
 | 2. Out of state | The master key uses Terraform write-only attributes, so it is not saved in state | phase 4 |
-| 3. Out of git | `.gitignore` covers state, tfvars, `.env` and `.kube/`. gitleaks runs in pre-commit (`task ci -- --staged`) and in CI (`task ci`, whole history) | phase 1 |
+| 3. Out of git | `.gitignore` covers state, tfvars, `.env` and `.kube/`. gitleaks runs in pre-commit (`task ci -- --staged`) and in CI (`task ci`, whole history). GitHub secret scanning and push protection are turned on when the repo goes public (free for public repos) | phase 1 |
 | 4. Out of AI context | Claude Code is denied from reading state, tfvars, `.env` and kubeconfigs; `kube-guard.py` blocks commands that print them or Secret values; `secret-guard.sh` blocks writing secrets into files | phase 1 |
 
 Rules for anything new:
