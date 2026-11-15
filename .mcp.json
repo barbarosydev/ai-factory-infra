@@ -4,7 +4,7 @@
       "command": "docker",
       "args": [
         "run", "-i", "--rm",
-        "hashicorp/terraform-mcp-server:1.4.1",
+        "hashicorp/terraform-mcp-server:1.4.1@sha256:11dd418bba6003dd5777e9d0979b68de59929a155b355f338f407947e00e9d80",
         "--toolsets=registry"
       ]
     }

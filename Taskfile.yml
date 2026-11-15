@@ -62,7 +62,7 @@ tasks:
       - ./scripts/lint.sh
 
   ci:
-    desc: task lint plus a gitleaks secret scan; pre-commit and GitHub Actions both run it
+    desc: task lint, the hook tests and a gitleaks secret scan; pre-commit and GitHub Actions both run it
     cmds:
       - ./scripts/ci.sh {{.CLI_ARGS}}
 

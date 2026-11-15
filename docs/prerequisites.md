@@ -64,7 +64,7 @@ Once per clone, from the repo root:
 pre-commit install
 ```
 
-Every commit then runs `task ci -- --staged`: lint plus a gitleaks scan of the staged changes.
+Every commit then runs `task ci -- --staged`: lint, the hook tests and a gitleaks scan of the staged changes. `task doctor:prereqs` warns (`pre-commit-hook`) when this step was skipped.
 
 ## 5. Models
 
@@ -82,7 +82,7 @@ ollama pull gemma4:e4b
 
 The stack assumes no network proxy. The check warns when `HTTP_PROXY`, `HTTPS_PROXY` or `ALL_PROXY` is set in your shell, because image pulls inside the cluster and pod traffic to Ollama can then fail.
 
-It also warns when the running Ollama server still carries proxy variables. Ollama keeps the environment it started with, so if it started while a proxy was set, `ollama pull` fails with `proxyconnect ... connection refused` even after the proxy is gone. Quit Ollama from its menu bar icon and open it again.
+It also warns when the running Ollama server still carries proxy variables. Ollama keeps the environment it started with, so if it started while a proxy was set, `ollama pull` fails with `proxyconnect ... connection refused` even after the proxy is gone. Run `task stop:ollama`, then `task up` (or quit Ollama from its menu bar icon and open it again).
 
 If you need a proxy again later, pass the proxy settings into k3d and add the cluster and host names to `NO_PROXY`.
 
@@ -90,7 +90,7 @@ Docker Desktop's own proxy setting ("system", following macOS) does not get in t
 
 ## Registry access
 
-If Docker Desktop is signed in to an organization, the organization can block images by registry or publisher; a blocked image fails with `image access restricted`. Signing out of Docker Desktop lifts those rules. While this Mac was signed in to a work organization, `curlimages/curl` was blocked, so the probe pods use the official `busybox` image, which is allowed almost everywhere.
+If Docker Desktop is signed in to an organization, the organization can block images by registry or publisher; a blocked image fails with `image access restricted`. Signing out of Docker Desktop lifts those rules. `task doctor:prereqs` warns (`docker-signin`) while Docker Desktop holds a Docker Hub login; it reads only the server names of stored logins, never the credentials. While this Mac was signed in to a work organization, `curlimages/curl` was blocked, so the probe pods use the official `busybox` image, which is allowed almost everywhere.
 
 ## Ports
 

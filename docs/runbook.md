@@ -41,7 +41,11 @@ Each wait names what it waited for and the command that shows why. The common on
 | the API server or the node | `task kube -- describe nodes`; Docker Desktop must be running with its memory limit |
 | Traefik or port 8080 | `task kube -- -n kube-system get pods`; another process on 8080 (`lsof -nP -iTCP:8080`) |
 | host.k3d.internal | `task kube -- -n kube-system logs deployment/coredns`; run `task up` again, it waits again |
-| an image pull (`ErrImagePull`) | Docker Desktop's proxy setting and your organization's registry access rules (docs/prerequisites.md) |
+| an image pull (`ErrImagePull`, `image access restricted`) | Docker Desktop signed in to an organization: sign out (`task doctor:prereqs` warns on `docker-signin`); see [registry access](prerequisites.md#registry-access) |
+
+## Ollama pulls fail
+
+`proxyconnect ... connection refused` means Ollama kept a proxy from when it started. Run `task stop:ollama`, then `task up`. `task doctor:prereqs` warns on `ollama-proxy`.
 
 ## A secret leaked
 

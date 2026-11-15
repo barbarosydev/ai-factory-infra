@@ -26,7 +26,12 @@
       "Bash(tflint*)",
       "Bash(shellcheck *)",
       "Bash(ollama list)",
-      "Bash(ollama ps)"
+      "Bash(ollama ps)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch --show-current)",
+      "Bash(tests/hooks/run.sh)"
     ],
     "ask": [
       "Bash(task up*)",
@@ -57,6 +62,7 @@
       "Read(~/.kube/**)",
       "Edit(./.kube/**)",
       "Edit(~/.kube/**)",
+      "Read(~/.docker/config.json)",
       "Bash(terraform state*)",
       "Bash(terraform -chdir=* state*)",
       "Bash(terraform show*)",
@@ -71,11 +77,19 @@
   },
   "enabledMcpjsonServers": ["terraform"],
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-context.sh" }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/kube-guard.py" }
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/kube-guard.py" },
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/branch-guard.sh" }
         ]
       },
       {

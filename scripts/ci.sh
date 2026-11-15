@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The one check that pre-commit and GitHub Actions both run: lint plus a secret scan.
+# The one check that pre-commit and GitHub Actions both run: lint, the hook tests and a secret scan.
 # Usage: scripts/ci.sh [--staged]
 #   --staged  scan only the staged changes (pre-commit uses this)
 #   default   scan the whole git history (GitHub Actions and manual runs)
@@ -20,6 +20,9 @@ done
 
 info "lint"
 "$REPO_ROOT/scripts/lint.sh"
+
+info "hook tests"
+"$REPO_ROOT/tests/hooks/run.sh"
 
 require_cmd gitleaks
 # Git mode only: a directory scan would read gitignored files such as .kube/config.

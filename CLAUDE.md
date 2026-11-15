@@ -21,7 +21,7 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 | `task smoke:cluster` | Cluster smoke test; `-- --lifecycle` also runs down and up |
 | `task doctor:prereqs` | Check the Mac before anything else |
 | `task lint` | fmt, validate, tflint, shellcheck, JSON and YAML |
-| `task ci` | lint plus gitleaks; must pass before every commit |
+| `task ci` | lint, hook tests and gitleaks; must pass before every commit |
 | `task kube -- <kubectl args>` | kubectl against the project cluster only |
 
 Also `task restart`, `stop:cluster`, `stop:ollama` and `clean` (deletes the cluster and its data). Later phases add `task doctor`, `plan`, `apply` and `clean:all`.
@@ -42,10 +42,27 @@ Also `task restart`, `stop:cluster`, `stop:ollama` and `clean` (deletes the clus
 - Each module has `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf` and `values.yaml.tftpl` for its Helm values.
 - Providers read `config_path = ".kube/config"` and `config_context = "k3d-ai-factory"`, never the default kubeconfig.
 
+## Workflow
+
+1. One branch and one pull request per phase or task; never commit on main.
+2. Before every commit run `git status -sb`: the IDE has switched this checkout to another branch mid-task before. The branch-guard hook blocks commits on main, but not a wrong feature branch.
+3. `task ci` must pass (pre-commit runs it on the staged changes anyway).
+4. Record a fact a later session would need (a version found, a Mac quirk) in the docs or the master plan, not only in the conversation.
+
+## Known behaviour on this Mac
+
+Found in phases 0 to 2. Check these before debugging from scratch:
+
+- **Resume is slow on purpose.** After `task up` resumes a stopped cluster, pods cannot resolve `host.k3d.internal` for about 90 s. `cluster-setup.sh` waits for it; a fresh create takes about 50 s.
+- **Ollama keeps the proxy it started with.** If it started while a proxy was set, `ollama pull` fails with `proxyconnect ... refused`. Fix: `task stop:ollama`, then `task up`. `task doctor:prereqs` warns.
+- **A Docker Desktop sign-in can block images.** A work organization's registry rules refused `curlimages/curl` (`image access restricted`). Signing out lifts them; `task doctor:prereqs` warns while signed in. Probe pods use the official `busybox` image.
+- **Docker Desktop's "system" proxy and the macOS PAC proxy are harmless.** In-cluster image pulls work through them.
+- **Model sizes.** `gemma4:e4b` is 9.5 GB on disk (larger than its name suggests) and `gemma4:12b` 7.6 GB. Do not add models above about 10 GB while the cluster runs.
+
 ## Docs
 
 Diagrams in docs are Mermaid (```mermaid blocks), so GitHub renders them. No ASCII art or image files for diagrams.
 
 ## Harness
 
-Hooks in `.claude/hooks/` block cluster commands that bypass the project kubeconfig, block secrets in written files, and format Terraform after each edit. Skills: debug-stack, add-model-route, upgrade-version. Agents: terraform-reviewer, k8s-troubleshooter. `docs/harness.md` explains each piece.
+Hooks in `.claude/hooks/` block cluster commands that bypass the project kubeconfig, block commits and pushes on main, block secrets in written files, format Terraform after each edit, and report the branch when a session starts. `tests/hooks/run.sh` tests them; change a hook only together with its tests. Skills: debug-stack, add-model-route, upgrade-version. Agents: terraform-reviewer, k8s-troubleshooter. `docs/harness.md` explains each piece.

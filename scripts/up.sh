@@ -11,10 +11,12 @@ source "$(dirname "$0")/lib/common.sh"
 "$REPO_ROOT/scripts/ollama.sh" start
 
 info "checking prerequisites"
-"$REPO_ROOT/scripts/doctor-prereqs.sh" >/dev/null || {
-  "$REPO_ROOT/scripts/doctor-prereqs.sh" | grep '^FAIL' || true
-  die "prerequisites failed: run task doctor:prereqs for the full report"
-}
+# Show only WARN and FAIL lines; a warning (for example Ollama holding an old
+# proxy, or a Docker sign-in) explains a failure later in the run.
+prereqs_ok=1
+report="$(NO_COLOR=1 "$REPO_ROOT/scripts/doctor-prereqs.sh")" || prereqs_ok=0
+grep -E '^(WARN|FAIL)' <<<"$report" >&2 || true
+(( prereqs_ok )) || die "prerequisites failed: run task doctor:prereqs for the full report"
 
 "$REPO_ROOT/scripts/cluster-setup.sh"
 
