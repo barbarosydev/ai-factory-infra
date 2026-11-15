@@ -90,7 +90,7 @@ Docker Desktop's own proxy setting ("system", following macOS) does not get in t
 
 ## Registry access
 
-If Docker Desktop is signed in to an organization, the organization can block images by registry or publisher. On this Mac `curlimages/curl` is blocked, so the probe pods use the official `busybox` image instead. Docker Hub `library`, `rancher` and `temporalio` images and the `ghcr.io` images the stack uses (k3d, CloudNativePG, LiteLLM) all pull. A blocked image fails with `image access restricted`.
+If Docker Desktop is signed in to an organization, the organization can block images by registry or publisher; a blocked image fails with `image access restricted`. Signing out of Docker Desktop lifts those rules. While this Mac was signed in to a work organization, `curlimages/curl` was blocked, so the probe pods use the official `busybox` image, which is allowed almost everywhere.
 
 ## Ports
 
