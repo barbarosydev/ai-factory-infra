@@ -11,7 +11,9 @@ Blocks (exit 2, reason on stderr, which Claude reads):
   * Printing Kubernetes Secret values (`get secret ... -o ...`).
   * Reading state, tfvars, .env or the kubeconfig with cat, grep, head and friends.
 
-Everything else passes (exit 0). Standard library only.
+Commands nested in `bash -c "..."`, `sh -c`, `eval`, `$(...)` and backticks are
+checked too. Everything else passes (exit 0). Standard library only.
+Tests: tests/hooks/run.sh (task ci runs them).
 """
 import json
 import os
@@ -38,6 +40,8 @@ SECRET_PATH = re.compile(
     r"(\.tfstate(\.|$)|\.tfplan$|\.tfvars(\.json)?$|(^|/)\.env(\.[^/]*)?$|(^|/)\.kube/config$)"
 )
 SAFE_EXAMPLE = re.compile(r"\.example$")
+SHELLS = {"bash", "sh", "zsh"}
+SUBSHELL = re.compile(r"\$\(([^()]*)\)|`([^`]*)`")
 OVERRIDE_VARS = {"KUBE_CONFIG_PATH", "KUBE_CONFIG_PATHS", "KUBE_CTX", "KUBE_CTX_CLUSTER", "KUBE_HOST"}
 
 
@@ -108,6 +112,12 @@ def check_segment(words) -> None:
     tool = os.path.basename(words[0])
     args = words[1:]
 
+    # Nested commands get the same checks as the outer line.
+    if tool in SHELLS and "-c" in args and args.index("-c") + 1 < len(args):
+        check_line(args[args.index("-c") + 1])
+    if tool == "eval":
+        check_line(" ".join(args))
+
     if tool in CONTEXT_SWITCHERS:
         block(f"{tool} changes your global kube context. Use `task kube -- ...` instead.")
 
@@ -144,14 +154,19 @@ def check_segment(words) -> None:
                 block(f"{arg} may hold secrets (state, tfvars, .env or kubeconfig); it stays out of Claude's context.")
 
 
+def check_line(command: str) -> None:
+    for match in SUBSHELL.finditer(command):
+        check_line(match.group(1) or match.group(2) or "")
+    for words in segments(command):
+        check_segment(list(words))
+
+
 def main() -> None:
     try:
         payload = json.load(sys.stdin)
     except json.JSONDecodeError:
         return
-    command = (payload.get("tool_input") or {}).get("command") or ""
-    for words in segments(command):
-        check_segment(list(words))
+    check_line((payload.get("tool_input") or {}).get("command") or "")
 
 
 if __name__ == "__main__":
