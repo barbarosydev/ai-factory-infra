@@ -1,9 +1,30 @@
-# Thin task runner: every task calls a script in scripts/.
-# Phase 0 ships only the prerequisites check; later phases add up, down, doctor and the rest.
+# Thin task runner: every task calls one script in scripts/, where the logic lives.
+# `task --list` prints every task with its description.
+# Later phases add up, down, status, doctor, plan, apply and clean.
 version: "3"
 
 tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
   doctor:prereqs:
     desc: Check tools, versions, Docker resources, Ollama models, proxy and free ports
     cmds:
       - ./scripts/doctor-prereqs.sh {{.CLI_ARGS}}
+
+  lint:
+    desc: terraform fmt, validate and tflint; shellcheck; JSON and YAML syntax
+    cmds:
+      - ./scripts/lint.sh
+
+  ci:
+    desc: task lint plus a gitleaks secret scan; pre-commit and GitHub Actions both run it
+    cmds:
+      - ./scripts/ci.sh {{.CLI_ARGS}}
+
+  kube:
+    desc: "Run kubectl against the project kubeconfig only, e.g. task kube -- get pods -A"
+    cmds:
+      - ./scripts/kube.sh {{.CLI_ARGS}}

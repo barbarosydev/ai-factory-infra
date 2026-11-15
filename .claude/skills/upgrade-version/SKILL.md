@@ -1,0 +1,19 @@
+---
+name: upgrade-version
+description: Upgrade a pinned version (Terraform, a provider, a Helm chart, k3d, the k3s image, an image or a tool). Use when asked to upgrade, bump or check for newer releases.
+---
+
+# Upgrade a pinned version
+
+Every version in this repo is pinned exactly. An upgrade is a deliberate, checked change.
+
+1. Find where it is pinned: `grep -rn "<old version>" --exclude-dir=.terraform .` (places include `.terraform-version`, `versions.tf`, module `main.tf` chart versions, `cluster/k3d-config.yaml`, `scripts/doctor-prereqs.sh`, `Brewfile` comments, `.mcp.json`, `.github/workflows/ci.yml`, `docs/`).
+2. Find the newest stable release from the official source (GitHub releases, the Terraform registry through the Terraform MCP server, the chart's index). Skip pre-releases.
+3. Check compatibility before choosing:
+   - k3s image: within one minor version of the local kubectl.
+   - PostgreSQL: a major version the Temporal server version supports.
+   - Charts: read the release notes for breaking value changes between the two versions.
+   - Providers: read the upgrade guide for a major bump.
+4. Bump every place found in step 1 in one change. For providers, run `terraform -chdir=terraform/environments/local init -upgrade` to refresh the lock file.
+5. Run `task lint`, then `task plan` and show the diff. Ask before `task apply`.
+6. After apply, run `task doctor`. Record the new version and date in the matching docs table.

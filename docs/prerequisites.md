@@ -1,6 +1,6 @@
 # Prerequisites
 
-Set up a Mac for ai-factory-infra in four steps, then run one check. The check is read-only and tells you exactly what is missing.
+Set up a Mac for ai-factory-infra in five steps, then run one check. The check is read-only and tells you exactly what is missing.
 
 ```bash
 task doctor:prereqs
@@ -56,7 +56,17 @@ tfenv install
 | pre-commit, gitleaks | | Checks and secret scan before each commit |
 | temporal, terraform-docs, k9s | optional | Doctor checks, module docs, a cluster UI |
 
-## 4. Models
+## 4. Checks before each commit
+
+Once per clone, from the repo root:
+
+```bash
+pre-commit install
+```
+
+Every commit then runs `task ci -- --staged`: lint plus a gitleaks scan of the staged changes.
+
+## 5. Models
 
 ```bash
 ollama pull gemma4:12b

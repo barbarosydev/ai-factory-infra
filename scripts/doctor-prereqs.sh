@@ -31,7 +31,7 @@ DOCKER_MIN_SWAP_MIB=2000
 DOCKER_MIN_DISK_MIB=100000
 REQUIRED_MODELS=("gemma4:12b" "gemma4:e4b")
 OLLAMA_URL="http://127.0.0.1:11434"
-CLUSTER_NAME="ai-factory"
+# CLUSTER_NAME comes from scripts/lib/common.sh
 CLUSTER_PORTS=(8080 7233)   # published by the k3d cluster once it runs
 FREE_PORTS=(8080 4000 7233 5432)
 DOCKER_SETTINGS="$HOME/Library/Group Containers/group.com.docker/settings-store.json"
