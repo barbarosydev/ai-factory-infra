@@ -13,6 +13,8 @@
 | See what runs | `task status` |
 | UIs, secret names and API commands | `task access` (`task access -- --copy master` copies Admin UI password) |
 | Check the cluster | `task smoke:cluster` (add `-- --lifecycle` to also test down and up) |
+| Check PostgreSQL | `task smoke:postgres` |
+| Check LiteLLM & models | `task smoke:litellm` |
 | Look at the cluster | `task kube -- get pods -A` |
 | Health check | `task doctor` (phase 6) |
 | Start from scratch | `task clean` then `task up` |

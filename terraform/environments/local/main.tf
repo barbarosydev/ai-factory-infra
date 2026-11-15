@@ -1,6 +1,10 @@
 resource "kubernetes_namespace_v1" "ai_platform" {
   metadata {
     name = var.namespace
+    labels = {
+      "app.kubernetes.io/part-of"    = "ai-factory"
+      "app.kubernetes.io/managed-by" = "terraform"
+    }
   }
 }
 

@@ -25,6 +25,8 @@ task up
 
 ```bash
 task smoke:cluster
+task smoke:postgres
+task smoke:litellm
 ```
 
 ```bash

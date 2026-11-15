@@ -35,11 +35,12 @@ TERRAFORM_STATE_READERS = {"state", "show", "output", "console"}
 READERS = {
     "cat", "less", "more", "head", "tail", "bat", "strings", "xxd", "od", "base64",
     "grep", "rg", "ag", "sed", "awk", "jq", "yq", "cp", "scp", "open", "code", "vim", "nano",
+    "python", "python3", "node", "ruby", "perl",
 }
 SECRET_PATH = re.compile(
-    r"(\.tfstate(\.|$)|\.tfplan$|\.tfvars(\.json)?$|(^|/)\.env(\.[^/]*)?$|(^|/)\.kube/config$)"
+    r"(\.tfstate(\.[A-Za-z0-9_.-]+)?|\.tfplan|\.tfvars(\.json)?|(^|/|['\"])\.env(\.[A-Za-z0-9_.-]+)?|(^|/|['\"])\.kube/config)(['\")]|\s|$)"
 )
-SAFE_EXAMPLE = re.compile(r"\.example$")
+SAFE_EXAMPLE = re.compile(r"\.(example|sample)(['\")]|\s|$)")
 SHELLS = {"bash", "sh", "zsh"}
 SUBSHELL = re.compile(r"\$\(([^()]*)\)|`([^`]*)`")
 OVERRIDE_VARS = {"KUBE_CONFIG_PATH", "KUBE_CONFIG_PATHS", "KUBE_CTX", "KUBE_CTX_CLUSTER", "KUBE_HOST"}
@@ -141,8 +142,10 @@ def check_segment(words) -> None:
 
     # Secret values from the cluster, through kubectl or task kube.
     joined = " ".join(args)
-    if (tool == "kubectl" or (tool == "task" and args[:1] == ["kube"])) and re.search(r"\bget\s+secrets?\b", joined):
-        if re.search(r"(^|\s)(-o|--output)(\s|=|$)|\s-o\w", " " + joined):
+    has_get = "get" in args
+    has_secret = any(re.match(r"^secrets?(/|$)", a) for a in args)
+    if (tool == "kubectl" or (tool == "task" and args[:1] == ["kube"])) and has_get and has_secret:
+        if re.search(r"(^|\s)(-o|--output|--template)(\s|=|$)|\s-o\w", " " + joined):
             block("printing Kubernetes Secret values is not allowed; list names with `task kube -- get secrets -n <ns>`.")
     if tool in CLUSTER_TOOLS | {"task"} and re.search(r"\bsecrets?\b.*(jsonpath|go-template|base64)", joined):
         block("printing Kubernetes Secret values is not allowed.")

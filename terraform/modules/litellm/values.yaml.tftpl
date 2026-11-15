@@ -6,7 +6,7 @@ fullnameOverride: "${release_name}"
 image:
   repository: ghcr.io/berriai/litellm
   pullPolicy: IfNotPresent
-  tag: "1.109.1"
+  tag: "${chart_version}"
 
 masterkeySecretName: "${masterkey_secret_name}"
 masterkeySecretKey: "masterkey"
@@ -75,7 +75,7 @@ extraResources:
           restartPolicy: OnFailure
           containers:
             - name: bootstrap-keys
-              image: ghcr.io/berriai/litellm:1.109.1
+              image: "ghcr.io/berriai/litellm:${chart_version}"
               imagePullPolicy: IfNotPresent
               env:
                 - name: PROXY_URL

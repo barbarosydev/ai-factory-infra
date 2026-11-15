@@ -42,6 +42,13 @@ else
 
   run "tflint init" tflint --init --config "$REPO_ROOT/.tflint.hcl"
   run "tflint" tflint --recursive --chdir terraform --config "$REPO_ROOT/.tflint.hcl"
+
+  if command -v terraform-docs >/dev/null 2>&1; then
+    for tf_dir in terraform/environments/*/ terraform/modules/*/; do
+      [[ -n "$(find "$tf_dir" -maxdepth 1 -name '*.tf' | head -n1)" ]] || continue
+      run "terraform-docs ${tf_dir%/}" terraform-docs markdown table --output-file README.md --output-mode inject --output-check "${tf_dir%/}"
+    done
+  fi
 fi
 
 # --- Shell -----------------------------------------------------------------

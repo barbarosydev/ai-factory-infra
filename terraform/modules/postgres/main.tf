@@ -9,14 +9,18 @@ locals {
   }
 }
 
+# atomic is intentionally false: CRDs and operator-managed Cluster resources
+# reconcile asynchronously, and scripts/terraform.sh waits on condition=Ready.
 resource "helm_release" "cnpg_operator" {
-  name       = "cnpg"
-  repository = "https://cloudnative-pg.github.io/charts"
-  chart      = "cloudnative-pg"
-  version    = "0.29.1"
-  namespace  = var.namespace
-  wait       = true
-  timeout    = 300
+  name            = "cnpg"
+  repository      = "https://cloudnative-pg.github.io/charts"
+  chart           = "cloudnative-pg"
+  version         = var.operator_chart_version
+  namespace       = var.namespace
+  wait            = true
+  timeout         = 300
+  cleanup_on_fail = true
+  max_history     = 5
 
   values = [
     templatefile("${path.module}/operator-values.yaml.tftpl", {})
@@ -37,7 +41,10 @@ resource "kubernetes_secret_v1" "db_user" {
     name      = "${var.cluster_name}-${each.key}-credentials"
     namespace = var.namespace
     labels = {
-      "cnpg.io/reload" = "true"
+      "app.kubernetes.io/part-of"    = "ai-factory"
+      "app.kubernetes.io/component"  = "postgres"
+      "app.kubernetes.io/managed-by" = "terraform"
+      "cnpg.io/reload"               = "true"
     }
   }
 
@@ -52,13 +59,15 @@ resource "kubernetes_secret_v1" "db_user" {
 }
 
 resource "helm_release" "cnpg_cluster" {
-  name       = var.cluster_name
-  repository = "https://cloudnative-pg.github.io/charts"
-  chart      = "cluster"
-  version    = "0.9.0"
-  namespace  = var.namespace
-  wait       = true
-  timeout    = 600
+  name            = var.cluster_name
+  repository      = "https://cloudnative-pg.github.io/charts"
+  chart           = "cluster"
+  version         = var.cluster_chart_version
+  namespace       = var.namespace
+  wait            = true
+  timeout         = 600
+  cleanup_on_fail = true
+  max_history     = 5
 
   values = [
     templatefile("${path.module}/values.yaml.tftpl", {
