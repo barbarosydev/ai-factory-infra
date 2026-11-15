@@ -17,6 +17,7 @@ env:
   TASK_VERSION: 3.54.0
   TFLINT_VERSION: v0.66.0
   GITLEAKS_VERSION: 8.30.1
+  SHELLCHECK_VERSION: 0.11.0
 
 jobs:
   ci:
@@ -54,6 +55,13 @@ jobs:
           curl -fsSL "$url/gitleaks_${GITLEAKS_VERSION}_checksums.txt" | grep " $tarball\$" | sha256sum -c -
           tar -xzf "$tarball" gitleaks
           sudo install gitleaks /usr/local/bin/gitleaks
+
+      - name: Install shellcheck
+        # The runner's shellcheck is older and reports different warnings; pin the Mac's version.
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar -xJ
+          sudo install "shellcheck-v${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck
 
       - name: Tool versions
         run: |

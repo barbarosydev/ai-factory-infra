@@ -60,7 +60,7 @@ done <<<"$(tracked '*.py')"
 # --- JSON and YAML syntax --------------------------------------------------
 
 require_cmd jq yq
-# shellcheck disable=SC2329  # called through run
+# shellcheck disable=SC2317,SC2329  # called through run
 yaml_ok() { yq eval 'true' "$1" >/dev/null; }
 while IFS= read -r f; do
   [[ -n "$f" ]] && run "json $f" jq empty "$f"

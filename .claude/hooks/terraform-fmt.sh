@@ -8,6 +8,10 @@ command -v jq >/dev/null 2>&1 || exit 0
 
 file="$(jq -r '.tool_input.file_path // empty')"
 case "$file" in
-  *.tf | *.tfvars) [[ -f "$file" ]] && terraform fmt -no-color "$file" >/dev/null 2>&1 || true ;;
+  *.tf | *.tfvars)
+    if [[ -f "$file" ]]; then
+      terraform fmt -no-color "$file" >/dev/null 2>&1 || true
+    fi
+    ;;
 esac
 exit 0
