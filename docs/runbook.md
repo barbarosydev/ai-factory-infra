@@ -47,6 +47,49 @@ Each wait names what it waited for and the command that shows why. The common on
 
 `proxyconnect ... connection refused` means Ollama kept a proxy from when it started. Run `task stop:ollama`, then `task up`. `task doctor:prereqs` warns on `ollama-proxy`.
 
+## Web UIs and API access
+
+| Service | URL | Authentication |
+| --- | --- | --- |
+| LiteLLM Admin UI | `http://litellm.localhost:8080/ui` | Username: `admin`, Password: the `masterkey` value in Secret `litellm-masterkey` |
+| LiteLLM OpenAI-compatible API | `http://litellm.localhost:8080/v1` | `Authorization: Bearer <key>` using an agent virtual key (`litellm-<agent>-key`) or the master key |
+| LiteLLM Swagger / OpenAPI docs | `http://litellm.localhost:8080/` | Master key or virtual key in the Swagger **Authorize** dialog |
+| Temporal Web UI (phase 5) | `http://temporal.localhost:8080` | None (local sandbox) |
+
+### Log in to the LiteLLM Admin UI (`http://litellm.localhost:8080/ui`)
+
+Because secrets are never stored in files or Terraform state, copy the master key straight from the cluster Secret into your macOS clipboard (nothing is printed to the terminal):
+
+```bash
+kubectl --kubeconfig .kube/config --context k3d-ai-factory \
+  get secret litellm-masterkey -n ai-platform \
+  -o jsonpath='{.data.masterkey}' | base64 -d | pbcopy
+```
+
+Then open `http://litellm.localhost:8080/ui` and sign in with:
+- **Username:** `admin`
+- **Password:** paste (`Cmd+V`)
+
+### Call the LiteLLM API from your Mac
+
+Each agent has its own scoped virtual key in Kubernetes (`litellm-pm-agent-key`, `litellm-dev-agent-key`, `litellm-sec-agent-key`). To send a chat completion from your terminal using an agent's virtual key:
+
+```bash
+AGENT="pm-agent" # or dev-agent, sec-agent
+API_KEY="$(kubectl --kubeconfig .kube/config --context k3d-ai-factory \
+  get secret "litellm-${AGENT}-key" -n ai-platform \
+  -o jsonpath='{.data.api_key}' | base64 -d)"
+
+curl -sS --noproxy '*' http://litellm.localhost:8080/v1/chat/completions \
+  -H "Authorization: Bearer ${API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"model\": \"${AGENT}\",
+    \"messages\": [{\"role\": \"user\", \"content\": \"Hello! Reply in one short sentence.\"}],
+    \"max_tokens\": 128
+  }" | jq -r '.choices[0].message.content'
+```
+
 ## A secret leaked
 
 1. Revoke and rotate it first, at its source. A secret that reached a commit counts as public, even if the commit was never pushed.
