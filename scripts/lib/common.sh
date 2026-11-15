@@ -8,6 +8,13 @@
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 export REPO_ROOT
 
+# Every cluster command uses the project kubeconfig and nothing else.
+# Your global ~/.kube/config (and any AKS context in it) is never read.
+CLUSTER_NAME="ai-factory"
+KUBE_CONTEXT="k3d-${CLUSTER_NAME}"
+KUBECONFIG="$REPO_ROOT/.kube/config"
+export CLUSTER_NAME KUBE_CONTEXT KUBECONFIG
+
 JSON_OUTPUT="${JSON_OUTPUT:-0}"
 CHECKS_PASSED=0
 CHECKS_WARNED=0
@@ -53,4 +60,18 @@ version_ge() {
 # first_version TEXT: the first dotted version number found in TEXT.
 first_version() {
   grep -Eo '[0-9]+\.[0-9]+(\.[0-9]+)?' <<<"$1" | head -n1
+}
+
+# --- Logging ---------------------------------------------------------------
+
+info() { printf '==> %s\n' "$*" >&2; }
+warn() { printf '%sWARN%s %s\n' "$C_YELLOW" "$C_RESET" "$*" >&2; }
+die() { printf '%sFAIL%s %s\n' "$C_RED" "$C_RESET" "$*" >&2; exit 1; }
+
+# require_cmd CMD...: fail with an install hint when a command is missing.
+require_cmd() {
+  local cmd
+  for cmd in "$@"; do
+    command -v "$cmd" >/dev/null 2>&1 || die "$cmd is not installed: brew bundle --no-upgrade"
+  done
 }

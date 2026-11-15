@@ -1,0 +1,11 @@
+# Runs task ci before every commit, scanning only the staged changes for secrets.
+# Install once per clone: pre-commit install
+repos:
+  - repo: local
+    hooks:
+      - id: task-ci
+        name: task ci (lint and secret scan)
+        entry: task ci -- --staged
+        language: system
+        pass_filenames: false
+        always_run: true

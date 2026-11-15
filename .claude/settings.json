@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(task)",
+      "Bash(task --list)",
+      "Bash(task doctor*)",
+      "Bash(task status*)",
+      "Bash(task lint*)",
+      "Bash(task ci*)",
+      "Bash(task plan*)",
+      "Bash(task down*)",
+      "Bash(task stop:*)",
+      "Bash(task kube -- get *)",
+      "Bash(task kube -- describe *)",
+      "Bash(task kube -- logs *)",
+      "Bash(task kube -- top *)",
+      "Bash(task kube -- events *)",
+      "Bash(terraform fmt*)",
+      "Bash(terraform -chdir=* fmt*)",
+      "Bash(terraform validate*)",
+      "Bash(terraform -chdir=* validate*)",
+      "Bash(terraform -chdir=* init*)",
+      "Bash(terraform -chdir=* plan*)",
+      "Bash(terraform version)",
+      "Bash(tflint*)",
+      "Bash(shellcheck *)",
+      "Bash(ollama list)",
+      "Bash(ollama ps)"
+    ],
+    "ask": [
+      "Bash(task up*)",
+      "Bash(task restart*)",
+      "Bash(task apply*)",
+      "Bash(task clean*)",
+      "Bash(task kube*)",
+      "Bash(terraform apply*)",
+      "Bash(terraform -chdir=* apply*)",
+      "Bash(terraform destroy*)",
+      "Bash(terraform -chdir=* destroy*)",
+      "Bash(terraform import*)",
+      "Bash(terraform -chdir=* import*)",
+      "Bash(ollama pull *)",
+      "Bash(ollama rm *)",
+      "Bash(k3d *)",
+      "Bash(git push*)"
+    ],
+    "deny": [
+      "Read(**/*.tfstate)",
+      "Read(**/*.tfstate.*)",
+      "Read(**/*.tfplan)",
+      "Read(**/*.tfvars)",
+      "Read(**/*.tfvars.json)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(./.kube/**)",
+      "Read(~/.kube/**)",
+      "Edit(./.kube/**)",
+      "Edit(~/.kube/**)",
+      "Bash(terraform state*)",
+      "Bash(terraform -chdir=* state*)",
+      "Bash(terraform show*)",
+      "Bash(terraform -chdir=* show*)",
+      "Bash(terraform output*)",
+      "Bash(terraform -chdir=* output*)",
+      "Bash(terraform console*)",
+      "Bash(kubectx*)",
+      "Bash(kubens*)",
+      "Bash(kubectl config use-context*)"
+    ]
+  },
+  "enabledMcpjsonServers": ["terraform"],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/kube-guard.py" }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/secret-guard.sh" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/terraform-fmt.sh" }
+        ]
+      }
+    ]
+  }
+}
