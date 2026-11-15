@@ -1,3 +1,10 @@
 # terraform/environments/local
 
-Arrives in phase 3: pinned providers, the ai-platform namespace and the module calls for the local k3d cluster. State stays here, local and gitignored.
+Local k3d environment: pinned providers (`kubernetes ~> 3.5`, `helm ~> 3.3`, `random ~> 3.8`), the `ai-platform` namespace, and the module calls for the local stack. State stays here, local and gitignored.
+
+## Usage
+
+```bash
+task plan
+task apply
+```
