@@ -86,6 +86,12 @@ It also warns when the running Ollama server still carries proxy variables. Olla
 
 If you need a proxy again later, pass the proxy settings into k3d and add the cluster and host names to `NO_PROXY`.
 
+Docker Desktop's own proxy setting ("system", following macOS) does not get in the way: the cluster pulls its images through it without any change. Checked in phase 2 on 15 Nov 2026.
+
+## Registry access
+
+If Docker Desktop is signed in to an organization, the organization can block images by registry or publisher; a blocked image fails with `image access restricted`. Signing out of Docker Desktop lifts those rules. While this Mac was signed in to a work organization, `curlimages/curl` was blocked, so the probe pods use the official `busybox` image, which is allowed almost everywhere.
+
 ## Ports
 
 These ports must be free before the first `task up`: 8080 (web pages through the cluster's ingress), 7233 (Temporal for workers on the Mac), 4000 (LiteLLM) and 5432 (PostgreSQL). Once the cluster runs, the check accepts 8080 and 7233 as used by the `ai-factory` cluster.

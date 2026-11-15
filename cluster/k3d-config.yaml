@@ -1,0 +1,34 @@
+# k3d cluster for the local platform. Read by scripts/cluster-setup.sh; do not
+# run `k3d cluster create` by hand, because the script also writes the project
+# kubeconfig and checks that your global kubeconfig stays untouched.
+# Schema: https://k3d.io/v5.9.0/usage/configfile/
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: ai-factory
+servers: 1
+agents: 0
+# Newest stable k3s (the k3s "stable" channel on 15 Nov 2026), within one minor
+# of kubectl 1.37. Tag and digest are both pinned; bump with the upgrade-version skill.
+image: rancher/k3s:v1.37.2-k3s1@sha256:21ea6e0fac4e3930c2ce8aa40ddd41a8b18cb3e9a0222c030dc005e7e88c4332
+kubeAPI:
+  # The API server is reachable from this Mac only. k3d picks a free host port.
+  hostIP: 127.0.0.1
+ports:
+  # Web pages through the built-in Traefik ingress: litellm.localhost:8080, temporal.localhost:8080.
+  - port: 127.0.0.1:8080:80
+    nodeFilters:
+      - loadbalancer
+  # Temporal gRPC for workers on the Mac (the Temporal Service arrives in phase 5).
+  - port: 127.0.0.1:7233:7233
+    nodeFilters:
+      - loadbalancer
+options:
+  k3d:
+    wait: true
+    timeout: 180s
+  kubeconfig:
+    # Never touch ~/.kube/config: it holds real AKS contexts. The setup script
+    # writes the project kubeconfig to .kube/config instead.
+    updateDefaultKubeconfig: false
+    switchCurrentContext: false

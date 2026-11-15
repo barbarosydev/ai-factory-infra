@@ -17,7 +17,21 @@ task doctor:prereqs
 pre-commit install
 ```
 
-3. `task --list` shows every command. `task up` and `task down` arrive in phase 2.
+3. Start the cluster, check it, and stop it again (data is kept):
+
+```bash
+task up
+```
+
+```bash
+task smoke:cluster
+```
+
+```bash
+task down
+```
+
+`task --list` shows every command; [docs/runbook.md](docs/runbook.md) says when to use each.
 
 ## Docs
 

@@ -4,7 +4,7 @@ Local K3d Cluster + Terraform + Helm for LiteLLM and Temporal. No external API k
 
 ## Architecture
 
-- k3d cluster `ai-factory` (one k3s server) in Docker Desktop. Port 8080 serves web pages through the built-in Traefik ingress (`litellm.localhost:8080`, `temporal.localhost:8080`); port 7233 exposes Temporal to workers on the Mac.
+- k3d cluster `ai-factory` (one k3s server, `cluster/k3d-config.yaml`) in Docker Desktop. `scripts/cluster-setup.sh` creates or resumes it and writes `.kube/config`; k3d never touches the global kubeconfig. Pods reach Ollama on the Mac at `host.k3d.internal:11434`. Port 8080 serves web pages through the built-in Traefik ingress (`litellm.localhost:8080`, `temporal.localhost:8080`); port 7233 exposes Temporal to workers on the Mac.
 - Terraform (`terraform/environments/local`, modules in `terraform/modules/`) installs everything inside the cluster in namespace `ai-platform`: CloudNativePG with one PostgreSQL server (databases `temporal`, `temporal_visibility`, `litellm`), LiteLLM, Temporal, and the `ollama` Service.
 - Ollama runs natively on the Mac for the GPU. LiteLLM reaches it only through the `ollama` Service. Model routes: pm-agent on gemma4:12b, dev-agent and sec-agent on gemma4:e4b.
 - The full plan and every decision: the master plan doc, mirrored in `docs/decisions/`.
@@ -15,12 +15,16 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 
 | Command | Use |
 | --- | --- |
+| `task up` | Start Ollama, check prerequisites, create or resume the cluster |
+| `task down` | Stop the cluster and unload Ollama models; data is kept |
+| `task status` | Cluster, pods, loaded models and URLs |
+| `task smoke:cluster` | Cluster smoke test; `-- --lifecycle` also runs down and up |
 | `task doctor:prereqs` | Check the Mac before anything else |
 | `task lint` | fmt, validate, tflint, shellcheck, JSON and YAML |
 | `task ci` | lint plus gitleaks; must pass before every commit |
 | `task kube -- <kubectl args>` | kubectl against the project cluster only |
 
-Later phases add `task up`, `down`, `status`, `doctor`, `plan`, `apply` and `clean`.
+Also `task restart`, `stop:cluster`, `stop:ollama` and `clean` (deletes the cluster and its data). Later phases add `task doctor`, `plan`, `apply` and `clean:all`.
 
 ## Hard rules
 
