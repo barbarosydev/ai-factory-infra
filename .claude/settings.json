@@ -6,6 +6,7 @@
       "Bash(task --list)",
       "Bash(task doctor*)",
       "Bash(task status*)",
+      "Bash(task access*)",
       "Bash(task lint*)",
       "Bash(task ci*)",
       "Bash(task plan*)",

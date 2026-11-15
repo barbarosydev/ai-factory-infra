@@ -11,6 +11,7 @@
 | Stop and start again | `task restart` |
 | Stop only one part | `task stop:cluster` or `task stop:ollama` |
 | See what runs | `task status` |
+| UIs, secret names and API commands | `task access` (`task access -- --copy master` copies Admin UI password) |
 | Check the cluster | `task smoke:cluster` (add `-- --lifecycle` to also test down and up) |
 | Look at the cluster | `task kube -- get pods -A` |
 | Health check | `task doctor` (phase 6) |
@@ -58,12 +59,10 @@ Each wait names what it waited for and the command that shows why. The common on
 
 ### Log in to the LiteLLM Admin UI (`http://litellm.localhost:8080/ui`)
 
-Because secrets are never stored in files or Terraform state, copy the master key straight from the cluster Secret into your macOS clipboard (nothing is printed to the terminal):
+Run `task access` to see all UIs, secret names and sample commands. Because secrets are never stored in files or Terraform state, copy the master key straight from the cluster Secret into your macOS clipboard (nothing is printed to the terminal):
 
 ```bash
-kubectl --kubeconfig .kube/config --context k3d-ai-factory \
-  get secret litellm-masterkey -n ai-platform \
-  -o jsonpath='{.data.masterkey}' | base64 -d | pbcopy
+task access -- --copy master
 ```
 
 Then open `http://litellm.localhost:8080/ui` and sign in with:
@@ -72,22 +71,19 @@ Then open `http://litellm.localhost:8080/ui` and sign in with:
 
 ### Call the LiteLLM API from your Mac
 
-Each agent has its own scoped virtual key in Kubernetes (`litellm-pm-agent-key`, `litellm-dev-agent-key`, `litellm-sec-agent-key`). To send a chat completion from your terminal using an agent's virtual key:
+Each agent has its own scoped virtual key in Kubernetes (`litellm-pm-agent-key`, `litellm-dev-agent-key`, `litellm-sec-agent-key`). Copy an agent key to your clipboard and call `/v1/chat/completions`:
 
 ```bash
-AGENT="pm-agent" # or dev-agent, sec-agent
-API_KEY="$(kubectl --kubeconfig .kube/config --context k3d-ai-factory \
-  get secret "litellm-${AGENT}-key" -n ai-platform \
-  -o jsonpath='{.data.api_key}' | base64 -d)"
+task access -- --copy pm-agent # or dev-agent, sec-agent
 
 curl -sS --noproxy '*' http://litellm.localhost:8080/v1/chat/completions \
-  -H "Authorization: Bearer ${API_KEY}" \
+  -H "Authorization: Bearer $(pbpaste)" \
   -H "Content-Type: application/json" \
-  -d "{
-    \"model\": \"${AGENT}\",
-    \"messages\": [{\"role\": \"user\", \"content\": \"Hello! Reply in one short sentence.\"}],
-    \"max_tokens\": 128
-  }" | jq -r '.choices[0].message.content'
+  -d '{
+    "model": "pm-agent",
+    "messages": [{"role": "user", "content": "Hello! Reply in one short sentence."}],
+    "max_tokens": 128
+  }' | jq -r '.choices[0].message.content'
 ```
 
 ## A secret leaked

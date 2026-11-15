@@ -50,6 +50,11 @@ tasks:
     cmds:
       - ./scripts/status.sh
 
+  access:
+    desc: "Show UIs, secret names and API commands; task access -- --copy <master|pm-agent|dev-agent|sec-agent> copies a key to clipboard"
+    cmds:
+      - ./scripts/access.sh {{.CLI_ARGS}}
+
   clean:
     desc: Delete the cluster, the project kubeconfig and Terraform state; databases are lost
     prompt: This deletes the ai-factory cluster and all its data. Continue?

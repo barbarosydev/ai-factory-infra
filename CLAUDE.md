@@ -18,6 +18,7 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 | `task up` | Start Ollama, check prerequisites, create or resume the cluster |
 | `task down` | Stop the cluster and unload Ollama models; data is kept |
 | `task status` | Cluster, pods, loaded models and URLs |
+| `task access` | UIs, secret names, API curl examples, and `-- --copy <target>` to clipboard |
 | `task smoke:cluster` | Cluster smoke test; `-- --lifecycle` also runs down and up |
 | `task doctor:prereqs` | Check the Mac before anything else |
 | `task lint` | fmt, validate, tflint, shellcheck, JSON and YAML |
