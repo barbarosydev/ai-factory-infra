@@ -10,10 +10,16 @@ export REPO_ROOT
 
 # Every cluster command uses the project kubeconfig and nothing else.
 # Your global ~/.kube/config (and any AKS context in it) is never read.
+# USER_KUBECONFIG remembers where your own kubeconfig lives, only so the cluster
+# scripts can prove they left it unchanged (they hash it, never print it).
+USER_KUBECONFIG="${USER_KUBECONFIG:-${KUBECONFIG:-$HOME/.kube/config}}"
+export USER_KUBECONFIG
 CLUSTER_NAME="ai-factory"
 KUBE_CONTEXT="k3d-${CLUSTER_NAME}"
 KUBECONFIG="$REPO_ROOT/.kube/config"
-export CLUSTER_NAME KUBE_CONTEXT KUBECONFIG
+K3D_CONFIG="$REPO_ROOT/cluster/k3d-config.yaml"
+OLLAMA_URL="${OLLAMA_URL:-http://127.0.0.1:11434}"
+export CLUSTER_NAME KUBE_CONTEXT KUBECONFIG K3D_CONFIG OLLAMA_URL
 
 JSON_OUTPUT="${JSON_OUTPUT:-0}"
 CHECKS_PASSED=0
@@ -73,5 +79,77 @@ require_cmd() {
   local cmd
   for cmd in "$@"; do
     command -v "$cmd" >/dev/null 2>&1 || die "$cmd is not installed: brew bundle --no-upgrade"
+  done
+}
+
+# --- Cluster helpers -------------------------------------------------------
+
+# kc ARGS...: kubectl pinned to the project kubeconfig and context.
+kc() { kubectl --kubeconfig "$KUBECONFIG" --context "$KUBE_CONTEXT" "$@"; }
+
+# Pinned image for short-lived probe pods: official busybox, for nslookup and wget.
+PROBE_IMAGE="busybox:1.37.0@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec"
+
+# probe_pod NAME SCRIPT [TIMEOUT]: run SCRIPT with sh in a throwaway pod in
+# namespace default, wait for it to finish (default 240 s), print its log and
+# return 0 only when it succeeded. The pod is always removed.
+probe_pod() {
+  local pod="$1-$$" script="$2" timeout="${3:-240}" phase="" deadline
+  kc run "$pod" -n default --restart=Never --image="$PROBE_IMAGE" \
+    --command -- sh -c "$script" >/dev/null || return 1
+  deadline=$((SECONDS + timeout))
+  until [[ "$phase" == "Succeeded" || "$phase" == "Failed" ]]; do
+    if (( SECONDS >= deadline )); then
+      echo "probe pod $pod did not finish within ${timeout}s"
+      break
+    fi
+    sleep 2
+    phase="$(kc get pod "$pod" -n default -o jsonpath='{.status.phase}' 2>/dev/null || true)"
+  done
+  kc logs "$pod" -n default 2>&1 || true
+  kc delete pod "$pod" -n default --ignore-not-found --wait=false >/dev/null 2>&1 || true
+  [[ "$phase" == "Succeeded" ]]
+}
+
+# cluster_state: prints absent, stopped or running for the k3d cluster.
+cluster_state() {
+  local counts
+  counts="$(k3d cluster list -o json 2>/dev/null \
+    | jq -r --arg n "$CLUSTER_NAME" '.[] | select(.name == $n) | "\(.serversRunning) \(.serversCount)"')"
+  if [[ -z "$counts" ]]; then
+    echo absent
+  elif [[ "${counts% *}" -gt 0 && "${counts% *}" == "${counts#* }" ]]; then
+    echo running
+  else
+    echo stopped
+  fi
+}
+
+# user_kubeconfig_fingerprint: one hash over your own kubeconfig file(s), or
+# "absent". Used before and after k3d runs; the contents are never printed.
+user_kubeconfig_fingerprint() {
+  local path out="" IFS=":"
+  for path in $USER_KUBECONFIG; do
+    if [[ -f "$path" ]]; then
+      out+="$(shasum -a 256 "$path" | cut -d' ' -f1);"
+    else
+      out+="absent;"
+    fi
+  done
+  printf '%s\n' "$out"
+}
+
+# ollama_answering: true when the Ollama API answers on OLLAMA_URL.
+ollama_answering() { curl -fsS --noproxy '*' --max-time 3 "$OLLAMA_URL/api/version" >/dev/null 2>&1; }
+
+# wait_until TIMEOUT_SECONDS WHAT CMD...: run CMD every 2 seconds until it
+# succeeds. On timeout, fail and name WHAT. Waits on a condition, never blindly.
+wait_until() {
+  local timeout="$1" what="$2" deadline
+  shift 2
+  deadline=$((SECONDS + timeout))
+  until "$@" >/dev/null 2>&1; do
+    (( SECONDS < deadline )) || die "timed out after ${timeout}s waiting for $what"
+    sleep 2
   done
 }

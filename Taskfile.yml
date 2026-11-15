@@ -1,6 +1,6 @@
 # Thin task runner: every task calls one script in scripts/, where the logic lives.
 # `task --list` prints every task with its description.
-# Later phases add up, down, status, doctor, plan, apply and clean.
+# Later phases add doctor, plan, apply and clean:all.
 version: "3"
 
 tasks:
@@ -8,6 +8,48 @@ tasks:
     cmds:
       - task --list
     silent: true
+
+  up:
+    desc: Start Ollama, check prerequisites, then create or resume the cluster (Terraform joins in phase 3)
+    cmds:
+      - ./scripts/up.sh
+
+  down:
+    desc: Stop the cluster and unload Ollama models; all data is kept
+    cmds:
+      - ./scripts/down.sh
+
+  restart:
+    desc: down, then up
+    cmds:
+      - ./scripts/down.sh
+      - ./scripts/up.sh
+
+  stop:cluster:
+    desc: Stop only the k3d cluster; data is kept
+    cmds:
+      - ./scripts/cluster-stop.sh
+
+  stop:ollama:
+    desc: Unload models and quit only Ollama
+    cmds:
+      - ./scripts/ollama.sh stop
+
+  status:
+    desc: Show the cluster, pods, loaded models and URLs
+    cmds:
+      - ./scripts/status.sh
+
+  clean:
+    desc: Delete the cluster, the project kubeconfig and Terraform state; databases are lost
+    prompt: This deletes the ai-factory cluster and all its data. Continue?
+    cmds:
+      - ./scripts/cluster-clean.sh
+
+  smoke:cluster:
+    desc: "Cluster smoke test; task smoke:cluster -- --lifecycle also runs down and up"
+    cmds:
+      - ./tests/smoke/cluster.sh {{.CLI_ARGS}}
 
   doctor:prereqs:
     desc: Check tools, versions, Docker resources, Ollama models, proxy and free ports
