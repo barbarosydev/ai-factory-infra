@@ -10,6 +10,18 @@ variable "kube_context" {
   }
 }
 
+variable "kubeconfig_path" {
+  description = "Absolute path of the project kubeconfig (a checkout's .kube/config). Empty uses this checkout's own. Set by scripts/terraform.sh so git worktrees share one cluster."
+  type        = string
+  default     = ""
+  nullable    = false
+
+  validation {
+    condition     = var.kubeconfig_path == "" || (startswith(var.kubeconfig_path, "/") && endswith(var.kubeconfig_path, "/.kube/config") && var.kubeconfig_path != pathexpand("~/.kube/config"))
+    error_message = "kubeconfig_path must be empty or the absolute path of a checkout's .kube/config, never the global ~/.kube/config."
+  }
+}
+
 variable "namespace" {
   description = "Kubernetes namespace for the AI platform stack."
   type        = string

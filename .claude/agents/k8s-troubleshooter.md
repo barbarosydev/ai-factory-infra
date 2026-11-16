@@ -14,7 +14,7 @@ Method:
 1. Start from the symptom and the namespace (usually ai-platform).
 2. Narrow to one pod, then read its events, then its logs, then the previous container's logs.
 3. Check its dependencies: Postgres (`ai-postgres-cluster-rw`) for Temporal and LiteLLM, the `ollama` Service for LiteLLM, and for Temporal also check the `temporal-schema-*` and `temporal-namespace-*` Jobs in `ai-platform` and the `svclb-temporal-frontend-*` DaemonSet pod in `kube-system` (which exposes `localhost:7233`).
-4. Before blaming DNS: right after a resume, pods cannot resolve `host.k3d.internal` for about 90 s, which is normal. For an image pull refused with `image access restricted`, the cause is a Docker Desktop sign-in (see CLAUDE.md, "Known behaviour").
+4. Before blaming DNS: right after a resume, pods cannot resolve `host.k3d.internal` for about 90 s, which is normal. For an image pull refused with `image access restricted`, the cause is a Docker Desktop sign-in (see `docs/runbook.md`, "Troubleshooting on this Mac").
 5. Stop as soon as the cause is supported by evidence.
 
 Report: the cause in one sentence, the two or three log or event lines that prove it, and the fix expressed as a Terraform change or a task command for the main session to apply.

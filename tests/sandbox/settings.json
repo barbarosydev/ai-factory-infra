@@ -1,0 +1,26 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "excludedCommands": [
+      "task",
+      "task *",
+      "terraform *",
+      "docker *",
+      "k3d *",
+      "ollama *",
+      "temporal *",
+      "git commit *",
+      "git push *",
+      "gh *"
+    ],
+    "filesystem": {
+      "denyRead": [
+        "/**/*.tfstate",
+        "/**/*.tfstate.*",
+        "/**/.kube/**"
+      ]
+    }
+  }
+}

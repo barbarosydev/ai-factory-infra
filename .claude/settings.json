@@ -43,7 +43,8 @@
       "Bash(git diff*)",
       "Bash(git log*)",
       "Bash(git branch --show-current)",
-      "Bash(tests/hooks/run.sh)"
+      "Bash(tests/hooks/run.sh)",
+      "Bash(task state:check*)"
     ],
     "ask": [
       "Bash(task up*)",
@@ -107,11 +108,12 @@
         "matcher": "Bash",
         "hooks": [
           { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/kube-guard.py" },
-          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/branch-guard.sh" }
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/branch-guard.sh" },
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/agent-guard.sh" }
         ]
       },
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Write|Edit",
         "hooks": [
           { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/secret-guard.sh" }
         ]
@@ -119,7 +121,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Write|Edit",
         "hooks": [
           { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/terraform-fmt.sh" }
         ]

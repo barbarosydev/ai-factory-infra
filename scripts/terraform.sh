@@ -18,7 +18,10 @@ esac
 tf_dir="$REPO_ROOT/terraform/environments/local"
 
 info "initializing Terraform in ${tf_dir#"$REPO_ROOT"/}"
-terraform -chdir="$tf_dir" init -input=false -upgrade=false >/dev/null
+# State and kubeconfig live in STACK_HOME (the main checkout), also when this runs
+# from a git worktree; see scripts/lib/common.sh.
+export TF_VAR_kubeconfig_path="$KUBECONFIG"
+terraform -chdir="$tf_dir" init -input=false -upgrade=false -reconfigure -backend-config="path=$TF_STATE_FILE" >/dev/null
 
 if [[ "$action" == "plan" ]]; then
   terraform -chdir="$tf_dir" plan -input=false "$@"

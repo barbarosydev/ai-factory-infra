@@ -1,5 +1,7 @@
 locals {
-  kubeconfig_path = pathexpand("${path.root}/../../../.kube/config")
+  # scripts/terraform.sh passes the stack home's kubeconfig, so a git worktree
+  # reaches the same cluster. Without it: this checkout's own .kube/config.
+  kubeconfig_path = var.kubeconfig_path != "" ? var.kubeconfig_path : pathexpand("${path.root}/../../../.kube/config")
 }
 
 provider "kubernetes" {

@@ -14,7 +14,7 @@ People and agents run the same scripts many times and trust their result. A scri
 
 ## Decision
 
-- Every script follows one contract (also hard rule 7 in `CLAUDE.md`):
+- Every script follows one contract (also hard rule 7 in `AGENTS.md`):
   - Safe to repeat: running it again gives the same result.
   - Waits for a condition with a timeout, never a fixed sleep (`wait_until` in `scripts/lib/common.sh`).
   - Exit codes mean one thing: 0 means no real failure, non-zero means failure. A WARN never fails.
