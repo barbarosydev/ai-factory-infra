@@ -15,11 +15,11 @@ Check and report each item in a concise table (Component | Current Pin | Where P
      * `cnpg_operator_chart_version` (`cloudnative-pg`)
      * `cnpg_cluster_chart_version` (`cluster`)
      * `cnpg_operator_image_tag` (operator image `tag@sha256:digest`, the operator chart's appVersion)
-     * `postgres_version` & `postgres_image_name` (`repository:MAJOR.MINOR@sha256:digest`; the major must equal `postgres_version` and be in Temporal's supported PostgreSQL matrix)
+     * `postgres_version` & `postgres_image_name` (`repository:MAJOR.MINOR@sha256:digest`; the major must equal `postgres_version` and be supported by both CloudNativePG and Temporal)
      * `litellm_chart_version` & `litellm_image_tag` (image version must equal the chart version)
      * `temporal_chart_version`, `temporal_server_image_tag`, `temporal_admin_tools_image_tag` (same version as the server) and `temporal_ui_image_tag`
      * Every image pin above is `tag@sha256:<64 hex>` (multi-arch index digest) with a Terraform `validation {}` block; a tag-only image is a finding. Probe pods in `tests/smoke/` resolve the image from the running cluster (`postgres_probe_image`, `litellm_probe_image` in `scripts/lib/common.sh`), so there is no second copy to align.
-   - Cluster & tools: `k3d`, `temporal` CLI, and `terraform-docs` in `scripts/doctor-prereqs.sh`, k3s image tag+digest in `cluster/k3d-config.yaml` (must stay within 1 minor version of local `kubectl`), `PROBE_IMAGE` in `scripts/lib/common.sh`, and Terraform MCP server image tag+digest in `.mcp.json`.
+   - Cluster & tools: tool pins in `mise.toml` (with checksums in `mise.lock`), k3s image tag+digest in `cluster/k3d-config.yaml` (must stay within 1 minor version of local `kubectl`), `PROBE_IMAGE` in `scripts/lib/common.sh`, and Terraform MCP server image tag+digest in `.mcp.json`.
 2. Security posture:
    - No unpinned `:latest` tags in any `.tf`, `.tftpl`, `.yaml`, `.json` or `.sh` file, and every running pod image in `ai-platform` carries `@sha256:` (`task kube -- get pods -n ai-platform -o jsonpath=...` over `.spec.containers[*].image` and `.spec.initContainers[*].image`).
    - All `kubernetes_secret_v1` resources use `data_wo` and `data_wo_revision` (never `data` or `string_data`).

@@ -22,8 +22,8 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 # Representative mock values for rendering `.yaml.tftpl` templates into concrete YAML.
 MOCK_VALUES: dict[str, str] = {
     "cluster_name": "ai-postgres",
-    "postgres_version": "16",
-    "postgres_image_name": "ghcr.io/cloudnative-pg/postgresql:16.15@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "postgres_version": "18",
+    "postgres_image_name": "ghcr.io/cloudnative-pg/postgresql:18.6@sha256:0000000000000000000000000000000000000000000000000000000000000000",
     "operator_image_tag": "1.30.1@sha256:0000000000000000000000000000000000000000000000000000000000000000",
     "storage_size": "5Gi",
     "release_name": "release",

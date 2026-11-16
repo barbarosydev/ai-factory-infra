@@ -65,19 +65,19 @@ variable "cnpg_cluster_chart_version" {
 variable "postgres_version" {
   description = "PostgreSQL major version supported by Temporal 1.32 and CloudNativePG."
   type        = string
-  default     = "16"
+  default     = "18"
   nullable    = false
 
   validation {
-    condition     = contains(["15", "16", "17"], var.postgres_version)
-    error_message = "PostgreSQL major version must be 15, 16, or 17."
+    condition     = contains(["15", "16", "17", "18"], var.postgres_version)
+    error_message = "PostgreSQL major version must be 15, 16, 17, or 18."
   }
 }
 
 variable "postgres_image_name" {
   description = "PostgreSQL container image as repository:MAJOR.MINOR@sha256:digest (multi-arch index digest). The major must equal postgres_version."
   type        = string
-  default     = "ghcr.io/cloudnative-pg/postgresql:16.15@sha256:34cd4159d07b3410a1b29da35072e2e927a0905e717a61afa3814624a2e8859a"
+  default     = "ghcr.io/cloudnative-pg/postgresql:18.6@sha256:899d3ed526b659d77935dde0e6bf2d69dbbf17d3d8c6486ca8cfd04bd3c18533"
   nullable    = false
 
   validation {

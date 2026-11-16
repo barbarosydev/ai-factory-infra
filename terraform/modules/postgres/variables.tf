@@ -49,12 +49,12 @@ variable "cluster_chart_version" {
 variable "postgres_version" {
   description = "PostgreSQL major version supported by Temporal 1.32 and CloudNativePG."
   type        = string
-  default     = "16"
+  default     = "18"
   nullable    = false
 
   validation {
-    condition     = contains(["15", "16", "17"], var.postgres_version)
-    error_message = "postgres_version must be 15, 16, or 17."
+    condition     = contains(["15", "16", "17", "18"], var.postgres_version)
+    error_message = "postgres_version must be 15, 16, 17, or 18."
   }
 }
 
