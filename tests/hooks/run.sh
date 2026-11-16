@@ -73,6 +73,28 @@ expect $b 0 "$tmp" 'git push -u origin feature'
 expect $b 2 "$tmp" 'git push origin main'
 expect $b 2 "$tmp" 'git push origin HEAD:main'
 
+# A worktree session: the project directory is on main, the command runs in a
+# worktree on its own branch (and the reverse). The hook follows the command's cwd.
+# expect_cwd EXIT_CODE PROJECT_DIR CWD COMMAND
+expect_cwd() {
+  local want="$1" dir="$2" cwd="$3" cmd="$4" got=0
+  jq -cn --arg c "$cmd" --arg d "$cwd" '{cwd: $d, tool_input: {command: $c}}' \
+    | CLAUDE_PROJECT_DIR="$dir" "$HOOKS/$b" >/dev/null 2>&1 || got=$?
+  if [[ "$got" == "$want" ]]; then
+    printf '%sPASS%s  %-16s %s (cwd %s)\n' "$C_GREEN" "$C_RESET" "$b" "$cmd" "$(basename "$cwd")"
+  else
+    printf '%sFAIL%s  %-16s %s (cwd %s, exit %s, want %s)\n' "$C_RED" "$C_RESET" "$b" "$cmd" "$(basename "$cwd")" "$got" "$want"
+    failed=1
+  fi
+}
+git -C "$tmp" switch -q main
+git -C "$tmp" worktree add -q "$tmp/wt-feature" -b wt-feature
+expect_cwd 0 "$tmp" "$tmp/wt-feature" 'git commit -m "change"'
+expect_cwd 0 "$tmp" "$tmp/wt-feature" 'git push -u origin wt-feature'
+expect_cwd 2 "$tmp" "$tmp/wt-feature" 'git push origin main'
+expect_cwd 2 "$tmp/wt-feature" "$tmp" 'git commit -m "change"'
+expect_cwd 2 "$tmp" "$tmp/does-not-exist" 'git commit -m "change"'
+
 # --- secret-guard.sh: no key or token written into a file -----------------------
 # The fake token is assembled at run time so this file itself passes gitleaks.
 if command -v gitleaks >/dev/null 2>&1; then
