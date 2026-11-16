@@ -115,7 +115,7 @@ This repo is also worked on with agent tools other than Claude Code. Everything 
 
 ## Sandbox: optional, Claude Code only
 
-The Claude Code Bash sandbox (Seatbelt on macOS) closes the gap named above for Claude Code sessions: a script cannot read the global kubeconfig, the project kubeconfig or the Terraform state. It is off in the shared settings, because it protects only one of the tools used here and changes how commands must be written (an excluded command such as `task doctor` only stays outside the sandbox when it runs on its own, without pipes or chaining). `tests/sandbox/settings.json` holds a block that was tried on this Mac on 16 Nov 2026: `tests/sandbox/run.sh` passed all six checks. To use it yourself, copy the `sandbox` block into `.claude/settings.local.json`, which is gitignored.
+The Claude Code Bash sandbox (Seatbelt on macOS) closes the gap named above for Claude Code sessions: a script cannot read the global kubeconfig, the project kubeconfig or the Terraform state. It is off in the shared settings, because it protects only one of the tools used here and changes how commands must be written (an excluded command such as `task doctor` only stays outside the sandbox when it runs on its own, without pipes or chaining). `tests/sandbox/settings.json` holds a block that was tried on this Mac on 16 Nov 2026: `tests/sandbox/run.sh` passed all six checks. To use it yourself, copy the `sandbox` block into `.claude/settings.local.json`, which is gitignored. Claude Code itself ships with the sandbox off and offers it as an opt-in (`/sandbox`), so leaving it off in the shared settings follows the tool's default; revisit if that default changes.
 
 ## MCP server: .mcp.json
 

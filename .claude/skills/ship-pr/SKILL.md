@@ -19,4 +19,4 @@ Follow these steps in order before committing or opening a pull request:
 4. **Commit & Push**:
    - Stage intentional changes (`git add -A`), check `git status -sb` one last time, commit with a conventional commit message (`feat(...)`, `fix(...)`, `chore(...)`, `docs(...)`), and push (`git push -u origin <branch>`).
 5. **Open or Update PR**:
-   - Use `gh pr create --base main --head <branch>` with `## Summary` and `## Verification` sections recording the exact `task plan`, `task doctor`, and `task ci` results.
+   - Use `gh pr create --base main --head <branch>` with the `## Summary` and `## Verification` sections of `.github/pull_request_template.md`, recording the exact `task plan`, `task doctor`, and `task ci` results.
