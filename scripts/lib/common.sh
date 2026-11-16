@@ -88,11 +88,28 @@ require_cmd() {
 kc() { kubectl --kubeconfig "$KUBECONFIG" --context "$KUBE_CONTEXT" "$@"; }
 
 # Pinned images for short-lived probe and smoke-test pods.
-# Keep POSTGRES_PROBE_IMAGE and LITELLM_PROBE_IMAGE aligned with terraform/environments/local/variables.tf.
+# busybox has no Terraform twin, so it is pinned here.
 PROBE_IMAGE="busybox:1.37.0@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec"
-POSTGRES_PROBE_IMAGE="ghcr.io/cloudnative-pg/postgresql:16"
-LITELLM_PROBE_IMAGE="ghcr.io/berriai/litellm:1.109.1"
-export PROBE_IMAGE POSTGRES_PROBE_IMAGE LITELLM_PROBE_IMAGE
+export PROBE_IMAGE
+
+# Probes that need psql or LiteLLM's Python reuse the exact image (tag@digest) the
+# cluster already runs, so terraform/environments/local/variables.tf is the only pin.
+# Each prints the image, or returns 1 when the workload is missing.
+postgres_probe_image() {
+  local img
+  img="$(kc get cluster.postgresql.cnpg.io/ai-postgres-cluster -n ai-platform \
+    -o jsonpath='{.spec.imageName}' 2>/dev/null)" || return 1
+  [[ -n "$img" ]] || return 1
+  printf '%s\n' "$img"
+}
+
+litellm_probe_image() {
+  local img
+  img="$(kc get deployment litellm -n ai-platform \
+    -o jsonpath='{.spec.template.spec.containers[?(@.name=="litellm")].image}' 2>/dev/null)" || return 1
+  [[ -n "$img" ]] || return 1
+  printf '%s\n' "$img"
+}
 
 # probe_pod NAME SCRIPT [TIMEOUT]: run SCRIPT with sh in a throwaway pod in
 # namespace default, wait for it to finish (default 240 s), print its log and
@@ -108,10 +125,10 @@ probe_pod() {
       break
     fi
     sleep 2
-    phase="$(kc get pod "$pod" -n default -o jsonpath='{.status.phase}' 2>/dev/null || true)"
+    phase="$(kc get pod "$pod" -n default -o jsonpath='{.status.phase}' 2>/dev/null || true)" # transient API errors: keep polling
   done
-  kc logs "$pod" -n default 2>&1 || true
-  kc delete pod "$pod" -n default --ignore-not-found --wait=false >/dev/null 2>&1 || true
+  kc logs "$pod" -n default 2>&1 || true # logs are diagnostics
+  kc delete pod "$pod" -n default --ignore-not-found --wait=false >/dev/null 2>&1 || true # best-effort cleanup
   [[ "$phase" == "Succeeded" ]]
 }
 

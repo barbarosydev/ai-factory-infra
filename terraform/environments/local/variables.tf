@@ -31,6 +31,18 @@ variable "cnpg_operator_chart_version" {
   nullable    = false
 }
 
+variable "cnpg_operator_image_tag" {
+  description = "CloudNativePG operator image tag and multi-arch index digest (ghcr.io/cloudnative-pg/cloudnative-pg); the version is the operator chart's appVersion."
+  type        = string
+  default     = "1.30.1@sha256:923c267ec29636db3bee20f993d0ec4973fa22998e1adad37da79e4d32b5bc07"
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+@sha256:[0-9a-f]{64}$", var.cnpg_operator_image_tag))
+    error_message = "cnpg_operator_image_tag must be an exact version plus index digest: X.Y.Z@sha256:<64 hex>."
+  }
+}
+
 variable "cnpg_cluster_chart_version" {
   description = "Pinned CloudNativePG cluster Helm chart version."
   type        = string
@@ -51,10 +63,15 @@ variable "postgres_version" {
 }
 
 variable "postgres_image_name" {
-  description = "Optional explicit PostgreSQL container image (tag or tag@sha256:digest). Empty uses the CloudNativePG default for postgres_version."
+  description = "PostgreSQL container image as repository:MAJOR.MINOR@sha256:digest (multi-arch index digest). The major must equal postgres_version."
   type        = string
-  default     = ""
+  default     = "ghcr.io/cloudnative-pg/postgresql:16.15@sha256:34cd4159d07b3410a1b29da35072e2e927a0905e717a61afa3814624a2e8859a"
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[a-z0-9./-]+:${var.postgres_version}\\.[0-9]+@sha256:[0-9a-f]{64}$", var.postgres_image_name))
+    error_message = "postgres_image_name must be repository:MAJOR.MINOR@sha256:<64 hex> with MAJOR equal to postgres_version."
+  }
 }
 
 variable "litellm_chart_version" {
@@ -62,6 +79,18 @@ variable "litellm_chart_version" {
   type        = string
   default     = "1.109.1"
   nullable    = false
+}
+
+variable "litellm_image_tag" {
+  description = "LiteLLM image tag and multi-arch index digest (ghcr.io/berriai/litellm); the version must equal litellm_chart_version."
+  type        = string
+  default     = "1.109.1@sha256:11175975a3093e05e92faee2fe2fe3412a3ae2fcaa849eb0fe25d5f0d8bcb2e9"
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+@sha256:[0-9a-f]{64}$", var.litellm_image_tag)) && startswith(var.litellm_image_tag, "${var.litellm_chart_version}@")
+    error_message = "litellm_image_tag must be an exact version plus index digest: X.Y.Z@sha256:<64 hex> with X.Y.Z equal to litellm_chart_version."
+  }
 }
 
 variable "litellm_store_prompts" {
@@ -79,17 +108,39 @@ variable "temporal_chart_version" {
 }
 
 variable "temporal_server_image_tag" {
-  description = "Pinned container image tag for temporalio/server and temporalio/admin-tools."
+  description = "temporalio/server image tag and multi-arch index digest."
   type        = string
-  default     = "1.32.2"
+  default     = "1.32.2@sha256:7bf69188a6232fea14869b9cef3d94aa82a1601d99517f7e86c71f22da4e0670"
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+@sha256:[0-9a-f]{64}$", var.temporal_server_image_tag))
+    error_message = "temporal_server_image_tag must be an exact version plus index digest: X.Y.Z@sha256:<64 hex>."
+  }
+}
+
+variable "temporal_admin_tools_image_tag" {
+  description = "temporalio/admin-tools image tag and multi-arch index digest; the version must equal the temporal_server_image_tag version."
+  type        = string
+  default     = "1.32.2@sha256:4a95866efba29d7e17ab012df5232795e8b0ad0f7d5f9d1ec4df321f7792a754"
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+@sha256:[0-9a-f]{64}$", var.temporal_admin_tools_image_tag)) && split("@", var.temporal_admin_tools_image_tag)[0] == split("@", var.temporal_server_image_tag)[0]
+    error_message = "temporal_admin_tools_image_tag must be an exact version plus index digest: X.Y.Z@sha256:<64 hex> with the same X.Y.Z as temporal_server_image_tag."
+  }
 }
 
 variable "temporal_ui_image_tag" {
-  description = "Pinned container image tag for temporalio/ui."
+  description = "temporalio/ui image tag and multi-arch index digest."
   type        = string
-  default     = "2.56.1"
+  default     = "2.56.1@sha256:584dd3408ab8333888d50b12d4a683e550e963409bf95fa2c9159d40d7cb825f"
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+@sha256:[0-9a-f]{64}$", var.temporal_ui_image_tag))
+    error_message = "temporal_ui_image_tag must be an exact version plus index digest: X.Y.Z@sha256:<64 hex>."
+  }
 }
 
 variable "model_routes" {

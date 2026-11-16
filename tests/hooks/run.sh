@@ -9,6 +9,11 @@ set -euo pipefail
 # shellcheck source=scripts/lib/common.sh
 source "$(dirname "$0")/../../scripts/lib/common.sh"
 require_cmd jq git python3
+# Under pre-commit, git exports GIT_DIR and GIT_INDEX_FILE. With those set, the
+# `git init` below would re-initialise the real repository (and mark it bare) instead
+# of the temporary one, so drop every repository-local git variable first.
+# shellcheck disable=SC2046
+unset $(git rev-parse --local-env-vars)
 HOOKS="$REPO_ROOT/.claude/hooks"
 failed=0
 

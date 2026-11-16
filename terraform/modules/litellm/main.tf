@@ -69,7 +69,7 @@ resource "helm_release" "litellm" {
   values = [
     templatefile("${path.module}/values.yaml.tftpl", {
       release_name                = var.release_name
-      chart_version               = var.chart_version
+      image_tag                   = var.image_tag
       masterkey_secret_name       = kubernetes_secret_v1.master_key.metadata[0].name
       db_endpoint                 = var.db_endpoint
       db_name                     = var.db_name

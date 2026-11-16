@@ -24,6 +24,9 @@ info "lint"
 info "hook tests"
 "$REPO_ROOT/tests/hooks/run.sh"
 
+info "state check tests"
+"$REPO_ROOT/tests/state/run.sh"
+
 require_cmd gitleaks
 # Git mode only: a directory scan would read gitignored files such as .kube/config.
 # --redact keeps any finding out of logs, so a leak is not repeated in CI output.

@@ -62,18 +62,20 @@ Measured on 16 Nov 2026 with `task status` (`docker stats --no-stream`, `kubectl
 
 ### 1. In-cluster pods (`namespace: ai-platform`)
 
-| Pod / Component | Idle CPU | Measured Memory (RSS) | Notes |
-| --- | --- | --- | --- |
-| `litellm` | `6m` | **697 MiB** | Python proxy + Prisma client + Admin UI |
-| `temporal-history` | `24m` | **188 MiB** | 512 history shards on PostgreSQL |
-| `temporal-matching` | `9m` | **63 MiB** | Task queue matching engine |
-| `temporal-frontend` | `8m` | **56 MiB** | gRPC (`:7233`) & HTTP (`:7243`) frontend |
-| `temporal-worker` | `6m` | **51 MiB** | Internal system workflows |
-| `temporal-web` | `1m` | **32 MiB** | Web UI (`temporalio/ui:2.56.1`) |
-| *Temporal subtotal (5 pods)* | *`48m`* | ***390 MiB*** | SQL visibility avoids Elasticsearch overhead |
-| `ai-postgres-cluster-1` | `10m` | **150 MiB** | PostgreSQL 16 (`shared_buffers = 128MB`) |
-| `cnpg-cloudnative-pg` | `2m` | **36 MiB** | CloudNativePG operator |
-| *PostgreSQL subtotal (2 pods)* | *`12m`* | ***186 MiB*** | Shared server across 3 databases |
+| Pod / Component | Idle CPU | Measured Memory (RSS) | Memory request / limit | Notes |
+| --- | --- | --- | --- | --- |
+| `litellm` | `6m` | **697 MiB** | 512Mi / 2Gi | Python proxy + Prisma client + Admin UI |
+| `temporal-history` | `24m` | **188 MiB** | 192Mi / 512Mi | 512 history shards on PostgreSQL |
+| `temporal-matching` | `9m` | **63 MiB** | 64Mi / 128Mi | Task queue matching engine |
+| `temporal-frontend` | `8m` | **56 MiB** | 64Mi / 128Mi | gRPC (`:7233`) & HTTP (`:7243`) frontend |
+| `temporal-worker` | `6m` | **51 MiB** | 64Mi / 128Mi | Internal system workflows |
+| `temporal-web` | `1m` | **32 MiB** | 32Mi / 64Mi | Web UI (`temporalio/ui:2.56.1`) |
+| *Temporal subtotal (5 pods)* | *`48m`* | ***390 MiB*** | *416Mi / 960Mi* | SQL visibility avoids Elasticsearch overhead |
+| `ai-postgres-cluster-1` | `10m` | **150 MiB** | 256Mi / 1Gi | PostgreSQL 16 (`shared_buffers = 128MB`) |
+| `cnpg-cloudnative-pg` | `2m` | **36 MiB** | 64Mi / 128Mi | CloudNativePG operator |
+| *PostgreSQL subtotal (2 pods)* | *`12m`* | ***186 MiB*** | *320Mi / 1.125Gi* | Shared server across 3 databases |
+
+Requests and limits are set in the Terraform values templates: memory limits are about twice the measured RSS, rounded up to a power-of-two step (history gets 512Mi for its 512-shard cache), and CPU requests stay modest (10m to 200m).
 
 ### 2. Whole-Mac memory budget (36 GB total)
 

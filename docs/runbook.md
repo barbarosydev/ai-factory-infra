@@ -5,7 +5,7 @@
 | Check the Mac | `task doctor:prereqs` |
 | Lint and secret scan | `task ci` |
 | Start everything (and run doctor) | `task up` |
-| Full platform health check | `task doctor` (`task doctor -- --json` for JSON output) |
+| Full platform health check | `task doctor` (`task doctor -- --json` for JSON output; includes the `tfstate secrets` check, which fails if Terraform state holds a secret value) |
 | Stop, keep data | `task down` |
 | Stop and start again | `task restart` |
 | Stop only one part | `task stop:cluster` or `task stop:ollama` |

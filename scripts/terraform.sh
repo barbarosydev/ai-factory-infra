@@ -32,7 +32,19 @@ else
   if kc get deployment/litellm -n ai-platform >/dev/null 2>&1; then
     info "waiting for LiteLLM deployment and virtual key bootstrap"
     kc rollout status deployment/litellm -n ai-platform --timeout=300s
-    kc wait --for=condition=complete job -l app.kubernetes.io/instance=litellm -n ai-platform --timeout=300s >/dev/null 2>&1 || true
+    # The Jobs carry no instance label, so select them by name. None is fine (keys disabled).
+    all_jobs="$(kc get job -n ai-platform -o name)"
+    litellm_jobs="$(grep '/litellm-' <<<"$all_jobs" || true)" # no match: no Jobs
+    for job in $litellm_jobs; do
+      if ! kc wait --for=condition=complete "$job" -n ai-platform --timeout=300s >/dev/null 2>&1; then
+        # Finished Jobs are deleted by their TTL; one that vanished mid-wait had finished.
+        kc get "$job" -n ai-platform >/dev/null 2>&1 || continue
+        warn "$job did not complete; its status and last log lines follow (no Secret values)"
+        kc get "$job" -n ai-platform >&2 || true # diagnostics only
+        kc logs "$job" -n ai-platform --tail=20 >&2 2>&1 || true # diagnostics only
+        die "$job failed or timed out after 300s: task kube -- describe $job -n ai-platform"
+      fi
+    done
   fi
   if kc get deployment/temporal-frontend -n ai-platform >/dev/null 2>&1; then
     info "waiting for Temporal schema/namespace Jobs and server deployments"

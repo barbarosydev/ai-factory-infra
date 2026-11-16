@@ -20,9 +20,27 @@ run() {
   fi
 }
 
+# lockfile_platforms FILE: every provider block needs hashes for darwin_arm64, linux_amd64 and
+# linux_arm64. h1: hashes are not labelled by platform, so check offline what is checkable:
+# at least three h1: and three zh: entries per provider (one each per platform).
+# Failure names the provider and the command that fixes it.
+# shellcheck disable=SC2317,SC2329  # called through run
+lockfile_platforms() {
+  awk '
+    function finish() { if (prov != "" && (h1 < 3 || zh < 3)) { printf "%s has %d h1 and %d zh hashes, need at least 3 of each\n", prov, h1, zh; bad = 1 } }
+    /^provider "/ { finish(); prov = $2; gsub(/"/, "", prov); h1 = 0; zh = 0 }
+    /^[[:space:]]*"h1:/ { h1++ }
+    /^[[:space:]]*"zh:/ { zh++ }
+    END { finish(); if (prov == "") { print "no provider blocks found"; bad = 1 } exit bad }
+  ' "$1" >&2 || {
+    echo "fix: terraform -chdir=terraform/environments/local providers lock -platform=darwin_arm64 -platform=linux_amd64 -platform=linux_arm64" >&2
+    return 1
+  }
+}
+
 # --- Terraform -------------------------------------------------------------
 
-tf_files="$(find terraform -name '*.tf' -not -path '*/.terraform/*' 2>/dev/null | head -n1 || true)"
+tf_files="$(find terraform -name '*.tf' -not -path '*/.terraform/*' 2>/dev/null | head -n1 || true)" # no .tf files is fine
 if [[ -z "$tf_files" ]]; then
   info "no Terraform files yet, skipping Terraform checks"
 else
@@ -35,8 +53,7 @@ else
       "terraform -chdir='$env_dir' init -backend=false -input=false >/dev/null && terraform -chdir='$env_dir' validate -no-color"
     lock_file="${env_dir}.terraform.lock.hcl"
     if [[ -f "$lock_file" ]]; then
-      run "terraform lockfile platforms ${env_dir%/}" bash -c \
-        "grep -q 'zh:' '$lock_file' && (( \$(grep -c 'provider \"registry.terraform.io/' '$lock_file') * 3 <= \$(grep -c 'h1:' '$lock_file') ))"
+      run "terraform lockfile platforms ${env_dir%/}" lockfile_platforms "$lock_file"
     fi
   done
 

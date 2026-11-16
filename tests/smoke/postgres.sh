@@ -18,7 +18,7 @@ for arg in "$@"; do
 done
 
 NS="ai-platform"
-PG_IMAGE="$POSTGRES_PROBE_IMAGE"
+PG_IMAGE="$(postgres_probe_image)" || PG_IMAGE="" # empty: the role check below fails
 
 # --- Operator & Cluster ----------------------------------------------------
 

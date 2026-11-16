@@ -17,6 +17,7 @@ Run these five gates in order and collect evidence for each:
    - When the cluster is running (`.kube/config` exists) and the change is already applied, run `task plan` and verify it reports `No changes. Your infrastructure matches the configuration.` (or, before apply, summarize the exact planned resource actions).
 4. **Runtime Health Gate (`task doctor`)**:
    - Run `task doctor -- --json` (or `task doctor -- --json --only <suites>` when verifying a single subsystem during iteration) and inspect `.passed`, `.warned`, `.failed` and any non-`PASS` items in `.checks[]`.
+   - The `tfstate secrets` check (doctor suite `state`, also `task state:check`) is a blocking gate: any FAIL stops the PR. You run the script and see only its count and resource addresses, never the state itself.
 5. **Documentation & ADR Gate**:
    - Check that any changed variable, version pin, port, task command or architectural behavior is reflected in `README.md`, `CLAUDE.md`, `docs/runbook.md`, `docs/architecture.md`, or `docs/adr/`.
 

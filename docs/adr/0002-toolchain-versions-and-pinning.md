@@ -20,7 +20,7 @@ The repo must rebuild from a fresh clone and give the same results on the Mac an
 - "Pinned exactly" means:
   - Tools: an exact version in the toolchain files and in CI.
   - Helm charts: an exact `version` in the Terraform module.
-  - Container images: tag plus digest.
+  - Container images: tag plus multi-arch index digest; for in-cluster images the pin lives once in Terraform, and probe pods reuse the image the cluster runs.
   - Providers: exact version through `.terraform.lock.hcl`, with hashes for the Mac and both Linux platforms.
   - GitHub Actions: a full commit SHA.
   The values live in `terraform/environments/local/variables.tf`, `cluster/k3d-config.yaml`, `.mcp.json` and `.github/workflows/ci.yml`; this record states the rule, not the numbers.
@@ -31,5 +31,6 @@ The repo must rebuild from a fresh clone and give the same results on the Mac an
 ## Consequences
 
 - A fresh clone needs the tools, `task up` and nothing else.
-- Several pins are not yet exact everywhere (floating image tags, Actions pinned by tag, tools checked against minimum versions). Closing these gaps is planned.
+- Every container image is pinned by tag and digest, and Terraform validation rejects an image pin without a digest. Some other pins are not yet exact everywhere (Actions pinned by tag, tools checked against minimum versions). Closing these gaps is planned.
+- An image bump changes the tag and the digest together, so pods restart even when the content is unchanged.
 - Local state is simple but lives on one machine.

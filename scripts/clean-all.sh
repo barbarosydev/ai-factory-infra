@@ -37,7 +37,7 @@ if [[ "$model_action" == "remove" ]]; then
   if command -v ollama >/dev/null 2>&1 && ollama_answering; then
     for m in gemma4:12b gemma4:e4b; do
       info "removing Ollama model $m"
-      ollama rm "$m" || true
+      ollama rm "$m" || warn "could not remove $m (already absent?)"
     done
   else
     warn "Ollama is not running; skipped removing models"

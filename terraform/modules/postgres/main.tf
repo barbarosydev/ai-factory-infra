@@ -23,7 +23,9 @@ resource "helm_release" "cnpg_operator" {
   max_history     = 5
 
   values = [
-    templatefile("${path.module}/operator-values.yaml.tftpl", {})
+    templatefile("${path.module}/operator-values.yaml.tftpl", {
+      operator_image_tag = var.operator_image_tag
+    })
   ]
 }
 

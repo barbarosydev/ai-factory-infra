@@ -34,26 +34,35 @@ variable "chart_version" {
 }
 
 variable "server_image_tag" {
-  description = "Pinned container image tag for temporalio/server and temporalio/admin-tools."
+  description = "temporalio/server image tag and multi-arch index digest (X.Y.Z@sha256:...)."
   type        = string
-  default     = "1.32.2"
   nullable    = false
 
   validation {
-    condition     = length(trimspace(var.server_image_tag)) > 0
-    error_message = "server_image_tag must not be empty."
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+@sha256:[0-9a-f]{64}$", var.server_image_tag))
+    error_message = "server_image_tag must be an exact version plus index digest: X.Y.Z@sha256:<64 hex>."
+  }
+}
+
+variable "admin_tools_image_tag" {
+  description = "temporalio/admin-tools image tag and multi-arch index digest (X.Y.Z@sha256:...) for the schema and namespace Jobs."
+  type        = string
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+@sha256:[0-9a-f]{64}$", var.admin_tools_image_tag))
+    error_message = "admin_tools_image_tag must be an exact version plus index digest: X.Y.Z@sha256:<64 hex>."
   }
 }
 
 variable "ui_image_tag" {
-  description = "Pinned container image tag for temporalio/ui."
+  description = "temporalio/ui image tag and multi-arch index digest (X.Y.Z@sha256:...)."
   type        = string
-  default     = "2.56.1"
   nullable    = false
 
   validation {
-    condition     = length(trimspace(var.ui_image_tag)) > 0
-    error_message = "ui_image_tag must not be empty."
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+@sha256:[0-9a-f]{64}$", var.ui_image_tag))
+    error_message = "ui_image_tag must be an exact version plus index digest: X.Y.Z@sha256:<64 hex>."
   }
 }
 

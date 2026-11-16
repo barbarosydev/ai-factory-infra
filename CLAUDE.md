@@ -17,7 +17,7 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 | --- | --- |
 | `task up` | Start Ollama, check prerequisites, create or resume the cluster, apply Terraform, and run `task doctor` |
 | `task down` | Stop the cluster and unload Ollama models; data is kept |
-| `task doctor` | Full health check across prerequisites, cluster, Postgres, Ollama, LiteLLM, Temporal and Web UIs (`-- --json` for JSON, `-- --only <suites>` for a subset) |
+| `task doctor` | Full health check across prerequisites, cluster, Postgres, Ollama, LiteLLM, Temporal, Web UIs and the state secret check (`-- --json` for JSON, `-- --only <suites>` for a subset) |
 | `task status` | Cluster, pods, container/pod memory use, loaded models and URLs |
 | `task access` | UIs, secret names, API curl examples, and `-- --copy <target>` to clipboard |
 | `task plan` / `task apply` | Terraform plan or apply for `terraform/environments/local` |
@@ -25,6 +25,7 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 | `task smoke:postgres` | PostgreSQL cluster, databases and per-role login isolation check |
 | `task smoke:litellm` | LiteLLM gateway, Admin UI, model completions and virtual key scope check |
 | `task smoke:temporal` | Temporal deployments, schema/namespace Jobs, gRPC health, Mac sample workflow and Web UI check |
+| `task state:check` | Check Terraform state holds no secret values (prints a count only; also part of `task doctor`) |
 | `task doctor:prereqs` | Check the Mac before anything else |
 | `task lint` | fmt, validate, tflint, terraform-docs, shellcheck, JSON and YAML |
 | `task ci` | lint, hook tests and gitleaks; must pass before every commit |

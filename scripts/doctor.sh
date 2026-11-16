@@ -4,7 +4,7 @@
 #
 # Usage:
 #   scripts/doctor.sh [--json] [--only <suites>]      (task doctor)
-#   where <suites> is a comma-separated list of: prereqs,cluster,postgres,litellm,temporal
+#   where <suites> is a comma-separated list of: prereqs,cluster,postgres,litellm,temporal,state
 # Exit code: 0 when no check failed, 1 otherwise. WARN never fails.
 set -euo pipefail
 
@@ -20,7 +20,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --only)
-      [[ $# -ge 2 ]] || die "usage: task doctor -- --only <prereqs|cluster|postgres|litellm|temporal>"
+      [[ $# -ge 2 ]] || die "usage: task doctor -- --only <prereqs|cluster|postgres|litellm|temporal|state>"
       only_filter="$2"
       shift 2
       ;;
@@ -44,15 +44,15 @@ should_run() {
 if [[ -n "$only_filter" ]]; then
   for token in ${only_filter//,/ }; do
     case "$token" in
-      prereqs | cluster | postgres | litellm | temporal) ;;
-      *) die "unknown suite '$token' in --only (choose from: prereqs,cluster,postgres,litellm,temporal)" ;;
+      prereqs | cluster | postgres | litellm | temporal | state) ;;
+      *) die "unknown suite '$token' in --only (choose from: prereqs,cluster,postgres,litellm,temporal,state)" ;;
     esac
   done
 fi
 
 run_suite() {
   local script="$1" out status check detail
-  out="$("$script" --json 2>/dev/null || true)"
+  out="$("$script" --json 2>/dev/null || true)" # exits 1 on FAIL; JSON checked next
   if [[ -z "$out" ]] || ! jq -e '.checks' <<<"$out" >/dev/null 2>&1; then
     check_fail "$(basename "$script" .sh)" "suite did not return valid JSON: run $script"
     return
@@ -110,6 +110,11 @@ fi
 # 5. Temporal deployments, schema/namespace Jobs, host gRPC, Mac workflow and Web UI
 if should_run temporal; then
   run_suite "$REPO_ROOT/tests/smoke/temporal.sh"
+fi
+
+# 6. Terraform state holds no secret values (prints counts and addresses, never values)
+if should_run state; then
+  run_suite "$REPO_ROOT/scripts/state-check.sh"
 fi
 
 finish_checks

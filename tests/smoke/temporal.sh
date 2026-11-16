@@ -62,7 +62,7 @@ tq="ai-factory-smoke-tq-$$"
 wf_completed=0
 cleanup_wf() {
   if [[ "$wf_completed" -eq 0 ]]; then
-    temporal workflow terminate --address "$GRPC_ADDR" --namespace default --workflow-id "$wf_id" --reason "smoke test cleanup" >/dev/null 2>&1 || true
+    temporal workflow terminate --address "$GRPC_ADDR" --namespace default --workflow-id "$wf_id" --reason "smoke test cleanup" >/dev/null 2>&1 || true # already finished is fine
   fi
 }
 trap cleanup_wf EXIT

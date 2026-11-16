@@ -66,24 +66,56 @@ server:
       # forwards Mac gRPC traffic (temporal CLI and SDK workers) to frontend.
       type: LoadBalancer
       port: ${grpc_port}
+    # Measured about 56 MiB RSS idle (docs/architecture.md).
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        cpu: 500m
+        memory: 128Mi
 
   history:
     enabled: true
     replicaCount: 1
+    # Measured about 188 MiB RSS idle (docs/architecture.md).
+    resources:
+      requests:
+        cpu: 50m
+        memory: 192Mi
+      limits:
+        cpu: 1000m
+        memory: 512Mi
 
   matching:
     enabled: true
     replicaCount: 1
+    # Measured about 63 MiB RSS idle (docs/architecture.md).
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        cpu: 500m
+        memory: 128Mi
 
   worker:
     enabled: true
     replicaCount: 1
+    # Measured about 51 MiB RSS idle (docs/architecture.md).
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        cpu: 500m
+        memory: 128Mi
 
 admintools:
   enabled: false
   image:
     repository: temporalio/admin-tools
-    tag: "${server_image_tag}"
+    tag: "${admin_tools_image_tag}"
     pullPolicy: IfNotPresent
 
 web:
@@ -95,6 +127,14 @@ web:
     pullPolicy: IfNotPresent
   podLabels:
     app.kubernetes.io/part-of: ai-factory
+  # Measured about 32 MiB RSS idle (docs/architecture.md).
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 250m
+      memory: 64Mi
   ingress:
     enabled: true
     className: traefik

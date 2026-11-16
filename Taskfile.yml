@@ -71,6 +71,11 @@ tasks:
     cmds:
       - ./scripts/doctor.sh {{.CLI_ARGS}}
 
+  state:check:
+    desc: Check that Terraform state holds no secret values (prints a count only)
+    cmds:
+      - ./scripts/state-check.sh {{.CLI_ARGS}}
+
   smoke:cluster:
     desc: "Cluster smoke test; task smoke:cluster -- --lifecycle also runs down and up"
     cmds:
