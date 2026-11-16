@@ -49,6 +49,8 @@ else
       run "terraform-docs ${tf_dir%/}" terraform-docs markdown table --output-file README.md --output-mode inject --output-check "${tf_dir%/}"
     done
   fi
+
+  run "terraform helm templates (.yaml.tftpl)" "$REPO_ROOT/scripts/lib/validate_tftpl.py"
 fi
 
 # --- Shell -----------------------------------------------------------------

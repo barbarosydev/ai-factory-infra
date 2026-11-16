@@ -79,107 +79,11 @@ else
   check_fail "workflow start (Mac -> $GRPC_ADDR)" "temporal workflow start failed"
 fi
 
-if python3 - "$GRPC_ADDR" "$tq" <<'PY'
-import subprocess, sys, tempfile
-
-addr, tq = sys.argv[1], sys.argv[2]
-
-def varint(n):
-    out = bytearray()
-    while n > 0x7F:
-        out.append((n & 0x7F) | 0x80)
-        n >>= 7
-    out.append(n)
-    return bytes(out)
-
-def read_varint(buf, pos):
-    val, shift = 0, 0
-    while True:
-        b = buf[pos]
-        pos += 1
-        val |= (b & 0x7F) << shift
-        if not (b & 0x80):
-            return val, pos
-        shift += 7
-
-def field_bytes(num, data):
-    if isinstance(data, str):
-        data = data.encode()
-    return varint((num << 3) | 2) + varint(len(data)) + data
-
-def field_varint(num, val):
-    return varint((num << 3) | 0) + varint(val)
-
-def grpc_call(method, payload):
-    frame = b"\x00" + len(payload).to_bytes(4, "big") + payload
-    url = f"http://{addr}/temporal.api.workflowservice.v1.WorkflowService/{method}"
-    with tempfile.NamedTemporaryFile() as tf, tempfile.NamedTemporaryFile() as hf:
-        tf.write(frame)
-        tf.flush()
-        proc = subprocess.run(
-            [
-                "curl", "-sS", "--noproxy", "*", "--http2-prior-knowledge",
-                "--max-time", "20",
-                "-D", hf.name,
-                "-H", "Content-Type: application/grpc",
-                "-H", "TE: trailers",
-                "-H", "grpc-timeout: 15S",
-                "-H", "Expect:",
-                "--data-binary", f"@{tf.name}",
-                url,
-            ],
-            capture_output=True,
-            check=True,
-        )
-        headers = hf.read().decode(errors="replace")
-    resp = proc.stdout
-    if len(resp) < 5:
-        raise RuntimeError(f"empty gRPC frame from {method}: headers={headers}")
-    msg_len = int.from_bytes(resp[1:5], "big")
-    return resp[5 : 5 + msg_len]
-
-# 1. PollWorkflowTaskQueueRequest (namespace=1, task_queue=2{name=1,kind=2}, identity=3)
-tq_msg = field_bytes(1, tq) + field_varint(2, 1)
-poll_req = field_bytes(1, "default") + field_bytes(2, tq_msg) + field_bytes(3, "mac-smoke-worker")
-poll_resp = grpc_call("PollWorkflowTaskQueue", poll_req)
-
-pos = 0
-task_token = b""
-while pos < len(poll_resp):
-    tag, pos = read_varint(poll_resp, pos)
-    fnum, wtype = tag >> 3, tag & 7
-    if wtype == 0:
-        _, pos = read_varint(poll_resp, pos)
-    elif wtype == 1:
-        pos += 8
-    elif wtype == 2:
-        ln, pos = read_varint(poll_resp, pos)
-        val = poll_resp[pos : pos + ln]
-        pos += ln
-        if fnum == 1:
-            task_token = val
-            break
-    elif wtype == 5:
-        pos += 4
-
-if not task_token:
-    raise RuntimeError("no task_token returned by PollWorkflowTaskQueue")
-
-# 2. RespondWorkflowTaskCompletedRequest with COMMAND_TYPE_COMPLETE_WORKFLOW_EXECUTION (4)
-meta = field_bytes(1, "encoding") + field_bytes(2, "json/plain")
-payload = field_bytes(1, meta) + field_bytes(2, '{"status":"ok","worker":"mac-host"}')
-payloads = field_bytes(1, payload)
-complete_attrs = field_bytes(1, payloads)
-cmd = field_varint(1, 4) + field_bytes(4, complete_attrs)
-comp_req = (
-    field_bytes(1, task_token)
-    + field_bytes(2, cmd)
-    + field_bytes(3, "mac-smoke-worker")
-    + field_bytes(9, "default")
-)
-grpc_call("RespondWorkflowTaskCompleted", comp_req)
-PY
-then
+if "$REPO_ROOT/scripts/lib/temporal_grpc.py" complete-one \
+  --address "$GRPC_ADDR" \
+  --namespace default \
+  --task-queue "$tq" \
+  --result '{"status":"ok","worker":"mac-host"}'; then
   wf_status="$(temporal workflow describe --address "$GRPC_ADDR" --namespace default --workflow-id "$wf_id" -o json 2>/dev/null \
     | jq -r '.workflowExecutionInfo.status // empty' || true)"
   if [[ "$wf_status" == "WORKFLOW_EXECUTION_STATUS_COMPLETED" || "$wf_status" == "Completed" ]]; then

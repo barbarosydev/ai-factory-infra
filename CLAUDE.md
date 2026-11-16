@@ -17,7 +17,7 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 | --- | --- |
 | `task up` | Start Ollama, check prerequisites, create or resume the cluster, apply Terraform, and run `task doctor` |
 | `task down` | Stop the cluster and unload Ollama models; data is kept |
-| `task doctor` | Full health check across prerequisites, cluster, Postgres, Ollama, LiteLLM, Temporal and Web UIs (`-- --json` for JSON) |
+| `task doctor` | Full health check across prerequisites, cluster, Postgres, Ollama, LiteLLM, Temporal and Web UIs (`-- --json` for JSON, `-- --only <suites>` for a subset) |
 | `task status` | Cluster, pods, container/pod memory use, loaded models and URLs |
 | `task access` | UIs, secret names, API curl examples, and `-- --copy <target>` to clipboard |
 | `task plan` / `task apply` | Terraform plan or apply for `terraform/environments/local` |
@@ -75,4 +75,4 @@ Diagrams in docs are Mermaid (```mermaid blocks), so GitHub renders them. No ASC
 
 ## Harness
 
-Hooks in `.claude/hooks/` block cluster commands that bypass the project kubeconfig, block commits and pushes on main, block secrets in written files, format Terraform after each edit, and report the branch when a session starts. `tests/hooks/run.sh` tests them; change a hook only together with its tests. Skills: debug-stack, add-model-route, upgrade-version. Agents: terraform-reviewer, k8s-troubleshooter, version-security-auditor. `docs/harness.md` explains each piece.
+Hooks in `.claude/hooks/` block cluster commands that bypass the project kubeconfig, block commits and pushes on main, block secrets in written files, format Terraform and sync `terraform-docs` after each edit, and report the branch when a session starts. `tests/hooks/run.sh` tests them alongside the Python helpers (`scripts/lib/temporal_grpc.py` and `scripts/lib/validate_tftpl.py`); change a hook only together with its tests. Skills: `debug-stack`, `add-model-route`, `upgrade-version`, `rotate-secrets`, `ship-pr`. Agents: `terraform-reviewer`, `k8s-troubleshooter`, `version-security-auditor`, `platform-verifier`. `docs/harness.md` explains each piece.
