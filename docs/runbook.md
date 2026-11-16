@@ -106,6 +106,18 @@ temporal workflow list --address localhost:7233 --namespace default
 
 Run `task smoke:temporal` at any time to start and complete a real workflow from your Mac and verify that it appears as `Completed` in the Web UI.
 
+## Troubleshooting on this Mac
+
+Check these before debugging from scratch.
+
+- **Resume is slow on purpose.** After `task up` resumes a stopped cluster, pods cannot resolve `host.k3d.internal` for about 90 s. `cluster-setup.sh` waits for it; a fresh create takes about 50 s.
+- **Ollama keeps the proxy it started with.** If it started while a proxy was set, `ollama pull` fails with `proxyconnect ... refused`. Fix: `task stop:ollama`, then `task up`. `task doctor:prereqs` warns.
+- **A Docker Desktop sign-in can block images.** A work organization's registry rules refused `curlimages/curl` (`image access restricted`). Signing out lifts them; `task doctor:prereqs` warns while signed in. Probe pods use the official `busybox` image.
+- **Docker Desktop's "system" proxy and the macOS PAC proxy are harmless.** In-cluster image pulls work through them.
+- **Model sizes.** `gemma4:e4b` is 9.5 GB on disk (larger than its name suggests) and `gemma4:12b` 7.6 GB. Do not add models above about 10 GB while the cluster runs.
+- **`gemma4` models use thinking tokens by default.** With `max_tokens: 16`, `gemma4:12b` and `gemma4:e4b` spend all 16 tokens in `thinking` and return an empty `content`. Completion probes should pass `max_tokens: 128` (or check `reasoning_content` / disable thinking).
+- **Temporal chart SQL setup and host gRPC.** Because CloudNativePG creates `temporal` and `temporal_visibility` owned by the non-superuser `temporal` role with strict `pg_hba` isolation, both SQL datastores in `terraform/modules/temporal/values.yaml.tftpl` must set `createDatabase: false` so `temporal-sql-tool` skips connecting to the admin `postgres` DB. `server.frontend.service.type: LoadBalancer` exposes `temporal-frontend:7233` directly to `localhost:7233` on the Mac via k3s ServiceLB (`127.0.0.1:7233:7233` in `cluster/k3d-config.yaml`). Raw HTTP/2 gRPC calls to `localhost:7233` require a `grpc-timeout` header (e.g. `grpc-timeout: 15S`).
+
 ## A secret leaked
 
 1. Revoke and rotate it first, at its source. A secret that reached a commit counts as public, even if the commit was never pushed.

@@ -1,6 +1,6 @@
 # The Claude Code harness
 
-This repo ships a small setup that lets Claude Code work on it safely: rules it reads, permissions it cannot exceed, hooks that run whether or not it remembers (with tests), reusable procedures, two helper agents and one tool integration. Each file is short enough to read in a minute.
+This repo ships a small setup that lets Claude Code work on it safely: rules it reads, permissions it cannot exceed, hooks that run whether or not it remembers (with tests), reusable procedures, four helper agents (`terraform-reviewer`, `k8s-troubleshooter`, `version-security-auditor`, `platform-verifier`) and one tool integration. Each file is short enough to read in a minute.
 
 | Piece | File | What it does here | Claude Code docs |
 | --- | --- | --- | --- |
@@ -33,7 +33,7 @@ A `SessionStart` hook runs once before all of this and tells Claude which branch
 
 ## Rules: CLAUDE.md
 
-Claude reads `CLAUDE.md` at the start of every session in this repo. It holds what a new teammate would need on day one: the architecture in a few lines, the `task` commands, seven hard rules, the git workflow, and a short list of known behaviour on this Mac (found in phases 0 to 2) so Claude does not diagnose the same thing twice. The rules are the ones that matter most on this Mac: use only the project kubeconfig, change things only through Terraform, never read state or Secret values.
+Claude reads `CLAUDE.md` at the start of every session in this repo. It holds what a new teammate needs to start: the architecture in a few lines, the `task` commands, the hard rules, the git workflow, and a pointer to the troubleshooting section of the [runbook](runbook.md) so Claude does not diagnose the same Mac quirk twice. The reasons behind the harness are in [ADR 0006](adr/0006-agent-harness.md). The rules are the ones that matter most on this Mac: use only the project kubeconfig, change things only through Terraform, never read state or Secret values.
 
 Rules in a text file depend on the model following them. The permissions and hooks below enforce the important ones regardless.
 
@@ -54,7 +54,7 @@ A hook is a script Claude Code runs on every matching tool call. A `PreToolUse` 
 | Hook | When | What it does |
 | --- | --- | --- |
 | `kube-guard.py` | Before every shell command | Blocks kubectl, helm or k9s unless they use this repo's `.kube/config`, and any context other than `k3d-ai-factory`. Blocks kubectx, kubens and `kubectl config` edits, provider overrides like `KUBE_CONFIG_PATH`, `terraform state/show/output/console`, `temporal server` or `temporal` CLI pointing outside `localhost:7233`, `get secret -o ...`, and reading state, tfvars, `.env` or a kubeconfig with `cat`, `grep` and similar tools |
-| `branch-guard.sh` | Before every shell command | Blocks `git commit` while main is checked out and `git push` to main. Added after the IDE switched this checkout to main in the middle of phase 1 |
+| `branch-guard.sh` | Before every shell command | Blocks `git commit` while main is checked out and `git push` to main; the reason is in [ADR 0006](adr/0006-agent-harness.md) |
 | `secret-guard.sh` | Before every file write or edit | Pipes the new content through `gitleaks stdin` and blocks the write if it looks like a key, token or password |
 | `terraform-fmt.sh` | After every file write or edit | Runs `terraform fmt` on an edited `.tf` or `.tfvars` file and refreshes `terraform-docs` in its `README.md` |
 | `session-context.sh` | When a session starts | Prints the branch, the number of uncommitted files and whether the project kubeconfig exists. For `SessionStart`, what a hook prints becomes part of Claude's context |
@@ -67,7 +67,7 @@ Try one yourself. A hook reads the tool call as JSON on stdin, exactly as Claude
 echo '{"tool_input":{"command":"kubectl get pods"}}' | CLAUDE_PROJECT_DIR=$PWD .claude/hooks/kube-guard.py; echo "exit $?"
 ```
 
-`tests/hooks/run.sh` runs about 30 such cases (blocked and allowed) for kube-guard, branch-guard and secret-guard, and `task ci` runs it, so a hook cannot silently stop protecting you. When you change a hook, add a case for the new behaviour.
+`tests/hooks/run.sh` runs test cases (blocked and allowed) for the guard hooks (kube-guard, branch-guard, secret-guard), and `task ci` runs it, so a hook cannot silently stop protecting you. When you change a hook, add a case for the new behaviour.
 
 ## Skills: .claude/skills/
 

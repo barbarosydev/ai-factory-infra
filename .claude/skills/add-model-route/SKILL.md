@@ -14,4 +14,4 @@ Agent names stay stable; only the model behind them changes. All routes live in 
 5. Run `task lint`, then `task plan` and show the diff. Ask before `task apply`.
 6. After apply, run `task doctor`; it sends a real completion to every route.
 
-Cloud models (for example Claude) are out of scope until API credit exists; when added, the key comes from the macOS Keychain at run time, never a file.
+Cloud models (for example Claude) are out of scope until API credit exists (see `docs/adr/0004-model-gateway-and-agent-routes.md`); when added, the key comes from the macOS Keychain at run time, never a file.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 5 smoke test for Temporal deployments, schema/namespace Jobs, gRPC health on
+# Smoke test for Temporal deployments, schema/namespace Jobs, gRPC health on
 # localhost:7233, sample workflow execution from the Mac, and Web UI visibility.
 #
 # Usage: tests/smoke/temporal.sh [--json]      (task smoke:temporal)

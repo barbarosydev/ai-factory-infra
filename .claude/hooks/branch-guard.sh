@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # PreToolUse hook for Bash: keep commits and pushes off main.
-# Work happens on a branch and reaches main through a pull request. The IDE once
-# switched this checkout to main in the middle of a phase, so the branch is
-# checked at the moment of the commit, not trusted from earlier.
+# Work happens on a branch and reaches main through a pull request. An IDE can
+# switch this checkout to main mid-task (see docs/adr/0006-agent-harness.md), so
+# the branch is checked at the moment of the commit, not trusted from earlier.
 # Blocks (exit 2, reason on stderr): `git commit` while main is checked out, and
 # `git push` while on main or with main as the target. Tests: tests/hooks/run.sh
 set -euo pipefail

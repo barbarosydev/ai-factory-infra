@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 3 smoke test for CloudNativePG and PostgreSQL role/database isolation.
+# Smoke test for CloudNativePG and PostgreSQL role/database isolation.
 # Prints one PASS/WARN/FAIL line per check; never reads or prints Secret values.
 #
 # Usage: tests/smoke/postgres.sh [--json]      (task smoke:postgres)

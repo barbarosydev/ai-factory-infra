@@ -19,7 +19,7 @@ ports:
   - port: 127.0.0.1:8080:80
     nodeFilters:
       - loadbalancer
-  # Temporal gRPC for workers on the Mac (the Temporal Service arrives in phase 5).
+  # Temporal gRPC for workers on the Mac.
   - port: 127.0.0.1:7233:7233
     nodeFilters:
       - loadbalancer

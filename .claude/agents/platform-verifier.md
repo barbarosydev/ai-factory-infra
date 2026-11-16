@@ -18,6 +18,6 @@ Run these five gates in order and collect evidence for each:
 4. **Runtime Health Gate (`task doctor`)**:
    - Run `task doctor -- --json` (or `task doctor -- --json --only <suites>` when verifying a single subsystem during iteration) and inspect `.passed`, `.warned`, `.failed` and any non-`PASS` items in `.checks[]`.
 5. **Documentation & ADR Gate**:
-   - Check that any changed variable, version pin, port, task command or architectural behavior is reflected in `README.md`, `CLAUDE.md`, `docs/runbook.md`, `docs/architecture.md`, or `docs/decisions/`.
+   - Check that any changed variable, version pin, port, task command or architectural behavior is reflected in `README.md`, `CLAUDE.md`, `docs/runbook.md`, `docs/architecture.md`, or `docs/adr/`.
 
 Return a concise **PR Readiness Scorecard** table (`Gate | Status (PASS/WARN/BLOCK) | Evidence`) followed by a one-line verdict (`READY TO SHIP` or the exact blocking items to fix).
