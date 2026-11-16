@@ -22,7 +22,7 @@ People and agents run the same scripts many times and trust their result. A scri
 - `task doctor` is the aggregate of the smoke suites (prerequisites, cluster, Postgres, LiteLLM, Temporal, state). `--only` runs a subset. It is the required health check after every change.
 - `task doctor` also checks that Terraform state holds no secret values (suite `state`, counts and names only); a FAIL blocks the pull request.
 - CI runs `task ci`: static checks, the Terraform module tests, the policies, the hook, script and Python tests, and gitleaks over the whole history.
-- Only the Mac can verify the live stack. That includes the cluster, the databases and model completions, which need Ollama and the GPU.
+- Only the Mac can verify the live stack. That includes the cluster, the databases and model completions, which need Ollama and the GPU. A live-stack job in GitHub Actions is not added while the repo has one contributor and one machine; revisit when a second machine or contributor appears.
 - `task doctor` before a pull request is therefore a manual gate, enforced by the `ship-pr` skill and the `platform-verifier` agent.
 
 ## Consequences
@@ -34,4 +34,3 @@ People and agents run the same scripts many times and trust their result. A scri
 ### Known limitations
 
 - CI never starts the stack, so a change that breaks only the live platform is caught on the Mac, not in Actions.
-- The shared script library has no unit tests of its own yet.

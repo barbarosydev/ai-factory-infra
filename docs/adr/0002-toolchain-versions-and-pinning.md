@@ -14,7 +14,7 @@ The repo must rebuild from a fresh clone and give the same results on the Mac an
 
 ## Decision
 
-- Open source first. There are two approved exceptions, both approved by the repo owner: Docker Desktop, because it is already installed and configured on the Mac, and Terraform, because it is the owner's chosen infrastructure tool.
+- Open source first. There are two exceptions, both accepted by the repo owner: Docker Desktop, because it is already installed and configured on the Mac, and Terraform, which is not open source (Business Source License since 1.6) but is accepted as the infrastructure tool for this repo.
 - Terraform with local, gitignored state. Modules live in `terraform/modules/`, one thin environment in `terraform/environments/local`, and Terraform owns the `ai-platform` namespace. Kubernetes and Helm providers use 3.x syntax. A cloud environment would be a new folder that calls the same modules.
 - The Taskfile is thin: each task calls one script in `scripts/`, so shellcheck can lint it and it can be run alone.
 - "Pinned exactly" means:
@@ -24,9 +24,9 @@ The repo must rebuild from a fresh clone and give the same results on the Mac an
   - Providers: exact version through `.terraform.lock.hcl`, with hashes for the Mac and both Linux platforms.
   - GitHub Actions: a full commit SHA.
   The values live in `mise.toml`, `terraform/environments/local/variables.tf`, `cluster/k3d-config.yaml`, `.mcp.json` and `.github/workflows/ci.yml`; this record states the rule, not the numbers.
-- Upgrades go through the `upgrade-version` skill, by hand. Renovate is not used while the repo is private and single-user, because it adds an app, a config and a PR stream.
+- Upgrades go through the `upgrade-version` skill: a coding agent finds the new version and digest, bumps the pin and runs the checks, and the version and security auditor role reviews it. Renovate is not used: it needs an app or a deployed bot, a config and a PR stream, which is more than one private repo with one contributor needs while the agent covers the same work. Revisit when the repo goes public.
 - One `task ci` runs lint, the tests and gitleaks. pre-commit and GitHub Actions both call it, so they cannot drift apart.
-- Tool boundaries: tflint lints Terraform; `terraform test` checks module behaviour; Conftest (`policy/`, capped at about seven rules) checks repo-wide conventions across file types. A rule goes to the first tool that fits.
+- Tool boundaries: tflint lints Terraform; `terraform test` checks module behaviour; Conftest (`policy/`, capped at about seven rules) checks repo-wide conventions across file types. A rule goes to the first tool that fits. Considered and not adopted for now: zizmor (a Conftest rule covers the workflow pins), shfmt, bats (the bash tests use plain scripts), markdownlint and lychee (a small stdlib link checker covers links). Revisit when the number of workflows or scripts grows enough to justify one.
 
 ## Consequences
 
