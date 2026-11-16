@@ -91,4 +91,36 @@ check "cluster_state stopped" stopped "$(state '[{"name":"ai-factory","serversRu
 check "cluster_state picks its own cluster" running \
   "$(state '[{"name":"other","serversRunning":0,"serversCount":1},{"name":"ai-factory","serversRunning":1,"serversCount":1}]')"
 
+# --- stack_lock / stack_unlock -----------------------------------------------
+lock_dir="$tmp/stack.lock"
+check "stack_lock creates lock and releases on exit" "released" \
+  "$( ( STACK_LOCK_DIR="$lock_dir"; stack_lock "test run"; [[ -f "$lock_dir/holder" ]] ) && [[ ! -d "$lock_dir" ]] && echo released || echo leaked )"
+
+check "stack_lock allows nested calls in the same process" "ok" \
+  "$( ( STACK_LOCK_DIR="$lock_dir"; stack_lock "outer"; stack_lock "inner"; echo ok ) )"
+
+# Hold a live lock in a background subshell and verify a second caller fails naming the holder.
+(
+  STACK_LOCK_DIR="$lock_dir"
+  stack_lock "task up"
+  sleep 2
+) &
+holder_pid=$!
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  [[ -f "$lock_dir/holder" ]] && break
+  sleep 0.1
+done
+busy_out="$( ( STACK_LOCK_DIR="$lock_dir"; stack_lock "task apply" ) 2>&1 || true )"
+kill "$holder_pid" 2>/dev/null || true
+wait "$holder_pid" 2>/dev/null || true
+rm -rf "$lock_dir"
+check "stack_lock fails when held by a live pid" "1" "$(grep -c 'the stack is busy: .*command=task up' <<<"$busy_out")"
+
+# A lock whose pid is dead is stale and taken over.
+mkdir -p "$lock_dir"
+printf 'pid=999999\ncheckout=/tmp/old\ncommand=task up\nsince=2026-01-01T00:00:00Z\n' >"$lock_dir/holder"
+stale_out="$( ( STACK_LOCK_DIR="$lock_dir"; stack_lock "task apply"; echo taken ) 2>&1 )"
+check "stack_lock takes over stale lock" "1" "$(grep -c 'taking over a stale stack lock' <<<"$stale_out")"
+check "stack_lock succeeds after stale takeover" "1" "$(grep -c '^taken$' <<<"$stale_out")"
+
 exit "$failed"

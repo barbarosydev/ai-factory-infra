@@ -29,6 +29,7 @@ MOCK_VALUES: dict[str, str] = {
     "release_name": "release",
     "chart_version": "1.109.1",
     "image_tag": "1.109.1@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "image_hash": "00000000",
     "masterkey_secret_name": "litellm-masterkey",
     "db_endpoint": "ai-postgres-cluster-rw",
     "db_port": "5432",

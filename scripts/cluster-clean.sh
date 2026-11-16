@@ -8,6 +8,7 @@ set -euo pipefail
 # shellcheck source=scripts/lib/common.sh
 source "$(dirname "$0")/lib/common.sh"
 require_cmd docker k3d jq shasum
+stack_lock "task clean"
 
 docker info >/dev/null 2>&1 || die "Docker is not running: open Docker Desktop"
 before="$(user_kubeconfig_fingerprint)"

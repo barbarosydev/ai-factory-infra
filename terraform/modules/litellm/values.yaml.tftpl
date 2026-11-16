@@ -69,7 +69,7 @@ extraResources:
   - apiVersion: batch/v1
     kind: Job
     metadata:
-      name: "${release_name}-bootstrap-keys-v${secret_version}"
+      name: "${release_name}-bootstrap-keys-v${secret_version}-${image_hash}"
     spec:
       backoffLimit: 6
       ttlSecondsAfterFinished: 600

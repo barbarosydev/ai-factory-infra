@@ -7,6 +7,7 @@ set -euo pipefail
 # shellcheck source=scripts/lib/common.sh
 source "$(dirname "$0")/lib/common.sh"
 require_cmd docker k3d jq
+stack_lock "task stop:cluster"
 
 if ! docker info >/dev/null 2>&1; then
   info "Docker is not running, so the cluster is already stopped"

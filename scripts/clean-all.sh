@@ -17,6 +17,7 @@ for arg in "$@"; do
   esac
 done
 
+stack_lock "task clean:all"
 "$REPO_ROOT/scripts/cluster-clean.sh"
 
 tf_dir="$REPO_ROOT/terraform/environments/local"
