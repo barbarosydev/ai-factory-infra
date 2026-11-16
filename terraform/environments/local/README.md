@@ -46,16 +46,19 @@ task apply
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_cnpg_cluster_chart_version"></a> [cnpg\_cluster\_chart\_version](#input\_cnpg\_cluster\_chart\_version) | Pinned CloudNativePG cluster Helm chart version. | `string` | `"0.9.0"` | no |
 | <a name="input_cnpg_operator_chart_version"></a> [cnpg\_operator\_chart\_version](#input\_cnpg\_operator\_chart\_version) | Pinned CloudNativePG operator Helm chart version. | `string` | `"0.29.1"` | no |
+| <a name="input_cnpg_operator_image_tag"></a> [cnpg\_operator\_image\_tag](#input\_cnpg\_operator\_image\_tag) | CloudNativePG operator image tag and multi-arch index digest (ghcr.io/cloudnative-pg/cloudnative-pg); the version is the operator chart's appVersion. | `string` | `"1.30.1@sha256:923c267ec29636db3bee20f993d0ec4973fa22998e1adad37da79e4d32b5bc07"` | no |
 | <a name="input_kube_context"></a> [kube\_context](#input\_kube\_context) | Kubeconfig context name for the local k3d cluster. | `string` | `"k3d-ai-factory"` | no |
 | <a name="input_litellm_chart_version"></a> [litellm\_chart\_version](#input\_litellm\_chart\_version) | Pinned LiteLLM Helm chart and container image version. | `string` | `"1.109.1"` | no |
+| <a name="input_litellm_image_tag"></a> [litellm\_image\_tag](#input\_litellm\_image\_tag) | LiteLLM image tag and multi-arch index digest (ghcr.io/berriai/litellm); the version must equal litellm\_chart\_version. | `string` | `"1.109.1@sha256:11175975a3093e05e92faee2fe2fe3412a3ae2fcaa849eb0fe25d5f0d8bcb2e9"` | no |
 | <a name="input_litellm_store_prompts"></a> [litellm\_store\_prompts](#input\_litellm\_store\_prompts) | Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI. | `bool` | `true` | no |
 | <a name="input_model_routes"></a> [model\_routes](#input\_model\_routes) | Map of agent route name to Ollama model tag. | `map(string)` | <pre>{<br/>  "dev-agent": "gemma4:e4b",<br/>  "pm-agent": "gemma4:12b",<br/>  "sec-agent": "gemma4:e4b"<br/>}</pre> | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Kubernetes namespace for the AI platform stack. | `string` | `"ai-platform"` | no |
-| <a name="input_postgres_image_name"></a> [postgres\_image\_name](#input\_postgres\_image\_name) | Optional explicit PostgreSQL container image (tag or tag@sha256:digest). Empty uses the CloudNativePG default for postgres\_version. | `string` | `""` | no |
+| <a name="input_postgres_image_name"></a> [postgres\_image\_name](#input\_postgres\_image\_name) | PostgreSQL container image as repository:MAJOR.MINOR@sha256:digest (multi-arch index digest). The major must equal postgres\_version. | `string` | `"ghcr.io/cloudnative-pg/postgresql:16.15@sha256:34cd4159d07b3410a1b29da35072e2e927a0905e717a61afa3814624a2e8859a"` | no |
 | <a name="input_postgres_version"></a> [postgres\_version](#input\_postgres\_version) | PostgreSQL major version supported by Temporal 1.32 and CloudNativePG. | `string` | `"16"` | no |
+| <a name="input_temporal_admin_tools_image_tag"></a> [temporal\_admin\_tools\_image\_tag](#input\_temporal\_admin\_tools\_image\_tag) | temporalio/admin-tools image tag and multi-arch index digest; the version must equal the temporal\_server\_image\_tag version. | `string` | `"1.32.2@sha256:4a95866efba29d7e17ab012df5232795e8b0ad0f7d5f9d1ec4df321f7792a754"` | no |
 | <a name="input_temporal_chart_version"></a> [temporal\_chart\_version](#input\_temporal\_chart\_version) | Pinned Temporal Helm chart version. | `string` | `"1.8.0"` | no |
-| <a name="input_temporal_server_image_tag"></a> [temporal\_server\_image\_tag](#input\_temporal\_server\_image\_tag) | Pinned container image tag for temporalio/server and temporalio/admin-tools. | `string` | `"1.32.2"` | no |
-| <a name="input_temporal_ui_image_tag"></a> [temporal\_ui\_image\_tag](#input\_temporal\_ui\_image\_tag) | Pinned container image tag for temporalio/ui. | `string` | `"2.56.1"` | no |
+| <a name="input_temporal_server_image_tag"></a> [temporal\_server\_image\_tag](#input\_temporal\_server\_image\_tag) | temporalio/server image tag and multi-arch index digest. | `string` | `"1.32.2@sha256:7bf69188a6232fea14869b9cef3d94aa82a1601d99517f7e86c71f22da4e0670"` | no |
+| <a name="input_temporal_ui_image_tag"></a> [temporal\_ui\_image\_tag](#input\_temporal\_ui\_image\_tag) | temporalio/ui image tag and multi-arch index digest. | `string` | `"2.56.1@sha256:584dd3408ab8333888d50b12d4a683e550e963409bf95fa2c9159d40d7cb825f"` | no |
 
 ## Outputs
 

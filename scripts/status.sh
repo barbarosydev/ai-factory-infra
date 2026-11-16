@@ -22,9 +22,9 @@ else
     cids=()
     while IFS= read -r cid; do
       [[ -n "$cid" ]] && cids+=("$cid")
-    done < <(docker ps -q --filter "label=k3d.cluster=$CLUSTER_NAME" 2>/dev/null || true)
+    done < <(docker ps -q --filter "label=k3d.cluster=$CLUSTER_NAME" 2>/dev/null || true) # display only
     if (( ${#cids[@]} > 0 )); then
-      docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}' "${cids[@]}" 2>/dev/null || true
+      docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}' "${cids[@]}" 2>/dev/null || true # display only
     fi
     if kc top pods -n ai-platform >/dev/null 2>&1; then
       printf '\n'

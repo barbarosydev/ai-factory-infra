@@ -40,6 +40,7 @@ No modules.
 | <a name="input_db_endpoint"></a> [db\_endpoint](#input\_db\_endpoint) | PostgreSQL read-write Service hostname. | `string` | n/a | yes |
 | <a name="input_db_name"></a> [db\_name](#input\_db\_name) | PostgreSQL database name for LiteLLM. | `string` | `"litellm"` | no |
 | <a name="input_db_secret_name"></a> [db\_secret\_name](#input\_db\_secret\_name) | Kubernetes Secret name containing PostgreSQL username and password. | `string` | n/a | yes |
+| <a name="input_image_tag"></a> [image\_tag](#input\_image\_tag) | LiteLLM image tag and multi-arch index digest (X.Y.Z@sha256:...) for ghcr.io/berriai/litellm. | `string` | n/a | yes |
 | <a name="input_ingress_host"></a> [ingress\_host](#input\_ingress\_host) | Hostname for the Traefik Ingress exposing LiteLLM. | `string` | `"litellm.localhost"` | no |
 | <a name="input_model_routes"></a> [model\_routes](#input\_model\_routes) | Map of agent route name to Ollama model tag. | `map(string)` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Kubernetes namespace where LiteLLM is deployed. | `string` | n/a | yes |

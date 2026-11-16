@@ -11,10 +11,10 @@ file="$(jq -r '.tool_input.file_path // empty')"
 case "$file" in
   *.tf | *.tfvars)
     if [[ -f "$file" ]]; then
-      terraform fmt -no-color "$file" >/dev/null 2>&1 || true
+      terraform fmt -no-color "$file" >/dev/null 2>&1 || true # best-effort; task lint checks
       dir="$(dirname "$file")"
       if command -v terraform-docs >/dev/null 2>&1 && [[ -f "$dir/README.md" ]] && grep -q "BEGIN_TF_DOCS" "$dir/README.md" 2>/dev/null; then
-        terraform-docs markdown table --output-file README.md --output-mode inject "$dir" >/dev/null 2>&1 || true
+        terraform-docs markdown table --output-file README.md --output-mode inject "$dir" >/dev/null 2>&1 || true # best-effort; task lint checks
       fi
     fi
     ;;

@@ -30,6 +30,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_admin_tools_image_tag"></a> [admin\_tools\_image\_tag](#input\_admin\_tools\_image\_tag) | temporalio/admin-tools image tag and multi-arch index digest (X.Y.Z@sha256:...) for the schema and namespace Jobs. | `string` | n/a | yes |
 | <a name="input_chart_version"></a> [chart\_version](#input\_chart\_version) | Pinned Temporal Helm chart version. | `string` | `"1.8.0"` | no |
 | <a name="input_db_endpoint"></a> [db\_endpoint](#input\_db\_endpoint) | PostgreSQL read-write Service hostname. | `string` | n/a | yes |
 | <a name="input_db_port"></a> [db\_port](#input\_db\_port) | PostgreSQL TCP port. | `number` | `5432` | no |
@@ -41,8 +42,8 @@ No modules.
 | <a name="input_ingress_host"></a> [ingress\_host](#input\_ingress\_host) | Hostname for the Traefik Ingress exposing the Temporal Web UI. | `string` | `"temporal.localhost"` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Kubernetes namespace where Temporal is deployed. | `string` | n/a | yes |
 | <a name="input_release_name"></a> [release\_name](#input\_release\_name) | Helm release name for Temporal. | `string` | `"temporal"` | no |
-| <a name="input_server_image_tag"></a> [server\_image\_tag](#input\_server\_image\_tag) | Pinned container image tag for temporalio/server and temporalio/admin-tools. | `string` | `"1.32.2"` | no |
-| <a name="input_ui_image_tag"></a> [ui\_image\_tag](#input\_ui\_image\_tag) | Pinned container image tag for temporalio/ui. | `string` | `"2.56.1"` | no |
+| <a name="input_server_image_tag"></a> [server\_image\_tag](#input\_server\_image\_tag) | temporalio/server image tag and multi-arch index digest (X.Y.Z@sha256:...). | `string` | n/a | yes |
+| <a name="input_ui_image_tag"></a> [ui\_image\_tag](#input\_ui\_image\_tag) | temporalio/ui image tag and multi-arch index digest (X.Y.Z@sha256:...). | `string` | n/a | yes |
 | <a name="input_visibility_db_name"></a> [visibility\_db\_name](#input\_visibility\_db\_name) | PostgreSQL database name for Temporal SQL visibility store. | `string` | `"temporal_visibility"` | no |
 
 ## Outputs

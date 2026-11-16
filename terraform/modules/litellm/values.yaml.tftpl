@@ -9,7 +9,7 @@ podAnnotations:
 image:
   repository: ghcr.io/berriai/litellm
   pullPolicy: IfNotPresent
-  tag: "${chart_version}"
+  tag: "${image_tag}"
 
 masterkeySecretName: "${masterkey_secret_name}"
 masterkeySecretKey: "masterkey"
@@ -78,7 +78,7 @@ extraResources:
           restartPolicy: OnFailure
           containers:
             - name: bootstrap-keys
-              image: "ghcr.io/berriai/litellm:${chart_version}"
+              image: "ghcr.io/berriai/litellm:${image_tag}"
               imagePullPolicy: IfNotPresent
               env:
                 - name: PROXY_URL

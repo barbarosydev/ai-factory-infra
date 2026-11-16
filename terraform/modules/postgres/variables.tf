@@ -28,6 +28,17 @@ variable "operator_chart_version" {
   nullable    = false
 }
 
+variable "operator_image_tag" {
+  description = "CloudNativePG operator image tag and multi-arch index digest (X.Y.Z@sha256:...); also used for the instance manager in PostgreSQL pods."
+  type        = string
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+@sha256:[0-9a-f]{64}$", var.operator_image_tag))
+    error_message = "operator_image_tag must be an exact version plus index digest: X.Y.Z@sha256:<64 hex>."
+  }
+}
+
 variable "cluster_chart_version" {
   description = "Pinned CloudNativePG cluster Helm chart version."
   type        = string
@@ -48,10 +59,14 @@ variable "postgres_version" {
 }
 
 variable "postgres_image_name" {
-  description = "Optional explicit PostgreSQL container image (tag or tag@sha256:digest). Empty uses the CloudNativePG default for postgres_version."
+  description = "PostgreSQL container image as repository:MAJOR.MINOR@sha256:digest (multi-arch index digest). The major must equal postgres_version."
   type        = string
-  default     = ""
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[a-z0-9./-]+:${var.postgres_version}\\.[0-9]+@sha256:[0-9a-f]{64}$", var.postgres_image_name))
+    error_message = "postgres_image_name must be repository:MAJOR.MINOR@sha256:<64 hex> with MAJOR equal to postgres_version."
+  }
 }
 
 variable "storage_size" {

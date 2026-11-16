@@ -28,6 +28,17 @@ variable "chart_version" {
   nullable    = false
 }
 
+variable "image_tag" {
+  description = "LiteLLM image tag and multi-arch index digest (X.Y.Z@sha256:...) for ghcr.io/berriai/litellm."
+  type        = string
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+@sha256:[0-9a-f]{64}$", var.image_tag))
+    error_message = "image_tag must be an exact version plus index digest: X.Y.Z@sha256:<64 hex>."
+  }
+}
+
 variable "db_endpoint" {
   description = "PostgreSQL read-write Service hostname."
   type        = string

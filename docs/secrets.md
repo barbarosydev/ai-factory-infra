@@ -9,6 +9,8 @@ No secret reaches git, Terraform state or a Claude conversation. Four layers enf
 | 3. Out of git | `.gitignore` covers state, tfvars, `.env` and `.kube/`. gitleaks runs in pre-commit (`task ci -- --staged`) and in CI (`task ci`, whole history). GitHub secret scanning and push protection are off because the repo is private, so gitleaks is the control; see [ADR 0005](adr/0005-security-secrets-and-cluster-isolation.md) | `.gitignore`, `scripts/ci.sh` |
 | 4. Out of AI context | Claude Code is denied from reading state, tfvars, `.env` and kubeconfigs; `kube-guard.py` blocks commands that print them or Secret values; `secret-guard.sh` blocks writing secrets into files | `.claude/settings.json`, `.claude/hooks/kube-guard.py`, `.claude/hooks/secret-guard.sh` |
 
+`task doctor` (suite `state`, also `task state:check`) verifies layer 2 on every run: it prints only the number of secret-shaped values in `terraform.tfstate` plus resource addresses and attribute names, never a value.
+
 AI-specific controls:
 
 - **One virtual key per agent.** `pm-agent`, `dev-agent` and `sec-agent` each hold their own virtual key in `litellm-<agent>-key`, scoped strictly to `models: ["<agent>"]` and a budget (`max_budget: 100`).

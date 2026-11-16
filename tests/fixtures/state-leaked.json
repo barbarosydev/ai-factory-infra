@@ -1,0 +1,18 @@
+{
+  "version": 4,
+  "resources": [
+    {
+      "mode": "managed", "type": "kubernetes_secret_v1", "name": "db",
+      "module": "module.postgres",
+      "instances": [{"attributes": {"data": {"x": "not-a-real-value"}, "data_wo": null}}]
+    },
+    {
+      "mode": "managed", "type": "random_password", "name": "pw",
+      "instances": [{"attributes": {"length": 8}}]
+    },
+    {
+      "mode": "managed", "type": "helm_release", "name": "app",
+      "instances": [{"index_key": "a", "attributes": {"auth_token": "not-a-real-value", "secret_name": "fine"}}]
+    }
+  ]
+}

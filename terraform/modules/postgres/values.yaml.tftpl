@@ -6,6 +6,7 @@ mode: standalone
 
 cluster:
   instances: 1
+  # Exact minor tag plus multi-arch index digest; version.postgresql above keeps the major.
   imageName: "${postgres_image_name}"
   enablePDB: false
 

@@ -17,6 +17,7 @@ resource "helm_release" "temporal" {
     templatefile("${path.module}/values.yaml.tftpl", {
       release_name                = var.release_name
       server_image_tag            = var.server_image_tag
+      admin_tools_image_tag       = var.admin_tools_image_tag
       ui_image_tag                = var.ui_image_tag
       db_endpoint                 = var.db_endpoint
       db_port                     = var.db_port

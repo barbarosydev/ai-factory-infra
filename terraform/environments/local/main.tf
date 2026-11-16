@@ -13,6 +13,7 @@ module "postgres" {
 
   namespace              = kubernetes_namespace_v1.ai_platform.metadata[0].name
   operator_chart_version = var.cnpg_operator_chart_version
+  operator_image_tag     = var.cnpg_operator_image_tag
   cluster_chart_version  = var.cnpg_cluster_chart_version
   postgres_version       = var.postgres_version
   postgres_image_name    = var.postgres_image_name
@@ -29,6 +30,7 @@ module "litellm" {
 
   namespace                   = kubernetes_namespace_v1.ai_platform.metadata[0].name
   chart_version               = var.litellm_chart_version
+  image_tag                   = var.litellm_image_tag
   db_endpoint                 = module.postgres.rw_service_name
   db_secret_name              = module.postgres.user_secret_names["litellm"]
   ollama_api_base             = module.model_backend.api_base
@@ -44,12 +46,13 @@ module "litellm" {
 module "temporal" {
   source = "../../modules/temporal"
 
-  namespace        = kubernetes_namespace_v1.ai_platform.metadata[0].name
-  chart_version    = var.temporal_chart_version
-  server_image_tag = var.temporal_server_image_tag
-  ui_image_tag     = var.temporal_ui_image_tag
-  db_endpoint      = module.postgres.rw_service_name
-  db_secret_name   = module.postgres.user_secret_names["temporal"]
+  namespace             = kubernetes_namespace_v1.ai_platform.metadata[0].name
+  chart_version         = var.temporal_chart_version
+  server_image_tag      = var.temporal_server_image_tag
+  admin_tools_image_tag = var.temporal_admin_tools_image_tag
+  ui_image_tag          = var.temporal_ui_image_tag
+  db_endpoint           = module.postgres.rw_service_name
+  db_secret_name        = module.postgres.user_secret_names["temporal"]
 
   depends_on = [
     module.postgres,

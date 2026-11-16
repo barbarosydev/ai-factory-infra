@@ -31,6 +31,7 @@ DOCKER_MIN_MEMORY_MIB=12000
 DOCKER_MIN_SWAP_MIB=2000
 DOCKER_MIN_DISK_MIB=100000
 REQUIRED_MODELS=("gemma4:12b" "gemma4:e4b")
+OLLAMA_MAX_MODEL_GB=10   # warn when a loaded model is larger than this (GB)
 OLLAMA_URL="http://127.0.0.1:11434"
 # CLUSTER_NAME comes from scripts/lib/common.sh
 CLUSTER_PORTS=(8080 7233)   # published by the k3d cluster once it runs
@@ -48,7 +49,7 @@ check_tool() {
     return
   fi
   local version
-  version="$(first_version "$("$@" 2>/dev/null || true)")"
+  version="$(first_version "$("$@" 2>/dev/null || true)")" # unreadable: warned below
   if [[ -z "$version" ]]; then
     check_warn "$name" "installed, version not readable"
   elif version_ge "$version" "$min"; then
@@ -178,11 +179,22 @@ if tags="$(curl -fsS --noproxy '*' --max-time 5 "$OLLAMA_URL/api/tags" 2>/dev/nu
   done
 
   # A server started while a proxy was set keeps it, and its model pulls then fail.
-  pid="$(pgrep -f 'ollama serve' | head -n1 || true)"
+  pid="$(pgrep -f 'ollama serve' | head -n1 || true)" # Ollama not running as a process
   if [[ -n "$pid" ]] && ps -wwE -p "$pid" -o command= 2>/dev/null | grep -Eqi '(^| )(https?|all)_proxy='; then
     check_warn ollama-proxy "the running Ollama server kept old proxy variables and pulls may fail: task stop:ollama, then task up"
   else
     check_pass ollama-proxy "no proxy variables"
+  fi
+
+  # A loaded model above the threshold may starve the k3d cluster of memory.
+  if ps_json="$(curl -fsS --noproxy '*' --max-time 5 "$OLLAMA_URL/api/ps" 2>/dev/null)"; then
+    big="$(jq -r --argjson max "$OLLAMA_MAX_MODEL_GB" \
+      '[.models[]? | select(.size > ($max * 1073741824)) | "\(.name) (\((.size / 1073741824 * 10 | round) / 10) GiB)"] | join(", ")' <<<"$ps_json")"
+    if [[ -z "$big" ]]; then
+      check_pass ollama-loaded "no loaded model above ${OLLAMA_MAX_MODEL_GB} GB"
+    else
+      check_warn ollama-loaded "loaded model above ${OLLAMA_MAX_MODEL_GB} GB: $big; the cluster may run short of memory (task stop:ollama)"
+    fi
   fi
 else
   check_fail ollama-running "no answer on $OLLAMA_URL: open the Ollama app"

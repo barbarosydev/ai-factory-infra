@@ -18,7 +18,7 @@ for arg in "$@"; do
 done
 
 NS="ai-platform"
-LITELLM_IMAGE="$LITELLM_PROBE_IMAGE"
+LITELLM_IMAGE="$(litellm_probe_image)" || LITELLM_IMAGE="" # empty: the route checks below fail
 
 # --- Service & Deployment --------------------------------------------------
 

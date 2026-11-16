@@ -45,8 +45,9 @@ No modules.
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the CloudNativePG cluster and Helm release. | `string` | `"ai-postgres"` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Kubernetes namespace where CloudNativePG and the PostgreSQL cluster are deployed. | `string` | n/a | yes |
 | <a name="input_operator_chart_version"></a> [operator\_chart\_version](#input\_operator\_chart\_version) | Pinned CloudNativePG operator Helm chart version. | `string` | `"0.29.1"` | no |
+| <a name="input_operator_image_tag"></a> [operator\_image\_tag](#input\_operator\_image\_tag) | CloudNativePG operator image tag and multi-arch index digest (X.Y.Z@sha256:...); also used for the instance manager in PostgreSQL pods. | `string` | n/a | yes |
 | <a name="input_password_version"></a> [password\_version](#input\_password\_version) | Increment to rotate the generated database user passwords. | `number` | `1` | no |
-| <a name="input_postgres_image_name"></a> [postgres\_image\_name](#input\_postgres\_image\_name) | Optional explicit PostgreSQL container image (tag or tag@sha256:digest). Empty uses the CloudNativePG default for postgres\_version. | `string` | `""` | no |
+| <a name="input_postgres_image_name"></a> [postgres\_image\_name](#input\_postgres\_image\_name) | PostgreSQL container image as repository:MAJOR.MINOR@sha256:digest (multi-arch index digest). The major must equal postgres\_version. | `string` | n/a | yes |
 | <a name="input_postgres_version"></a> [postgres\_version](#input\_postgres\_version) | PostgreSQL major version supported by Temporal 1.32 and CloudNativePG. | `string` | `"16"` | no |
 | <a name="input_storage_size"></a> [storage\_size](#input\_storage\_size) | Persistent volume size for the PostgreSQL data directory. | `string` | `"8Gi"` | no |
 

@@ -14,7 +14,7 @@ info "checking prerequisites"
 # proxy, or a Docker sign-in) explains a failure later in the run.
 prereqs_ok=1
 report="$(NO_COLOR=1 "$REPO_ROOT/scripts/doctor-prereqs.sh")" || prereqs_ok=0
-grep -E '^(WARN|FAIL)' <<<"$report" >&2 || true
+grep -E '^(WARN|FAIL)' <<<"$report" >&2 || true # no warnings is fine
 (( prereqs_ok )) || die "prerequisites failed: run task doctor:prereqs for the full report"
 
 "$REPO_ROOT/scripts/cluster-setup.sh"
