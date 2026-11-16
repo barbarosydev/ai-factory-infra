@@ -4,9 +4,9 @@
 #   1. a script cannot read the global kubeconfig, the project kubeconfig or the
 #      Terraform state, although it can read ordinary files;
 #   2. task commands still work, because they are excluded from the sandbox.
-# Not part of task ci: it needs a logged-in claude CLI, a running stack and a few
-# cents of model use. Run it before copying the "sandbox" block into
-# .claude/settings.json, and again after a Claude Code upgrade.
+# Optional and Claude Code only. Not part of task ci: it needs a logged-in claude CLI, a running stack and a few
+# cents of model use. Run it before copying the "sandbox" block into your own
+# .claude/settings.local.json, and again after a Claude Code upgrade.
 # Usage: tests/sandbox/run.sh
 set -euo pipefail
 

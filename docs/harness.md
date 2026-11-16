@@ -86,7 +86,7 @@ A skill is a folder with a `SKILL.md`. Its `description` tells Claude when to us
 
 ## Agents: .claude/agents/
 
-An agent (subagent) is a separate Claude with its own instructions and tool list. The main session hands it a job and gets back a short report, which keeps long log reading out of the main conversation. All four agents here are read-only: their tool lists have no Write or Edit, and `agent-guard.sh` blocks shell commands that change anything. The other hooks and the deny rules apply to them too. Each agent names its model in its frontmatter: the Terraform reviewer runs on the strongest model, the other three on a faster one.
+An agent (subagent) is a separate Claude with its own instructions and tool list. The main session hands it a job and gets back a short report, which keeps long log reading out of the main conversation. All four agents here are read-only: their tool lists have no Write or Edit, and `agent-guard.sh` blocks shell commands that change anything. The other hooks and the deny rules apply to them too. The agent files name no model, so they run on the session's model. `AGENTS.md` lists the same four roles for any agent tool, with a suggested model tier (deep reasoning, balanced or fast) instead of a vendor's model name.
 
 | Agent | Job |
 | --- | --- |
@@ -103,9 +103,18 @@ Claude Code can work in a git worktree, so several sessions do not share one che
 - **Hooks follow the command.** `branch-guard.sh` and `session-context.sh` look at the directory the command runs in, not the project directory, which in a desktop-app worktree session is the main checkout.
 - **Settings come from the main checkout.** In a desktop-app worktree session Claude Code reads `.claude/settings.json` and runs the hooks from the main checkout, so a change to a hook or a permission takes effect only after it is merged and the main checkout is pulled.
 
-## Sandbox: not enabled yet
+## Other agent tools
 
-The Claude Code Bash sandbox (Seatbelt on macOS) would close the gap named above: with it, the `Read` deny rules also apply to every shell command, so a script cannot read the global kubeconfig or the Terraform state. It is not turned on, because it has not been proven here. `tests/sandbox/settings.json` holds the proposed block (strict mode, with the `task`, `terraform`, `docker`, `k3d`, `ollama`, `temporal` and `gh` entry points excluded, since they need Docker, the cluster and the denied files). `tests/sandbox/run.sh` trials it in headless sessions: it needs a logged-in `claude` CLI and a running stack. One cost is known in advance: an excluded command only stays outside the sandbox when it runs on its own, so `task doctor | tail` would fail and agents must run task commands without pipes. Copy the block into `.claude/settings.json` only after the trial passes.
+This repo is also worked on with agent tools other than Claude Code. Everything in `.claude/` is an extra layer for Claude Code only, so a rule that must hold for every tool lives in a layer every tool passes through:
+
+- `AGENTS.md` carries the instructions, the review roles and the definition of done.
+- `task ci` runs in pre-commit and in GitHub Actions: lint, tests and the secret scan apply to every commit, whoever wrote it.
+- The scripts take the project kubeconfig from one place and never the global one; Terraform validates the kubeconfig path, the context and every pin.
+- `task doctor` ends with the state check, so a secret in Terraform state fails the run for any agent.
+
+## Sandbox: optional, Claude Code only
+
+The Claude Code Bash sandbox (Seatbelt on macOS) closes the gap named above for Claude Code sessions: a script cannot read the global kubeconfig, the project kubeconfig or the Terraform state. It is off in the shared settings, because it protects only one of the tools used here and changes how commands must be written (an excluded command such as `task doctor` only stays outside the sandbox when it runs on its own, without pipes or chaining). `tests/sandbox/settings.json` holds a block that was tried on this Mac on 16 Nov 2026: `tests/sandbox/run.sh` passed all six checks. To use it yourself, copy the `sandbox` block into `.claude/settings.local.json`, which is gitignored.
 
 ## MCP server: .mcp.json
 

@@ -10,11 +10,12 @@ Accepted
 
 ## Context
 
-Claude Code works directly on this repo, next to a Mac that holds real cloud credentials. Instructions in a text file depend on the model following them, so the important rules need enforcement that does not. [harness.md](../harness.md) describes each piece.
+Coding agents (Claude Code and others) work directly on this repo, next to a Mac that holds real cloud credentials. Instructions in a text file depend on the model following them, so the important rules need enforcement that does not. [harness.md](../harness.md) describes each piece.
 
 ## Decision
 
-- Each layer has one job:
+- A rule that must hold for every agent tool lives in a tool-neutral layer: `AGENTS.md`, the scripts, Terraform validations, and `task ci` in pre-commit and CI. `.claude/` adds Claude Code layers on top.
+- Each Claude Code layer has one job:
   - Rules: `AGENTS.md` is the tool-neutral source, `CLAUDE.md` imports it, and `.claude/rules/` holds conventions that load only for matching paths.
   - Permissions (`.claude/settings.json`): allow, ask and deny lists. Deny wins; anything unlisted asks.
   - Hooks: deterministic checks before or after a tool call, with tests in `tests/hooks/`. Used for rules that must hold every time.
@@ -33,5 +34,5 @@ Claude Code works directly on this repo, next to a Mac that holds real cloud cre
 
 ### Known limitations
 
-- Pattern-matching hooks do not inspect a script the agent writes and then runs. The Bash sandbox would close this; it stays off until `tests/sandbox/run.sh` passes. Until then the deny rules, the project-only kubeconfig and the review agents cover the gap.
+- Pattern-matching hooks do not inspect a script the agent writes and then runs. The Claude Code Bash sandbox closes this and passed its trial (`tests/sandbox/`), but stays optional and off in shared settings because it covers one tool only. The deny rules, the project-only kubeconfig and the review roles cover the gap.
 - In a desktop-app worktree session, settings and hooks come from the main checkout, so a harness change is live only after merge.

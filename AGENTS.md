@@ -48,6 +48,19 @@ Also `task restart`, `stop:cluster`, `stop:ollama`, `clean` (deletes the cluster
 Conventions for `terraform/` live in `.claude/rules/terraform.md`; conventions for `scripts/`, `tests/` and hooks live in `.claude/rules/scripts.md`.
 Agents that do not load those files automatically must read the matching one before editing there.
 
+## Review roles and model tiers
+
+Four read-only review roles have a written checklist. Any agent tool can play a role by following its file; Claude Code also offers them as subagents. A reviewer reports findings and never changes anything.
+
+| Role | Use it | Checklist | Suggested tier |
+| --- | --- | --- | --- |
+| Terraform reviewer | After editing anything under `terraform/`, before committing | `.claude/agents/terraform-reviewer.md` | Deep reasoning |
+| Platform verifier | Before committing, pushing or opening a pull request | `.claude/agents/platform-verifier.md` | Balanced |
+| Version and security auditor | Before or after a version bump | `.claude/agents/version-security-auditor.md` | Balanced |
+| Kubernetes troubleshooter | When a pod is not ready or a service does not answer | `.claude/agents/k8s-troubleshooter.md` | Balanced |
+
+Pick the model by tier, whatever the vendor: **deep reasoning** (the strongest model you have) for design, Terraform, security and anything touching secrets or state; **balanced** (the everyday model) for writing docs, scripts and running the checks; **fast** (the small, cheap model) for mechanical edits such as renames, comment fixes and link updates. When unsure, go one tier up rather than down.
+
 ## Workflow
 
 1. One branch and one pull request per task; never commit on main. Work may happen in a git worktree.

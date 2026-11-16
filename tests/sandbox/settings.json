@@ -14,6 +14,13 @@
       "git commit *",
       "git push *",
       "gh *"
-    ]
+    ],
+    "filesystem": {
+      "denyRead": [
+        "/**/*.tfstate",
+        "/**/*.tfstate.*",
+        "/**/.kube/**"
+      ]
+    }
   }
 }
