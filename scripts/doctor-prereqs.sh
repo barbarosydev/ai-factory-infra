@@ -58,15 +58,6 @@ check_tool() {
   fi
 }
 
-check_optional_tool() {
-  local name="$1" cmd="$2" why="$3"
-  if command -v "$cmd" >/dev/null 2>&1; then
-    check_pass "$name" "installed"
-  else
-    check_warn "$name" "not installed, $why: brew bundle --no-upgrade"
-  fi
-}
-
 check_tool docker      docker     29.0  docker version --format '{{.Client.Version}}'
 check_tool kubectl     kubectl    1.36  kubectl version --client
 check_tool helm        helm       4.0   helm version --short
@@ -77,9 +68,9 @@ check_tool jq          jq         1.7   jq --version
 check_tool yq          yq         4.40  yq --version
 check_tool pre-commit  pre-commit 4.0   pre-commit --version
 check_tool gitleaks    gitleaks   8.20  gitleaks version
-check_tool ollama      ollama     0.40  ollama --version
-check_optional_tool temporal       temporal       "used by task doctor"
-check_optional_tool terraform-docs terraform-docs "generates module docs"
+check_tool ollama         ollama         0.40  ollama --version
+check_tool temporal       temporal       1.0   temporal --version
+check_tool terraform-docs terraform-docs 0.19  terraform-docs --version
 
 # k3d is pinned exactly.
 if command -v k3d >/dev/null 2>&1; then

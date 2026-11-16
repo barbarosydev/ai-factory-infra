@@ -16,8 +16,8 @@ Check and report each item in a concise table (Component | Current Pin | Where P
      * `cnpg_cluster_chart_version` (`cluster`)
      * `postgres_version` & `postgres_image_name` (must match `POSTGRES_PROBE_IMAGE` in `scripts/lib/common.sh` and Temporal's supported PostgreSQL matrix)
      * `litellm_chart_version` (must match `LITELLM_PROBE_IMAGE` in `scripts/lib/common.sh`)
-     * Temporal chart version (from phase 5)
-   - Cluster & tools: `k3d` in `scripts/doctor-prereqs.sh`, k3s image tag+digest in `cluster/k3d-config.yaml` (must stay within 1 minor version of local `kubectl`), `PROBE_IMAGE` in `scripts/lib/common.sh`, and Terraform MCP server image tag+digest in `.mcp.json`.
+     * `temporal_chart_version` (`1.8.0`), `temporal_server_image_tag` (`1.32.2`, shared by `temporalio/server` and `temporalio/admin-tools`), and `temporal_ui_image_tag` (`2.56.1`, `temporalio/ui`)
+   - Cluster & tools: `k3d`, `temporal` CLI, and `terraform-docs` in `scripts/doctor-prereqs.sh`, k3s image tag+digest in `cluster/k3d-config.yaml` (must stay within 1 minor version of local `kubectl`), `PROBE_IMAGE` in `scripts/lib/common.sh`, and Terraform MCP server image tag+digest in `.mcp.json`.
 2. Security posture:
    - No unpinned `:latest` tags in any `.tf`, `.tftpl`, `.yaml`, `.json` or `.sh` file.
    - All `kubernetes_secret_v1` resources use `data_wo` and `data_wo_revision` (never `data` or `string_data`).

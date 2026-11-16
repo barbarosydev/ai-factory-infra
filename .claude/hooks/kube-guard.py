@@ -6,6 +6,8 @@ Blocks (exit 2, reason on stderr, which Claude reads):
     .kube/config, and any --context / --kube-context other than k3d-ai-factory.
     `task kube -- ...` is the normal path and always pins both.
   * kubectx, kubens and `kubectl config` commands that switch or edit contexts.
+  * `temporal server ...` (Temporal runs in-cluster on port 7233) or `temporal`
+    CLI calls pointing at any address other than localhost:7233 / 127.0.0.1:7233.
   * Environment overrides that could point Terraform's providers elsewhere.
   * terraform state, show, output and console, which print state values.
   * Printing Kubernetes Secret values (`get secret ... -o ...`).
@@ -44,6 +46,7 @@ SAFE_EXAMPLE = re.compile(r"\.(example|sample)(['\")]|\s|$)")
 SHELLS = {"bash", "sh", "zsh"}
 SUBSHELL = re.compile(r"\$\(([^()]*)\)|`([^`]*)`")
 OVERRIDE_VARS = {"KUBE_CONFIG_PATH", "KUBE_CONFIG_PATHS", "KUBE_CTX", "KUBE_CTX_CLUSTER", "KUBE_HOST"}
+ALLOWED_TEMPORAL_ADDRS = {"localhost:7233", "127.0.0.1:7233", "temporal-frontend:7233"}
 
 
 def block(reason: str) -> None:
@@ -139,6 +142,14 @@ def check_segment(words) -> None:
         sub = [a for a in args if not a.startswith("-")]
         if sub and sub[0] in TERRAFORM_STATE_READERS:
             block(f"`terraform {sub[0]}` prints values from state, which may hold secrets.")
+
+    if tool == "temporal":
+        sub = [a for a in args if not a.startswith("-")]
+        if sub and sub[0] == "server":
+            block("`temporal server` is blocked: Temporal runs in the k3d cluster on localhost:7233 via Terraform.")
+        t_addr = flag_value(args, "--address") or env.get("TEMPORAL_ADDRESS") or env.get("TEMPORAL_CLI_ADDRESS")
+        if t_addr and t_addr not in ALLOWED_TEMPORAL_ADDRS:
+            block(f"only local Temporal addresses ({', '.join(sorted(ALLOWED_TEMPORAL_ADDRS))}) are allowed, not {t_addr}.")
 
     # Secret values from the cluster, through kubectl or task kube.
     joined = " ".join(args)

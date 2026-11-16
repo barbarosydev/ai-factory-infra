@@ -56,8 +56,10 @@ cat <<'EOF'
     Password:            stored in Secret litellm-masterkey (key: masterkey)
   LiteLLM Swagger UI:    http://litellm.localhost:8080/
   LiteLLM OpenAI API:    http://litellm.localhost:8080/v1
-  Temporal Web UI:       http://temporal.localhost:8080  (phase 5, no auth in local sandbox)
-  Temporal gRPC:         localhost:7233                  (phase 5, no auth in local sandbox)
+  Temporal Web UI:       http://temporal.localhost:8080/namespaces/default/workflows
+    Authentication:      none (open in local sandbox)
+  Temporal Web UI API:   http://temporal.localhost:8080/api/v1/namespaces/default/workflows
+  Temporal gRPC (Mac):   localhost:7233 (no TLS / no auth in local sandbox)
   Ollama (host):         http://127.0.0.1:11434
 
 == Kubernetes Secrets (namespace: ai-platform)
@@ -83,4 +85,9 @@ cat <<'EOF'
     -H "Content-Type: application/json" \
     -d '{"model":"pm-agent","messages":[{"role":"user","content":"Hello!"}],"max_tokens":128}' \
     | jq -r '.choices[0].message.content'
+
+== Use Temporal CLI & Web UI from your Mac
+  temporal operator cluster health --address localhost:7233
+  temporal operator namespace describe --namespace default --address localhost:7233
+  temporal workflow list --address localhost:7233 --namespace default
 EOF

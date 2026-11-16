@@ -76,6 +76,11 @@ tasks:
     cmds:
       - ./tests/smoke/litellm.sh {{.CLI_ARGS}}
 
+  smoke:temporal:
+    desc: Temporal deployments, schema/namespace Jobs, gRPC health, Mac sample workflow and Web UI check
+    cmds:
+      - ./tests/smoke/temporal.sh {{.CLI_ARGS}}
+
   doctor:prereqs:
     desc: Check tools, versions, Docker resources, Ollama models, proxy and free ports
     cmds:

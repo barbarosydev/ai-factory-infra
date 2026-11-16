@@ -1,0 +1,108 @@
+fullnameOverride: "${release_name}"
+
+additionalLabels:
+  app.kubernetes.io/part-of: ai-factory
+
+server:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: temporalio/server
+    tag: "${server_image_tag}"
+    pullPolicy: IfNotPresent
+  podLabels:
+    app.kubernetes.io/part-of: ai-factory
+
+  config:
+    logLevel: "info"
+    persistence:
+      defaultStore: default
+      visibilityStore: visibility
+      numHistoryShards: 512
+      datastores:
+        default:
+          sql:
+            createDatabase: false
+            manageSchema: true
+            pluginName: postgres12
+            driverName: postgres12
+            databaseName: "${default_db_name}"
+            connectAddr: "${db_endpoint}:${db_port}"
+            connectProtocol: tcp
+            user: "${db_user}"
+            existingSecret: "${db_secret_name}"
+            secretKey: password
+            maxConns: 20
+            maxIdleConns: 20
+            maxConnLifetime: "1h"
+        visibility:
+          sql:
+            createDatabase: false
+            manageSchema: true
+            pluginName: postgres12
+            driverName: postgres12
+            databaseName: "${visibility_db_name}"
+            connectAddr: "${db_endpoint}:${db_port}"
+            connectProtocol: tcp
+            user: "${db_user}"
+            existingSecret: "${db_secret_name}"
+            secretKey: password
+            maxConns: 20
+            maxIdleConns: 20
+            maxConnLifetime: "1h"
+
+    namespaces:
+      create: true
+      useHelmHooks: false
+      namespace:
+        - name: default
+          retention: "${default_namespace_retention}"
+
+  frontend:
+    enabled: true
+    replicaCount: 1
+    service:
+      # Exposed via k3s ServiceLB so k3d's 127.0.0.1:7233:7233 host port mapping
+      # forwards Mac gRPC traffic (temporal CLI and SDK workers) to frontend.
+      type: LoadBalancer
+      port: ${grpc_port}
+
+  history:
+    enabled: true
+    replicaCount: 1
+
+  matching:
+    enabled: true
+    replicaCount: 1
+
+  worker:
+    enabled: true
+    replicaCount: 1
+
+admintools:
+  enabled: false
+  image:
+    repository: temporalio/admin-tools
+    tag: "${server_image_tag}"
+    pullPolicy: IfNotPresent
+
+web:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: temporalio/ui
+    tag: "${ui_image_tag}"
+    pullPolicy: IfNotPresent
+  podLabels:
+    app.kubernetes.io/part-of: ai-factory
+  ingress:
+    enabled: true
+    className: traefik
+    hosts:
+      - "${ingress_host}/"
+
+schema:
+  useHelmHooks: false
+  ttlSecondsAfterFinished: 86400
+  podLabels:
+    app.kubernetes.io/part-of: ai-factory

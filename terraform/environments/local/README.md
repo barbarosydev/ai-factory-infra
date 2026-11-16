@@ -32,6 +32,7 @@ task apply
 | <a name="module_litellm"></a> [litellm](#module\_litellm) | ../../modules/litellm | n/a |
 | <a name="module_model_backend"></a> [model\_backend](#module\_model\_backend) | ../../modules/model-backend | n/a |
 | <a name="module_postgres"></a> [postgres](#module\_postgres) | ../../modules/postgres | n/a |
+| <a name="module_temporal"></a> [temporal](#module\_temporal) | ../../modules/temporal | n/a |
 
 ## Resources
 
@@ -52,6 +53,9 @@ task apply
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Kubernetes namespace for the AI platform stack. | `string` | `"ai-platform"` | no |
 | <a name="input_postgres_image_name"></a> [postgres\_image\_name](#input\_postgres\_image\_name) | Optional explicit PostgreSQL container image (tag or tag@sha256:digest). Empty uses the CloudNativePG default for postgres\_version. | `string` | `""` | no |
 | <a name="input_postgres_version"></a> [postgres\_version](#input\_postgres\_version) | PostgreSQL major version supported by Temporal 1.32 and CloudNativePG. | `string` | `"16"` | no |
+| <a name="input_temporal_chart_version"></a> [temporal\_chart\_version](#input\_temporal\_chart\_version) | Pinned Temporal Helm chart version. | `string` | `"1.8.0"` | no |
+| <a name="input_temporal_server_image_tag"></a> [temporal\_server\_image\_tag](#input\_temporal\_server\_image\_tag) | Pinned container image tag for temporalio/server and temporalio/admin-tools. | `string` | `"1.32.2"` | no |
+| <a name="input_temporal_ui_image_tag"></a> [temporal\_ui\_image\_tag](#input\_temporal\_ui\_image\_tag) | Pinned container image tag for temporalio/ui. | `string` | `"2.56.1"` | no |
 
 ## Outputs
 
@@ -66,4 +70,7 @@ task apply
 | <a name="output_postgres_databases"></a> [postgres\_databases](#output\_postgres\_databases) | Provisioned PostgreSQL databases. |
 | <a name="output_postgres_rw_service"></a> [postgres\_rw\_service](#output\_postgres\_rw\_service) | Kubernetes Service name for read-write PostgreSQL connections. |
 | <a name="output_postgres_user_secrets"></a> [postgres\_user\_secrets](#output\_postgres\_user\_secrets) | Kubernetes Secret names holding the PostgreSQL user credentials. |
+| <a name="output_temporal_frontend_service"></a> [temporal\_frontend\_service](#output\_temporal\_frontend\_service) | Kubernetes Service name for the Temporal gRPC frontend. |
+| <a name="output_temporal_grpc_endpoint"></a> [temporal\_grpc\_endpoint](#output\_temporal\_grpc\_endpoint) | Host gRPC endpoint for the Temporal CLI and SDK workers on the Mac. |
+| <a name="output_temporal_web_url"></a> [temporal\_web\_url](#output\_temporal\_web\_url) | Local HTTP URL for the Temporal Web UI via Traefik. |
 <!-- END_TF_DOCS -->
