@@ -4,7 +4,7 @@ This repo ships a small setup that lets Claude Code work on it safely: rules it 
 
 | Piece | File | What it does here | Claude Code docs |
 | --- | --- | --- | --- |
-| Rules | [CLAUDE.md](../CLAUDE.md) | Architecture, commands and the hard rules, loaded into every session | [Memory](https://code.claude.com/docs/en/memory) |
+| Rules | [AGENTS.md](../AGENTS.md), imported by [CLAUDE.md](../CLAUDE.md); path-scoped rules in `.claude/rules/` | Architecture, commands, the hard rules and the definition of done, loaded into every session; Terraform and script conventions loaded when a matching file is touched | [Memory](https://code.claude.com/docs/en/memory) |
 | Permissions | [.claude/settings.json](../.claude/settings.json) | Allow, ask and deny rules for tools and commands | [Settings and permissions](https://code.claude.com/docs/en/settings) |
 | Hooks | [.claude/hooks/](../.claude/hooks/) | Scripts that run before or after a tool call | [Hooks](https://code.claude.com/docs/en/hooks) |
 | Skills | [.claude/skills/](../.claude/skills/) | Step-by-step procedures Claude loads when a task matches | [Skills](https://code.claude.com/docs/en/skills) |
@@ -31,9 +31,11 @@ flowchart TD
 
 A `SessionStart` hook runs once before all of this and tells Claude which branch is checked out.
 
-## Rules: CLAUDE.md
+## Rules: AGENTS.md, CLAUDE.md and .claude/rules/
 
-Claude reads `CLAUDE.md` at the start of every session in this repo. It holds what a new teammate needs to start: the architecture in a few lines, the `task` commands, the hard rules, the git workflow, and a pointer to the troubleshooting section of the [runbook](runbook.md) so Claude does not diagnose the same Mac quirk twice. The reasons behind the harness are in [ADR 0006](adr/0006-agent-harness.md). The rules are the ones that matter most on this Mac: use only the project kubeconfig, change things only through Terraform, never read state or Secret values.
+`AGENTS.md` is the source of truth for any coding agent, not only Claude Code. `CLAUDE.md` imports it with one line (`@AGENTS.md`) and adds only what is specific to Claude Code. Conventions that matter in one part of the repo live in `.claude/rules/`: `terraform.md` loads when Claude reads or edits a file under `terraform/`, and `scripts.md` for `scripts/`, `tests/` and `.claude/hooks/`. That keeps the always-loaded text short.
+
+Claude reads `CLAUDE.md`, and through it `AGENTS.md`, at the start of every session in this repo. It holds what a new teammate needs to start: the architecture in a few lines, the `task` commands, the hard rules, the git workflow, a definition of done, and a pointer to the troubleshooting section of the [runbook](runbook.md) so Claude does not diagnose the same Mac quirk twice. The reasons behind the harness are in [ADR 0006](adr/0006-agent-harness.md). The rules are the ones that matter most on this Mac: use only the project kubeconfig, change things only through Terraform, never read state or Secret values.
 
 Rules in a text file depend on the model following them. The permissions and hooks below enforce the important ones regardless.
 
@@ -55,11 +57,12 @@ A hook is a script Claude Code runs on every matching tool call. A `PreToolUse` 
 | --- | --- | --- |
 | `kube-guard.py` | Before every shell command | Blocks kubectl, helm or k9s unless they use this repo's `.kube/config`, and any context other than `k3d-ai-factory`. Blocks kubectx, kubens and `kubectl config` edits, provider overrides like `KUBE_CONFIG_PATH`, `terraform state/show/output/console`, `temporal server` or `temporal` CLI pointing outside `localhost:7233`, `get secret -o ...`, and reading state, tfvars, `.env` or a kubeconfig with `cat`, `grep` and similar tools |
 | `branch-guard.sh` | Before every shell command | Blocks `git commit` while main is checked out and `git push` to main; the reason is in [ADR 0006](adr/0006-agent-harness.md) |
+| `agent-guard.sh` | Before every shell command | Only for calls from the four review agents: blocks commands that change the cluster, Terraform, git, GitHub or files. Claude Code cannot narrow Bash to single commands in an agent's tool list, so this hook keeps those agents read-only |
 | `secret-guard.sh` | Before every file write or edit | Pipes the new content through `gitleaks stdin` and blocks the write if it looks like a key, token or password |
 | `terraform-fmt.sh` | After every file write or edit | Runs `terraform fmt` on an edited `.tf` or `.tfvars` file and refreshes `terraform-docs` in its `README.md` |
-| `session-context.sh` | When a session starts | Prints the branch, the number of uncommitted files and whether the project kubeconfig exists. For `SessionStart`, what a hook prints becomes part of Claude's context |
+| `session-context.sh` | When a session starts | Prints the branch and the number of uncommitted files of the directory the session runs in (a git worktree has its own branch), says when that directory is a worktree sharing the main checkout's stack, and whether the project kubeconfig exists. For `SessionStart`, what a hook prints becomes part of Claude's context |
 
-The kube guard parses each part of a command line separately, so `echo hi && kubectl get ns` is still caught, and it also checks commands nested in `bash -c "..."`, `eval`, `$(...)` and backticks. No pattern matcher catches everything (a script file Claude writes and then runs is not inspected), which is why the deny rules and the project-only kubeconfig sit behind it. `task kube -- <args>` is the normal way in: `scripts/kube.sh` always passes the project kubeconfig and context.
+The kube guard parses each part of a command line separately, so `echo hi && kubectl get ns` is still caught, and it also checks commands nested in `bash -c "..."`, `eval`, `$(...)` and backticks. No pattern matcher catches everything (a script file Claude writes and then runs is not inspected; see "Sandbox" below), which is why the deny rules and the project-only kubeconfig sit behind it. `task kube -- <args>` is the normal way in: `scripts/kube.sh` always passes the project kubeconfig and context.
 
 Try one yourself. A hook reads the tool call as JSON on stdin, exactly as Claude Code sends it:
 
@@ -83,7 +86,7 @@ A skill is a folder with a `SKILL.md`. Its `description` tells Claude when to us
 
 ## Agents: .claude/agents/
 
-An agent (subagent) is a separate Claude with its own instructions and tool list. The main session hands it a job and gets back a short report, which keeps long log reading out of the main conversation. All four agents here are read-only by instruction, and the hooks and deny rules apply to them too.
+An agent (subagent) is a separate Claude with its own instructions and tool list. The main session hands it a job and gets back a short report, which keeps long log reading out of the main conversation. All four agents here are read-only: their tool lists have no Write or Edit, and `agent-guard.sh` blocks shell commands that change anything. The other hooks and the deny rules apply to them too. Each agent names its model in its frontmatter: the Terraform reviewer runs on the strongest model, the other three on a faster one.
 
 | Agent | Job |
 | --- | --- |
@@ -91,6 +94,18 @@ An agent (subagent) is a separate Claude with its own instructions and tool list
 | `k8s-troubleshooter` | Diagnoses a failing pod with `task kube -- get/describe/logs` and read-only Temporal CLI checks |
 | `version-security-auditor` | Audits pinned versions across Terraform, Helm charts, images and scripts against upstream stable releases, and checks secret/lockfile security posture |
 | `platform-verifier` | Runs the pre-PR verification gates (`git status`, `task ci`, `task plan`, `task doctor -- --json`, doc sync) and returns a compact PR Readiness Scorecard |
+
+## Worktrees
+
+Claude Code can work in a git worktree, so several sessions do not share one checkout. Three things make that safe here:
+
+- **One stack.** There is one cluster, so there is one kubeconfig and one Terraform state. They live in the main checkout (`STACK_HOME` in `scripts/lib/common.sh`). A session in a worktree runs its own branch's scripts and Terraform against that stack, so `task plan` and `task doctor` work from anywhere. Only one session should run `task up` or `task apply` at a time.
+- **Hooks follow the command.** `branch-guard.sh` and `session-context.sh` look at the directory the command runs in, not the project directory, which in a desktop-app worktree session is the main checkout.
+- **Settings come from the main checkout.** In a desktop-app worktree session Claude Code reads `.claude/settings.json` and runs the hooks from the main checkout, so a change to a hook or a permission takes effect only after it is merged and the main checkout is pulled.
+
+## Sandbox: not enabled yet
+
+The Claude Code Bash sandbox (Seatbelt on macOS) would close the gap named above: with it, the `Read` deny rules also apply to every shell command, so a script cannot read the global kubeconfig or the Terraform state. It is not turned on, because it has not been proven here. `tests/sandbox/settings.json` holds the proposed block (strict mode, with the `task`, `terraform`, `docker`, `k3d`, `ollama`, `temporal` and `gh` entry points excluded, since they need Docker, the cluster and the denied files). `tests/sandbox/run.sh` trials it in headless sessions: it needs a logged-in `claude` CLI and a running stack. One cost is known in advance: an excluded command only stays outside the sandbox when it runs on its own, so `task doctor | tail` would fail and agents must run task commands without pipes. Copy the block into `.claude/settings.json` only after the trial passes.
 
 ## MCP server: .mcp.json
 

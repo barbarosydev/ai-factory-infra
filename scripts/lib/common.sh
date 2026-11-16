@@ -16,10 +16,19 @@ USER_KUBECONFIG="${USER_KUBECONFIG:-${KUBECONFIG:-$HOME/.kube/config}}"
 export USER_KUBECONFIG
 CLUSTER_NAME="ai-factory"
 KUBE_CONTEXT="k3d-${CLUSTER_NAME}"
-KUBECONFIG="$REPO_ROOT/.kube/config"
+# One live stack serves every git worktree of this repo. STACK_HOME is the checkout
+# that holds the project kubeconfig and the Terraform state: the main worktree,
+# unless STACK_HOME is set. Code (scripts, Terraform, k3d config) always comes
+# from REPO_ROOT, so a worktree verifies its own branch against the one cluster.
+if [[ -z "${STACK_HOME:-}" ]]; then
+  STACK_HOME="$(git -C "$REPO_ROOT" worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')"
+  [[ -n "$STACK_HOME" && -d "$STACK_HOME/terraform/environments/local" ]] || STACK_HOME="$REPO_ROOT"
+fi
+TF_STATE_FILE="$STACK_HOME/terraform/environments/local/terraform.tfstate"
+KUBECONFIG="$STACK_HOME/.kube/config"
 K3D_CONFIG="$REPO_ROOT/cluster/k3d-config.yaml"
 OLLAMA_URL="${OLLAMA_URL:-http://127.0.0.1:11434}"
-export CLUSTER_NAME KUBE_CONTEXT KUBECONFIG K3D_CONFIG OLLAMA_URL
+export STACK_HOME TF_STATE_FILE CLUSTER_NAME KUBE_CONTEXT KUBECONFIG K3D_CONFIG OLLAMA_URL
 
 JSON_OUTPUT="${JSON_OUTPUT:-0}"
 CHECKS_PASSED=0

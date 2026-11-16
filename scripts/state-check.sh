@@ -3,7 +3,7 @@
 # on failure, resource addresses and attribute names; never a value.
 #
 # Usage: scripts/state-check.sh [--json] [STATE_FILE]      (task state:check)
-#   STATE_FILE defaults to $STATE_FILE, then terraform/environments/local/terraform.tfstate
+#   STATE_FILE defaults to $STATE_FILE, then the stack home's state (scripts/lib/common.sh)
 # Rules (a finding each):
 #   1. a kubernetes_secret_v1 with a non-empty data, data_wo, binary_data or string_data
 #   2. any managed (non-ephemeral) random_password resource
@@ -17,7 +17,7 @@ set -euo pipefail
 source "$(dirname "$0")/lib/common.sh"
 require_cmd jq
 
-state_file="${STATE_FILE:-$REPO_ROOT/terraform/environments/local/terraform.tfstate}"
+state_file="${STATE_FILE:-$TF_STATE_FILE}"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --json)

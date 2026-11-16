@@ -21,7 +21,7 @@ else
 fi
 
 rm -f "$KUBECONFIG"
-state_dir="$REPO_ROOT/terraform/environments/local"
+state_dir="$(dirname "$TF_STATE_FILE")"
 rm -f "$state_dir"/terraform.tfstate "$state_dir"/terraform.tfstate.backup "$state_dir"/.terraform.tfstate.lock.info
 info "removed the project kubeconfig and local Terraform state"
 

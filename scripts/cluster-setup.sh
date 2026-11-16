@@ -29,9 +29,10 @@ case "$state" in
 esac
 
 # Project kubeconfig: only the k3d-ai-factory context, readable by you alone.
-mkdir -p "$REPO_ROOT/.kube"
-chmod 700 "$REPO_ROOT/.kube"
-tmp="$(mktemp "$REPO_ROOT/.kube/config.XXXXXX")"
+kube_dir="$(dirname "$KUBECONFIG")"
+mkdir -p "$kube_dir"
+chmod 700 "$kube_dir"
+tmp="$(mktemp "$kube_dir/config.XXXXXX")"
 trap 'rm -f "$tmp"' EXIT
 k3d kubeconfig get "$CLUSTER_NAME" >"$tmp"
 chmod 600 "$tmp"

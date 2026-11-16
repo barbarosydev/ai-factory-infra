@@ -100,6 +100,82 @@ expect_cwd 2 "$tmp" "$tmp/wt-feature" 'git push origin main'
 expect_cwd 2 "$tmp/wt-feature" "$tmp" 'git commit -m "change"'
 expect_cwd 2 "$tmp" "$tmp/does-not-exist" 'git commit -m "change"'
 
+# --- agent-guard.sh: the read-only agents cannot change anything ---------------
+# expect_agent EXIT_CODE AGENT_TYPE COMMAND   (AGENT_TYPE "" = main conversation)
+a="agent-guard.sh"
+expect_agent() {
+  local want="$1" agent="$2" cmd="$3" got=0
+  jq -cn --arg c "$cmd" --arg a "$agent" '{tool_input: {command: $c}} + (if $a == "" then {} else {agent_type: $a} end)' \
+    | CLAUDE_PROJECT_DIR="$REPO_ROOT" "$HOOKS/$a" >/dev/null 2>&1 || got=$?
+  if [[ "$got" == "$want" ]]; then
+    printf '%sPASS%s  %-16s %s: %s\n' "$C_GREEN" "$C_RESET" "$a" "${agent:-main}" "$cmd"
+  else
+    printf '%sFAIL%s  %-16s %s: %s (exit %s, want %s)\n' "$C_RED" "$C_RESET" "$a" "${agent:-main}" "$cmd" "$got" "$want"
+    failed=1
+  fi
+}
+expect_agent 0 "" 'task apply'
+expect_agent 0 general-purpose 'git commit -m "change"'
+expect_agent 0 platform-verifier 'task ci'
+expect_agent 0 platform-verifier 'task plan'
+expect_agent 0 platform-verifier 'task doctor -- --json'
+expect_agent 0 platform-verifier 'git status -sb && git diff --stat'
+expect_agent 0 k8s-troubleshooter 'task kube -- get pods -A'
+expect_agent 0 k8s-troubleshooter 'task kube -- logs deploy/litellm -n ai-platform --tail=50'
+expect_agent 0 terraform-reviewer 'terraform -chdir=terraform/environments/local validate'
+expect_agent 0 version-security-auditor 'docker buildx imagetools inspect busybox:1.37.0'
+expect_agent 2 platform-verifier 'task apply'
+expect_agent 2 platform-verifier 'task up'
+expect_agent 2 platform-verifier 'task clean:all -- --keep-models'
+expect_agent 2 platform-verifier 'git commit -m "change"'
+expect_agent 2 platform-verifier 'git status && git push'
+expect_agent 2 platform-verifier 'gh pr merge 12 --merge'
+expect_agent 2 k8s-troubleshooter 'task kube -- delete pod litellm-0 -n ai-platform'
+expect_agent 2 k8s-troubleshooter 'task kube -- -n ai-platform rollout restart deploy/litellm'
+expect_agent 2 k8s-troubleshooter 'task kube -- exec -n ai-platform litellm-0 -- env'
+expect_agent 2 terraform-reviewer 'terraform -chdir=terraform/environments/local apply -auto-approve'
+expect_agent 2 terraform-reviewer 'sed -i "" s/a/b/ terraform/environments/local/main.tf'
+expect_agent 2 version-security-auditor 'rm -rf terraform/environments/local/.terraform'
+expect_agent 2 version-security-auditor 'ollama pull gemma4:27b'
+
+# --- session-context.sh and common.sh in a git worktree -------------------------
+# The session hook reports the worktree's own branch, and the scripts resolve one
+# stack home (the main worktree) for the kubeconfig and Terraform state.
+wt_check() {
+  local name="$1" got="$2" want="$3"
+  if [[ "$got" == "$want" ]]; then
+    printf '%sPASS%s  %-16s %s\n' "$C_GREEN" "$C_RESET" worktree "$name"
+  else
+    printf '%sFAIL%s  %-16s %s (got %s, want %s)\n' "$C_RED" "$C_RESET" worktree "$name" "$got" "$want"
+    failed=1
+  fi
+}
+repo="$tmp/stack"
+mkdir -p "$repo/scripts/lib" "$repo/terraform/environments/local"
+cp "$REPO_ROOT/scripts/lib/common.sh" "$repo/scripts/lib/common.sh"
+: >"$repo/terraform/environments/local/.keep"
+git -C "$repo" init -q -b main
+git -C "$repo" add -A
+git -C "$repo" -c user.name=t -c user.email=t@example.invalid commit -q -m init
+git -C "$repo" worktree add -q "$repo-wt" -b feature
+repo="$(cd "$repo" && pwd -P)"
+wt="$(cd "$repo-wt" && pwd -P)"
+ctx="$(jq -cn --arg d "$wt" '{cwd: $d}' | CLAUDE_PROJECT_DIR="$repo" "$HOOKS/session-context.sh")"
+wt_check "session-context reports the worktree branch" "$(grep -c 'branch feature' <<<"$ctx")" 1
+wt_check "session-context names the stack home" "$(grep -c "live stack owned by $repo" <<<"$ctx")" 1
+wt_check "session-context in the main checkout" \
+  "$(jq -cn --arg d "$repo" '{cwd: $d}' | CLAUDE_PROJECT_DIR="$repo" "$HOOKS/session-context.sh" | grep -c 'git worktree')" 0
+# shellcheck disable=SC2016  # expanded by the inner shell
+wt_check "worktree scripts use the main checkout's stack" \
+  "$(env -u STACK_HOME bash -c 'source "$1/scripts/lib/common.sh"; echo "$STACK_HOME|$KUBECONFIG|$TF_STATE_FILE"' _ "$wt")" \
+  "$repo|$repo/.kube/config|$repo/terraform/environments/local/terraform.tfstate"
+# shellcheck disable=SC2016
+wt_check "main checkout is its own stack home" \
+  "$(env -u STACK_HOME bash -c 'source "$1/scripts/lib/common.sh"; echo "$STACK_HOME"' _ "$repo")" "$repo"
+# shellcheck disable=SC2016
+wt_check "STACK_HOME can be set explicitly" \
+  "$(STACK_HOME=/somewhere/else bash -c 'source "$1/scripts/lib/common.sh"; echo "$KUBECONFIG"' _ "$wt")" "/somewhere/else/.kube/config"
+
 # --- secret-guard.sh: no key or token written into a file -----------------------
 # The fake token is assembled at run time so this file itself passes gitleaks.
 if command -v gitleaks >/dev/null 2>&1; then
