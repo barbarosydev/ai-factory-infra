@@ -15,9 +15,10 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 
 | Command | Use |
 | --- | --- |
-| `task up` | Start Ollama, check prerequisites, create or resume the cluster |
+| `task up` | Start Ollama, check prerequisites, create or resume the cluster, apply Terraform, and run `task doctor` |
 | `task down` | Stop the cluster and unload Ollama models; data is kept |
-| `task status` | Cluster, pods, loaded models and URLs |
+| `task doctor` | Full health check across prerequisites, cluster, Postgres, Ollama, LiteLLM, Temporal and Web UIs (`-- --json` for JSON, `-- --only <suites>` for a subset) |
+| `task status` | Cluster, pods, container/pod memory use, loaded models and URLs |
 | `task access` | UIs, secret names, API curl examples, and `-- --copy <target>` to clipboard |
 | `task plan` / `task apply` | Terraform plan or apply for `terraform/environments/local` |
 | `task smoke:cluster` | Cluster smoke test; `-- --lifecycle` also runs down and up |
@@ -25,17 +26,17 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 | `task smoke:litellm` | LiteLLM gateway, Admin UI, model completions and virtual key scope check |
 | `task smoke:temporal` | Temporal deployments, schema/namespace Jobs, gRPC health, Mac sample workflow and Web UI check |
 | `task doctor:prereqs` | Check the Mac before anything else |
-| `task lint` | fmt, validate, tflint, shellcheck, JSON and YAML |
+| `task lint` | fmt, validate, tflint, terraform-docs, shellcheck, JSON and YAML |
 | `task ci` | lint, hook tests and gitleaks; must pass before every commit |
 | `task kube -- <kubectl args>` | kubectl against the project cluster only |
 
-Also `task restart`, `stop:cluster`, `stop:ollama` and `clean` (deletes the cluster and its data). Later phases add `task doctor`, `plan`, `apply` and `clean:all`.
+Also `task restart`, `stop:cluster`, `stop:ollama`, `clean` (deletes the cluster and its data), and `clean:all` (also removes Terraform caches and, if confirmed, Ollama models).
 
 ## Hard rules
 
 1. Every cluster command uses the project kubeconfig `.kube/config`, which holds only the `k3d-ai-factory` context. The global kubeconfig holds real AKS contexts: never use it, never switch contexts, never run kubectx or kubens. Use `task kube -- ...`.
 2. All changes go through Terraform. No `kubectl apply`, `kubectl edit` or `helm install` by hand.
-3. Use task commands to start, stop and verify. Run `task doctor` after every change (`task doctor:prereqs` until phase 6 lands the full doctor).
+3. Use task commands to start, stop and verify. Run `task doctor` after every change.
 4. Never read or print Terraform state, tfvars, `.env`, the kubeconfig, or Kubernetes Secret values. Refer to secrets by name.
 5. No secret in any file. Passwords are generated in the cluster or passed as write-only values. See `docs/secrets.md`.
 6. Pin every version exactly (tools, charts, images, providers). Bump with the upgrade-version skill.
@@ -74,4 +75,4 @@ Diagrams in docs are Mermaid (```mermaid blocks), so GitHub renders them. No ASC
 
 ## Harness
 
-Hooks in `.claude/hooks/` block cluster commands that bypass the project kubeconfig, block commits and pushes on main, block secrets in written files, format Terraform after each edit, and report the branch when a session starts. `tests/hooks/run.sh` tests them; change a hook only together with its tests. Skills: debug-stack, add-model-route, upgrade-version. Agents: terraform-reviewer, k8s-troubleshooter, version-security-auditor. `docs/harness.md` explains each piece.
+Hooks in `.claude/hooks/` block cluster commands that bypass the project kubeconfig, block commits and pushes on main, block secrets in written files, format Terraform and sync `terraform-docs` after each edit, and report the branch when a session starts. `tests/hooks/run.sh` tests them alongside the Python helpers (`scripts/lib/temporal_grpc.py` and `scripts/lib/validate_tftpl.py`); change a hook only together with its tests. Skills: `debug-stack`, `add-model-route`, `upgrade-version`, `rotate-secrets`, `ship-pr`. Agents: `terraform-reviewer`, `k8s-troubleshooter`, `version-security-auditor`, `platform-verifier`. `docs/harness.md` explains each piece.

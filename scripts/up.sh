@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# Bring the stack up: Ollama, the prerequisites check, the cluster, then Terraform.
+# Bring the stack up: Ollama, the prerequisites check, the cluster, Terraform, and the doctor.
 # Usage: scripts/up.sh      (task up)
 # Safe to repeat: a running stack is left as it is.
-# Phase 6 adds the full doctor.
 set -euo pipefail
 
 # shellcheck source=scripts/lib/common.sh
@@ -21,4 +20,9 @@ grep -E '^(WARN|FAIL)' <<<"$report" >&2 || true
 "$REPO_ROOT/scripts/cluster-setup.sh"
 "$REPO_ROOT/scripts/terraform.sh" apply
 
-info "up: cluster $CLUSTER_NAME, Ollama and Terraform are up (task status)"
+if [[ "${UP_SKIP_DOCTOR:-0}" != "1" ]]; then
+  info "running platform doctor"
+  "$REPO_ROOT/scripts/doctor.sh"
+fi
+
+info "up: cluster $CLUSTER_NAME, Ollama and Terraform are up and healthy (task status)"

@@ -17,17 +17,16 @@ task doctor:prereqs
 pre-commit install
 ```
 
-3. Start the cluster, check it, and stop it again (data is kept):
+3. Start the stack (runs `task doctor` automatically at the end), check status/access, and stop it again when done (data is kept):
 
 ```bash
 task up
 ```
 
 ```bash
-task smoke:cluster
-task smoke:postgres
-task smoke:litellm
-task smoke:temporal
+task doctor
+task status
+task access
 ```
 
 ```bash

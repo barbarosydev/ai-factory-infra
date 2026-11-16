@@ -1,6 +1,5 @@
 # Thin task runner: every task calls one script in scripts/, where the logic lives.
 # `task --list` prints every task with its description.
-# Later phases add doctor, plan, apply and clean:all.
 version: "3"
 
 tasks:
@@ -60,6 +59,17 @@ tasks:
     prompt: This deletes the ai-factory cluster and all its data. Continue?
     cmds:
       - ./scripts/cluster-clean.sh
+
+  clean:all:
+    desc: Delete the cluster, Terraform state and caches, and optionally remove the Ollama models
+    prompt: This deletes the ai-factory cluster, Terraform state and caches. Continue?
+    cmds:
+      - ./scripts/clean-all.sh {{.CLI_ARGS}}
+
+  doctor:
+    desc: Full health check across prerequisites, cluster, Postgres, Ollama, LiteLLM, Temporal and Web UIs
+    cmds:
+      - ./scripts/doctor.sh {{.CLI_ARGS}}
 
   smoke:cluster:
     desc: "Cluster smoke test; task smoke:cluster -- --lifecycle also runs down and up"

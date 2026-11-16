@@ -75,19 +75,22 @@ A skill is a folder with a `SKILL.md`. Its `description` tells Claude when to us
 
 | Skill | Use it when |
 | --- | --- |
-| `debug-stack` | `task doctor` or `task up` fails: read the failing pod's events and logs, name the cause, propose a fix |
+| `debug-stack` | `task doctor` or `task up` fails: read the failing pod's events and logs, name the cause, propose a fix (`task doctor -- --only <suite>` isolates one subsystem) |
 | `add-model-route` | Changing which Ollama model an agent name uses, or adding an agent |
 | `upgrade-version` | Bumping any pinned version: find the newest stable release, check compatibility, bump every pin, run the doctor |
+| `rotate-secrets` | Rotating PostgreSQL role passwords (`password_version`) or LiteLLM master/virtual keys (`secret_version`) via write-only `data_wo_revision` without exposing plaintext |
+| `ship-pr` | Verifying branch hygiene, `task ci`, zero-diff `task plan`, and `task doctor` before committing and opening a pull request |
 
 ## Agents: .claude/agents/
 
-An agent (subagent) is a separate Claude with its own instructions and tool list. The main session hands it a job and gets back a short report, which keeps long log reading out of the main conversation. Both agents here are read-only by instruction, and the hooks and deny rules apply to them too.
+An agent (subagent) is a separate Claude with its own instructions and tool list. The main session hands it a job and gets back a short report, which keeps long log reading out of the main conversation. All four agents here are read-only by instruction, and the hooks and deny rules apply to them too.
 
 | Agent | Job |
 | --- | --- |
 | `terraform-reviewer` | Reviews a Terraform change against the module conventions, pinned versions, provider 3.x syntax and the secret rules |
-| `k8s-troubleshooter` | Diagnoses a failing pod with `task kube -- get/describe/logs` only |
+| `k8s-troubleshooter` | Diagnoses a failing pod with `task kube -- get/describe/logs` and read-only Temporal CLI checks |
 | `version-security-auditor` | Audits pinned versions across Terraform, Helm charts, images and scripts against upstream stable releases, and checks secret/lockfile security posture |
+| `platform-verifier` | Runs the pre-PR verification gates (`git status`, `task ci`, `task plan`, `task doctor -- --json`, doc sync) and returns a compact PR Readiness Scorecard |
 
 ## MCP server: .mcp.json
 

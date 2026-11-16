@@ -7,7 +7,7 @@ description: Diagnose a failing ai-factory stack. Use when task doctor or task u
 
 Work from evidence, read-only, until you can name the cause. Propose the fix; do not apply it without asking.
 
-1. Run `task doctor -- --json` (before phase 6: `task doctor:prereqs -- --json`). Take the first FAIL; later failures are often caused by it.
+1. Run `task doctor -- --json` (or `task doctor -- --json --only <prereqs|cluster|postgres|litellm|temporal>` to isolate one subsystem in seconds). Take the first FAIL; later failures are often caused by it.
 2. Find the component's pods: `task kube -- get pods -n ai-platform -o wide`.
 3. For a pod that is not ready, read in this order and stop when the cause is clear:
    - `task kube -- describe pod <pod> -n ai-platform` (events at the bottom: image pull, scheduling, probes)
