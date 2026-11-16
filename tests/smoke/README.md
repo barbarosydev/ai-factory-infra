@@ -9,4 +9,4 @@ Each script prints one `PASS`, `WARN` or `FAIL` line per check (or JSON with `--
 | `litellm.sh` | `task smoke:litellm` | `ollama` ExternalName Service, `litellm` Deployment Ready, Admin UI on `http://litellm.localhost:8080/ui`, real chat completions for `pm-agent`, `dev-agent` and `sec-agent` using each agent's virtual key, and cross-agent virtual key rejection |
 | `temporal.sh` | `task smoke:temporal` | Temporal `frontend`, `history`, `matching`, `worker` and `web` Deployments Ready, schema and namespace Jobs Complete, `localhost:7233` gRPC `SERVING`, `default` namespace registered, a sample workflow started and completed from the Mac, and Web UI (`http://temporal.localhost:8080`) listing the completed workflow |
 
-Phase 6 folds all of them into `task doctor`.
+`task doctor` (`scripts/doctor.sh`) runs `doctor:prereqs` and all four smoke suites above in order.

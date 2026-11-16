@@ -1,24 +1,23 @@
 # Runbook
 
-> Phases 3 to 6 add Terraform, the doctor and the rest of the commands as they land.
-
 | Situation | Command |
 | --- | --- |
 | Check the Mac | `task doctor:prereqs` |
 | Lint and secret scan | `task ci` |
-| Start everything | `task up` |
+| Start everything (and run doctor) | `task up` |
+| Full platform health check | `task doctor` (`task doctor -- --json` for JSON output) |
 | Stop, keep data | `task down` |
 | Stop and start again | `task restart` |
 | Stop only one part | `task stop:cluster` or `task stop:ollama` |
-| See what runs | `task status` |
+| See what runs & memory use | `task status` |
 | UIs, secret names and API commands | `task access` (`task access -- --copy master` copies Admin UI password) |
 | Check the cluster | `task smoke:cluster` (add `-- --lifecycle` to also test down and up) |
 | Check PostgreSQL | `task smoke:postgres` |
 | Check LiteLLM & models | `task smoke:litellm` |
 | Check Temporal & sample workflow | `task smoke:temporal` |
 | Look at the cluster | `task kube -- get pods -A` |
-| Health check | `task doctor` (phase 6) |
 | Start from scratch | `task clean` then `task up` |
+| Deep clean (cluster + caches + optional models) | `task clean:all` |
 
 ## Cluster lifecycle
 

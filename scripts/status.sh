@@ -18,13 +18,25 @@ else
     kc get nodes -o wide
     printf '\n== Pods\n'
     kc get pods -A
+    printf '\n== Resource Use (Docker & Pods)\n'
+    cids=()
+    while IFS= read -r cid; do
+      [[ -n "$cid" ]] && cids+=("$cid")
+    done < <(docker ps -q --filter "label=k3d.cluster=$CLUSTER_NAME" 2>/dev/null || true)
+    if (( ${#cids[@]} > 0 )); then
+      docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}' "${cids[@]}" 2>/dev/null || true
+    fi
+    if kc top pods -n ai-platform >/dev/null 2>&1; then
+      printf '\n'
+      kc top pods -n ai-platform
+    fi
   fi
 fi
 
 printf '\n== Ollama\n'
 if ollama_answering; then
   curl -fsS --noproxy '*' --max-time 5 "$OLLAMA_URL/api/ps" \
-    | jq -r '"loaded models: " + (if (.models | length) == 0 then "none" else ([.models[].name] | join(", ")) end)'
+    | jq -r '"loaded models: " + (if (.models | length) == 0 then "none" else ([.models[] | "\(.name) (\((.size / 1073741824 * 10 | round) / 10) GiB)"] | join(", ")) end)'
 else
   echo "not running"
 fi

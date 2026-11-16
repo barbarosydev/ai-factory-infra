@@ -34,7 +34,7 @@ if (( lifecycle )); then
   else
     check_fail "down" "cluster did not stop: task down"
   fi
-  if "$REPO_ROOT/scripts/up.sh" >&2; then
+  if UP_SKIP_DOCTOR=1 "$REPO_ROOT/scripts/up.sh" >&2; then
     uid_after="$(node_uid || true)"
     if [[ "$uid_after" == "$uid_before" ]]; then
       check_pass "up resumes" "same node ${uid_after:0:8}, same cluster"
