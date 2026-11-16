@@ -22,6 +22,8 @@ brew "shellcheck"
 # Checks before commit
 brew "pre-commit"
 brew "gitleaks"
+brew "ruff"            # lints and format-checks the Python helpers
+brew "conftest"        # runs the Rego policies in policy/
 
 # Day-to-day helpers
 brew "temporal"        # Temporal CLI, used by task doctor

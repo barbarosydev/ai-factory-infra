@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Lint everything: Terraform format, validate and tflint; shellcheck; Python, JSON and YAML syntax.
+# Lint everything: Terraform format, validate and tflint; shellcheck; ruff; JSON and YAML syntax;
+# the Conftest policies in policy/; links and paths in the docs.
 # Usage: scripts/lint.sh
-# Exit code: 0 when every linter passes, 1 otherwise. Never changes a file.
+# Exit code: 0 when every linter passes, 1 otherwise. Never changes a tracked file.
 set -euo pipefail
 
 # shellcheck source=scripts/lib/common.sh
@@ -68,6 +69,16 @@ else
   fi
 
   run "terraform helm templates (.yaml.tftpl)" "$REPO_ROOT/scripts/lib/validate_tftpl.py"
+
+  # Module tests: mock providers, plan only; no cluster, Docker or state.
+  # init writes a lock file into the module; remove it, because lock files belong to
+  # environments only and terraform-docs would print its versions into the README.
+  for mod_dir in terraform/modules/*/; do
+    [[ -d "${mod_dir}tests" ]] || continue
+    run "terraform test ${mod_dir%/}" bash -c \
+      "terraform -chdir='$mod_dir' init -backend=false -input=false >/dev/null && terraform -chdir='$mod_dir' test -no-color >/dev/null"
+    rm -f "${mod_dir}.terraform.lock.hcl"
+  done
 fi
 
 # --- Shell -----------------------------------------------------------------
@@ -82,11 +93,16 @@ if [[ -n "$shell_files" ]]; then
   run "shellcheck ($(wc -l <<<"$shell_files" | tr -d ' ') files)" shellcheck -x $shell_files
 fi
 
-# --- Python (hooks) ------------------------------------------------------
+# --- Python ------------------------------------------------------------------
 
-while IFS= read -r f; do
-  [[ -n "$f" ]] && run "python $f" python3 -c 'import ast, sys; ast.parse(open(sys.argv[1]).read(), sys.argv[1])' "$f"
-done <<<"$(tracked '*.py')"
+require_cmd ruff
+py_files="$(tracked '*.py')"
+if [[ -n "$py_files" ]]; then
+  # shellcheck disable=SC2086  # one file per line, no spaces in our paths
+  run "ruff check ($(wc -l <<<"$py_files" | tr -d ' ') files)" ruff check --quiet $py_files
+  # shellcheck disable=SC2086
+  run "ruff format --check" ruff format --check --quiet $py_files
+fi
 
 # --- JSON and YAML syntax --------------------------------------------------
 
@@ -99,5 +115,34 @@ done <<<"$(tracked '*.json')"
 while IFS= read -r f; do
   [[ -n "$f" ]] && run "yaml $f" yaml_ok "$f"
 done <<<"$(tracked '*.yml' '*.yaml')"
+
+# --- Policies (policy/README.md) -------------------------------------------
+# Conftest turns the hard rules into checks. Each namespace runs only against
+# its own files; the .tf globs never match state or the module test folders.
+
+require_cmd conftest
+# ct ARGS...: quiet when the policy passes, shows the failures when it does not.
+# shellcheck disable=SC2317,SC2329  # called through run
+ct() {
+  local out
+  out="$(conftest test --no-color --policy policy "$@" 2>&1)" || {
+    echo "$out" >&2
+    return 1
+  }
+}
+run "conftest verify (policy unit tests)" conftest verify --no-color --policy policy
+# shellcheck disable=SC2046  # file lists are split on purpose
+run "policy: write-only secrets, helm release contract" ct --namespace terraform.secrets --namespace terraform.helm \
+  $(tracked 'terraform/modules/*/*.tf' 'terraform/environments/*/*.tf' | grep -v '/tests/')
+run "policy: providers use the project kubeconfig" ct --namespace terraform.providers terraform/environments/local/providers.tf
+run "policy: images pinned by digest" ct --namespace images terraform/environments/local/variables.tf cluster/k3d-config.yaml .mcp.json
+run "policy: k3d binds to loopback only" ct --namespace k3d cluster/k3d-config.yaml
+# shellcheck disable=SC2046
+run "policy: workflows have a read-only token" ct --namespace github $(tracked '.github/workflows/*.yml')
+run "policy: Claude Code deny rules and guard hooks" ct --namespace claude .claude/settings.json
+
+# --- Docs ------------------------------------------------------------------
+
+run "doc links and paths" "$REPO_ROOT/scripts/lib/check_links.py"
 
 exit "$failed"

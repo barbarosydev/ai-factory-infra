@@ -7,6 +7,7 @@ without requiring an external Python virtualenv or the `temporalio` / `grpcio` w
 
 Standard library only ( plus `curl --http2-prior-knowledge` for h2c transport).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -118,12 +119,7 @@ def build_complete_workflow_task_request(
     payloads = field_bytes(1, payload)
     complete_attrs = field_bytes(1, payloads)
     cmd = field_varint(1, COMMAND_TYPE_COMPLETE_WORKFLOW_EXECUTION) + field_bytes(4, complete_attrs)
-    return (
-        field_bytes(1, task_token)
-        + field_bytes(2, cmd)
-        + field_bytes(3, identity)
-        + field_bytes(9, namespace)
-    )
+    return field_bytes(1, task_token) + field_bytes(2, cmd) + field_bytes(3, identity) + field_bytes(9, namespace)
 
 
 def parse_grpc_status(headers_text: str) -> tuple[int, str]:

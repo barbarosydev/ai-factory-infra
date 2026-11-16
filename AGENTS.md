@@ -27,8 +27,8 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 | `task smoke:temporal` | Temporal deployments, schema/namespace Jobs, gRPC health, Mac sample workflow and Web UI check |
 | `task state:check` | Check Terraform state holds no secret values (prints a count only; also part of `task doctor`) |
 | `task doctor:prereqs` | Check the Mac before anything else |
-| `task lint` | fmt, validate, tflint, terraform-docs, shellcheck, JSON and YAML |
-| `task ci` | lint, hook tests and gitleaks; must pass before every commit |
+| `task lint` | Terraform fmt, validate, tflint, terraform-docs and module tests; shellcheck; ruff; JSON and YAML; Conftest policies; doc links |
+| `task ci` | lint, the hook, state-check, script and Python tests, and gitleaks; must pass before every commit |
 | `task kube -- <kubectl args>` | kubectl against the project cluster only |
 
 Also `task restart`, `stop:cluster`, `stop:ollama`, `clean` (deletes the cluster and its data), and `clean:all` (also removes Terraform caches and, if confirmed, Ollama models).

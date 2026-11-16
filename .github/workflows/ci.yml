@@ -18,6 +18,8 @@ env:
   TFLINT_VERSION: v0.66.0
   GITLEAKS_VERSION: 8.30.1
   SHELLCHECK_VERSION: 0.11.0
+  RUFF_VERSION: 0.17.5
+  CONFTEST_VERSION: 0.71.1
 
 jobs:
   ci:
@@ -63,6 +65,26 @@ jobs:
           curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar -xJ
           sudo install "shellcheck-v${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck
 
+      - name: Install ruff
+        run: |
+          set -euo pipefail
+          url="https://github.com/astral-sh/ruff/releases/download/${RUFF_VERSION}"
+          tarball="ruff-x86_64-unknown-linux-gnu.tar.gz"
+          curl -fsSLO "$url/$tarball"
+          curl -fsSL "$url/$tarball.sha256" | sha256sum -c -
+          tar -xzf "$tarball"
+          sudo install ruff-x86_64-unknown-linux-gnu/ruff /usr/local/bin/ruff
+
+      - name: Install conftest
+        run: |
+          set -euo pipefail
+          url="https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}"
+          tarball="conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
+          curl -fsSLO "$url/$tarball"
+          curl -fsSL "$url/checksums.txt" | grep " $tarball\$" | sha256sum -c -
+          tar -xzf "$tarball" conftest
+          sudo install conftest /usr/local/bin/conftest
+
       - name: Tool versions
         run: |
           terraform version | head -n1
@@ -72,6 +94,8 @@ jobs:
           shellcheck --version | sed -n 2p
           jq --version
           yq --version
+          ruff --version
+          conftest --version | head -n1
 
       - name: task ci
         run: task ci

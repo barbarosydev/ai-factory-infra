@@ -25,8 +25,8 @@ The repo must rebuild from a fresh clone and give the same results on the Mac an
   - GitHub Actions: a full commit SHA.
   The values live in `terraform/environments/local/variables.tf`, `cluster/k3d-config.yaml`, `.mcp.json` and `.github/workflows/ci.yml`; this record states the rule, not the numbers.
 - Upgrades go through the `upgrade-version` skill, by hand. Renovate is not used while the repo is private and single-user, because it adds an app, a config and a PR stream.
-- One `task ci` runs lint, hook tests and gitleaks. pre-commit and GitHub Actions both call it, so they cannot drift apart.
-- Tool boundaries: tflint lints Terraform; `terraform test` (planned) checks module behaviour; Conftest (planned) checks repo-wide conventions across file types. A rule goes to the first tool that fits.
+- One `task ci` runs lint, the tests and gitleaks. pre-commit and GitHub Actions both call it, so they cannot drift apart.
+- Tool boundaries: tflint lints Terraform; `terraform test` checks module behaviour; Conftest (`policy/`, capped at about seven rules) checks repo-wide conventions across file types. A rule goes to the first tool that fits.
 
 ## Consequences
 

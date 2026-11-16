@@ -70,7 +70,7 @@ Try one yourself. A hook reads the tool call as JSON on stdin, exactly as Claude
 echo '{"tool_input":{"command":"kubectl get pods"}}' | CLAUDE_PROJECT_DIR=$PWD .claude/hooks/kube-guard.py; echo "exit $?"
 ```
 
-`tests/hooks/run.sh` runs test cases (blocked and allowed) for the guard hooks (kube-guard, branch-guard, secret-guard), and `task ci` runs it, so a hook cannot silently stop protecting you. When you change a hook, add a case for the new behaviour.
+`tests/hooks/run.sh` runs test cases (blocked and allowed) for the guard hooks (kube-guard, branch-guard, agent-guard, secret-guard), the session hook and the stack-home resolution in a git worktree, and `task ci` runs it, so a hook cannot silently stop protecting you. When you change a hook, add a case for the new behaviour.
 
 ## Skills: .claude/skills/
 
@@ -109,6 +109,7 @@ This repo is also worked on with agent tools other than Claude Code. Everything 
 
 - `AGENTS.md` carries the instructions, the review roles and the definition of done.
 - `task ci` runs in pre-commit and in GitHub Actions: lint, tests and the secret scan apply to every commit, whoever wrote it.
+- The Conftest policies in `policy/` and the `terraform test` suites in each module run inside `task lint`: write-only Secrets, digest-pinned images, loopback-only ports and the Helm release contract are checked the same way for every tool.
 - The scripts take the project kubeconfig from one place and never the global one; Terraform validates the kubeconfig path, the context and every pin.
 - `task doctor` ends with the state check, so a secret in Terraform state fails the run for any agent.
 
