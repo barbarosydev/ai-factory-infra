@@ -11,7 +11,7 @@ Each `.rego` file starts with a comment that says what it checks and what it doe
 | 3 | Kubernetes and Helm providers set `config_path` and `config_context` | `terraform.providers` (`terraform_providers.rego`) | `terraform/environments/local/providers.tf` | 1 |
 | 4 | Every image is pinned by digest (`@sha256:` + 64 hex) and none uses `latest` | `images` (`images.rego`) | `terraform/environments/local/variables.tf`, `cluster/k3d-config.yaml`, `.mcp.json` | 6 |
 | 5 | k3d ports and API bind to `127.0.0.1`; k3d does not update or switch the default kubeconfig | `k3d` (`k3d.rego`) | `cluster/k3d-config.yaml` | 1 |
-| 6 | Workflows set top-level `permissions: contents: read` and grant nothing `write` | `github` (`github_workflows.rego`) | `.github/workflows/*.yml` | 5 |
+| 6 | Workflows set top-level `permissions: contents: read`, grant nothing `write`, and pin every action by commit SHA | `github` (`github_workflows.rego`) | `.github/workflows/*.yml` | 5 |
 | 7 | `.claude/settings.json` still denies reading state, tfvars, `.env` and kubeconfig, and still wires the guard hooks | `claude` (`claude_settings.rego`) | `.claude/settings.json` | 1, 4, 5 |
 
 ## Run
@@ -48,5 +48,4 @@ Keep this set at about seven rules; add one only for a written hard rule that no
 
 - `PROBE_IMAGE` in `scripts/lib/common.sh`: Conftest has no bash parser.
 - Images inside Helm values templates (`*.yaml.tftpl`): the module variables' validation blocks check their format.
-- GitHub Actions pinned by commit SHA: they are pinned by tag today; that check comes with a later change.
 - What the guard hooks do: `tests/hooks/run.sh` tests that. Rule 7 only checks that they are wired.

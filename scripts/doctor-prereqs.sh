@@ -24,8 +24,6 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 # Expected values. See docs/adr/0002-toolchain-versions-and-pinning.md.
-K3D_VERSION="5.9.0"
-TERRAFORM_VERSION="$(tr -d '[:space:]' <"$REPO_ROOT/.terraform-version")"
 DOCKER_MIN_CPUS=8
 DOCKER_MIN_MEMORY_MIB=12000
 DOCKER_MIN_SWAP_MIB=2000
@@ -39,16 +37,50 @@ FREE_PORTS=(8080 4000 7233 5432)
 DOCKER_SETTINGS="$HOME/Library/Group Containers/group.com.docker/settings-store.json"
 
 # --- Tools -----------------------------------------------------------------
+# mise.toml pins every command line tool exactly; scripts/lib/common.sh puts the
+# pinned versions on PATH. Docker Desktop and Ollama are desktop apps, checked
+# against a minimum version.
 
-# check_tool NAME COMMAND MIN_VERSION VERSION_COMMAND...
-check_tool() {
-  local name="$1" cmd="$2" min="$3"
-  shift 3
-  if ! command -v "$cmd" >/dev/null 2>&1; then
-    check_fail "$name" "not installed: brew bundle --no-upgrade"
+if command -v mise >/dev/null 2>&1; then
+  check_pass mise "$(first_version "$(mise --version 2>/dev/null)")"
+else
+  check_fail mise "not installed: brew install mise, then mise install in this repo"
+fi
+
+# pinned_version TOOL: the exact version mise.toml pins for TOOL.
+pinned_version() {
+  sed -n "s/^$1[[:space:]]*=[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$REPO_ROOT/mise.toml" | head -n1
+}
+
+# check_pinned TOOL COMMAND VERSION_COMMAND...: the installed version equals the pin.
+check_pinned() {
+  local name="$1" cmd="$2" want version
+  shift 2
+  want="$(pinned_version "$name")"
+  if [[ -z "$want" ]]; then
+    check_fail "$name" "no pin in mise.toml"
     return
   fi
-  local version
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    check_fail "$name" "not installed, expected $want: mise install"
+    return
+  fi
+  version="$(first_version "$("$@" 2>/dev/null || true)")" # unreadable: fails below
+  if [[ "$version" == "$want" ]]; then
+    check_pass "$name" "$version"
+  else
+    check_fail "$name" "found ${version:-unknown}, expected $want: mise install"
+  fi
+}
+
+# check_min NAME COMMAND MIN_VERSION VERSION_COMMAND...
+check_min() {
+  local name="$1" cmd="$2" min="$3" version
+  shift 3
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    check_fail "$name" "not installed: see docs/prerequisites.md"
+    return
+  fi
   version="$(first_version "$("$@" 2>/dev/null || true)")" # unreadable: warned below
   if [[ -z "$version" ]]; then
     check_warn "$name" "installed, version not readable"
@@ -59,46 +91,25 @@ check_tool() {
   fi
 }
 
-check_tool docker      docker     29.0  docker version --format '{{.Client.Version}}'
-check_tool kubectl     kubectl    1.36  kubectl version --client
-check_tool helm        helm       4.0   helm version --short
-check_tool task        task       3.40  task --version
-check_tool tflint      tflint     0.60  tflint --version
-check_tool shellcheck  shellcheck 0.10  shellcheck --version
-check_tool jq          jq         1.7   jq --version
-check_tool yq          yq         4.40  yq --version
-check_tool pre-commit  pre-commit 4.0   pre-commit --version
-check_tool gitleaks    gitleaks   8.20  gitleaks version
-check_tool ollama         ollama         0.40  ollama --version
-check_tool temporal       temporal       1.0   temporal --version
-check_tool terraform-docs terraform-docs 0.19  terraform-docs --version
-check_tool ruff           ruff           0.17  ruff --version
-# The Homebrew build of conftest reports its own version as "dev"; ask Homebrew instead.
-check_tool conftest       conftest       0.70  brew list --versions conftest
+check_min docker docker 29.0 docker version --format '{{.Client.Version}}'
+check_min ollama ollama 0.40 ollama --version
 
-# k3d is pinned exactly.
-if command -v k3d >/dev/null 2>&1; then
-  v="$(first_version "$(k3d version 2>/dev/null | head -n1)")"
-  if [[ "$v" == "$K3D_VERSION" ]]; then
-    check_pass k3d "$v"
-  else
-    check_fail k3d "found ${v:-unknown}, expected $K3D_VERSION"
-  fi
-else
-  check_fail k3d "not installed: brew bundle --no-upgrade"
-fi
-
-# Terraform is pinned exactly by .terraform-version (tfenv reads it in this repo).
-if command -v terraform >/dev/null 2>&1; then
-  v="$(cd "$REPO_ROOT" && first_version "$(terraform version 2>/dev/null | head -n1)")"
-  if [[ "$v" == "$TERRAFORM_VERSION" ]]; then
-    check_pass terraform "$v"
-  else
-    check_fail terraform "found ${v:-unknown}, expected $TERRAFORM_VERSION: tfenv install $TERRAFORM_VERSION"
-  fi
-else
-  check_fail terraform "not installed: brew install tfenv && tfenv install $TERRAFORM_VERSION"
-fi
+check_pinned k3d            k3d            k3d version
+check_pinned kubectl        kubectl        kubectl version --client
+check_pinned helm           helm           helm version --short
+check_pinned terraform      terraform      terraform version
+check_pinned tflint         tflint         tflint --version
+check_pinned terraform-docs terraform-docs terraform-docs --version
+check_pinned conftest       conftest       conftest --version
+check_pinned task           task           task --version
+check_pinned jq             jq             jq --version
+check_pinned yq             yq             yq --version
+check_pinned shellcheck     shellcheck     shellcheck --version
+check_pinned ruff           ruff           ruff --version
+check_pinned actionlint     actionlint     actionlint --version
+check_pinned pre-commit     pre-commit     pre-commit --version
+check_pinned gitleaks       gitleaks       gitleaks version
+check_pinned temporal       temporal       temporal --version
 
 # --- Docker Desktop --------------------------------------------------------
 

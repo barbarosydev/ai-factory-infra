@@ -14,7 +14,7 @@ Every line prints `PASS`, `WARN` or `FAIL`. The command exits 0 only when nothin
 | --- | --- | --- |
 | [Docker Desktop](https://docs.docker.com/desktop/setup/install/mac-install/) | Runs the k3d cluster | Download from Docker |
 | [Ollama](https://ollama.com/download) | Runs the models natively, so they can use the Mac's GPU | Download from Ollama |
-| [Homebrew](https://brew.sh) | Installs the command line tools | See brew.sh |
+| [Homebrew](https://brew.sh) | Installs mise, which installs the command line tools | See brew.sh |
 
 ## 2. Docker Desktop settings
 
@@ -40,21 +40,22 @@ brew bundle --no-upgrade
 ```
 
 ```bash
-tfenv install
+mise install
 ```
 
-`brew bundle` installs everything in the [Brewfile](../Brewfile). `--no-upgrade` leaves tools you already have at their current version. `tfenv install` reads [.terraform-version](../.terraform-version) and installs that exact Terraform version; inside this repo tfenv then uses it automatically, without changing your global default.
+`brew bundle` installs [mise](https://mise.jdx.dev/) (and k9s, an optional cluster UI). `mise install` then installs every command line tool at the exact version pinned in [mise.toml](../mise.toml), into mise's own folder, without touching tools you installed another way. GitHub Actions installs from the same file.
 
-| Tool | Pinned or minimum | Used for |
-| --- | --- | --- |
-| k3d | exactly 5.9.0 | Creating and stopping the local cluster |
-| terraform | exactly the version in `.terraform-version` | Installing everything inside the cluster |
-| kubectl, helm | kubectl 1.36+, helm 4.0+ | Talking to the cluster |
-| task | 3.40+ | The `task` commands |
-| tflint, shellcheck | | Linting |
-| jq, yq | | Scripts |
-| pre-commit, gitleaks | | Checks and secret scan before each commit |
-| temporal, terraform-docs, k9s | optional | Doctor checks, module docs, a cluster UI |
+You do not need to change your shell setup for this repo: every script puts the pinned tools on its `PATH` (see `scripts/lib/common.sh`), so `task` commands and the pre-commit check use them. To also get them in your own terminal, add mise's activation line to your shell as the mise docs describe.
+
+| Tools | Used for |
+| --- | --- |
+| k3d, kubectl, helm | Creating, stopping and talking to the local cluster |
+| terraform, tflint, terraform-docs, conftest | Installing everything inside the cluster; linting, module docs and policies |
+| task, jq, yq, shellcheck, ruff, actionlint | The `task` commands, scripts and their linters |
+| pre-commit, gitleaks | Checks and secret scan before each commit |
+| temporal | Doctor checks against Temporal |
+
+`task doctor:prereqs` fails when an installed version differs from its pin; the fix is `mise install`.
 
 ## 4. Checks before each commit
 

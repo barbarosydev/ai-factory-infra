@@ -16,7 +16,7 @@ Then review what a check cannot judge, and report each finding with file:line an
 
 1. Tests and policies kept up: a new variable validation, Helm value that matters, or Secret has a matching `run` block in the module's `tests/*.tftest.hcl`; a new convention that should hold repo-wide has a policy, or a note why not.
 2. Secrets beyond the pattern: no password, key or token in any .tf or .tftpl file; nothing secret flows into Helm `values`, an output without `sensitive = true`, or a resource other than a write-only Secret.
-3. Versions: `required_version` matches `.terraform-version`; providers use `~>` in versions.tf; a chart bump and its image tag and digest move together.
+3. Versions: `required_version` matches the `terraform` pin in `mise.toml`; providers use `~>` in versions.tf; a chart bump and its image tag and digest move together.
 4. Provider 3.x syntax: helm `set` as a list of objects, helm `kubernetes = { ... }` as an attribute.
 5. Design: module layout (main.tf, variables.tf, outputs.tf, versions.tf, `values.yaml.tftpl`); `atomic` set or a comment explaining why not (operator CRDs, non-hook Jobs); `createDatabase: false` where CloudNativePG owns the database; requests and limits on every new workload.
 6. Idempotence: a second plan should show no changes (look for timestamps, random values without keepers, or computed values in Helm values).

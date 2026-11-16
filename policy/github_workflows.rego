@@ -7,9 +7,8 @@
 #   - no permission, top-level or per job, is `write` or `write-all`.
 # Without top-level `permissions` the token gets the repository default,
 # which can be read-write.
-#
-# Not checked yet: actions pinned by commit SHA (they are pinned by tag today;
-# that change belongs to a later work package).
+#   - every `uses:` names a full commit SHA (40 hex), because a tag can be moved
+#     (hard rule 6: pin every version exactly). Local actions (`./...`) are exempt.
 package github
 
 deny contains msg if {
@@ -39,4 +38,13 @@ deny contains msg if {
 	some scope, level in job.permissions
 	level == "write"
 	msg := sprintf("job %q grants `%s: write`; the token must stay read-only", [job_name, scope])
+}
+
+deny contains msg if {
+	some job_name, job in input.jobs
+	some step in job.steps
+	uses := step.uses
+	not startswith(uses, "./")
+	not regex.match(`^[^@]+@[0-9a-f]{40}$`, uses)
+	msg := sprintf("job %q uses %q; pin the action to a full commit SHA and note the tag in a comment", [job_name, uses])
 }

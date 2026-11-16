@@ -8,6 +8,14 @@
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 export REPO_ROOT
 
+# Pinned tools: mise.toml lists the exact version of every command line tool. Put
+# them first on PATH here, so every script (and pre-commit, and any agent tool)
+# runs the same versions without shell setup. Without mise, PATH stays as it is
+# and task doctor:prereqs reports it.
+if command -v mise >/dev/null 2>&1 && [[ -f "$REPO_ROOT/mise.toml" ]]; then
+  eval "$(mise env -s bash -C "$REPO_ROOT" 2>/dev/null || true)" # no mise env: PATH unchanged
+fi
+
 # Every cluster command uses the project kubeconfig and nothing else.
 # Your global ~/.kube/config (and any AKS context in it) is never read.
 # USER_KUBECONFIG remembers where your own kubeconfig lives, only so the cluster
@@ -87,7 +95,7 @@ die() { printf '%sFAIL%s %s\n' "$C_RED" "$C_RESET" "$*" >&2; exit 1; }
 require_cmd() {
   local cmd
   for cmd in "$@"; do
-    command -v "$cmd" >/dev/null 2>&1 || die "$cmd is not installed: brew bundle --no-upgrade"
+    command -v "$cmd" >/dev/null 2>&1 || die "$cmd is not installed: mise install (see docs/prerequisites.md)"
   done
 }
 

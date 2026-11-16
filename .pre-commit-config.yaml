@@ -1,11 +1,13 @@
-# Runs task ci before every commit, scanning only the staged changes for secrets.
+# Runs the task ci checks before every commit, scanning only the staged changes for secrets.
+# Calls the script directly: it finds the pinned tools itself (mise.toml), so the
+# hook does not depend on what is on PATH in the program that runs git.
 # Install once per clone: pre-commit install
 repos:
   - repo: local
     hooks:
       - id: task-ci
         name: task ci (lint and secret scan)
-        entry: task ci -- --staged
+        entry: scripts/ci.sh --staged
         language: system
         pass_filenames: false
         always_run: true
