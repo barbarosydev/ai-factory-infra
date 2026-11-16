@@ -23,6 +23,7 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 | `task smoke:cluster` | Cluster smoke test; `-- --lifecycle` also runs down and up |
 | `task smoke:postgres` | PostgreSQL cluster, databases and per-role login isolation check |
 | `task smoke:litellm` | LiteLLM gateway, Admin UI, model completions and virtual key scope check |
+| `task smoke:temporal` | Temporal deployments, schema/namespace Jobs, gRPC health, Mac sample workflow and Web UI check |
 | `task doctor:prereqs` | Check the Mac before anything else |
 | `task lint` | fmt, validate, tflint, shellcheck, JSON and YAML |
 | `task ci` | lint, hook tests and gitleaks; must pass before every commit |
@@ -65,6 +66,7 @@ Found in phases 0 to 2. Check these before debugging from scratch:
 - **Docker Desktop's "system" proxy and the macOS PAC proxy are harmless.** In-cluster image pulls work through them.
 - **Model sizes.** `gemma4:e4b` is 9.5 GB on disk (larger than its name suggests) and `gemma4:12b` 7.6 GB. Do not add models above about 10 GB while the cluster runs.
 - **`gemma4` models use thinking tokens by default.** With `max_tokens: 16`, `gemma4:12b` and `gemma4:e4b` spend all 16 tokens in `thinking` and return an empty `content`. Completion probes should pass `max_tokens: 128` (or check `reasoning_content` / disable thinking).
+- **Temporal chart `1.8.0` SQL setup and host gRPC.** Because CloudNativePG creates `temporal` and `temporal_visibility` owned by the non-superuser `temporal` role with strict `pg_hba` isolation, both SQL datastores in `terraform/modules/temporal/values.yaml.tftpl` must set `createDatabase: false` so `temporal-sql-tool` skips connecting to the admin `postgres` DB. `server.frontend.service.type: LoadBalancer` exposes `temporal-frontend:7233` directly to `localhost:7233` on the Mac via k3s ServiceLB (`127.0.0.1:7233:7233` in `cluster/k3d-config.yaml`). Raw HTTP/2 gRPC calls to `localhost:7233` require a `grpc-timeout` header (e.g. `grpc-timeout: 15S`).
 
 ## Docs
 

@@ -42,3 +42,18 @@ output "litellm_agent_key_secrets" {
   description = "Map of agent route name to the Kubernetes Secret holding its virtual key."
   value       = module.litellm.agent_key_secret_names
 }
+
+output "temporal_web_url" {
+  description = "Local HTTP URL for the Temporal Web UI via Traefik."
+  value       = module.temporal.web_url
+}
+
+output "temporal_grpc_endpoint" {
+  description = "Host gRPC endpoint for the Temporal CLI and SDK workers on the Mac."
+  value       = module.temporal.grpc_endpoint
+}
+
+output "temporal_frontend_service" {
+  description = "Kubernetes Service name for the Temporal gRPC frontend."
+  value       = module.temporal.frontend_service_name
+}

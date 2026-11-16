@@ -15,6 +15,7 @@
 | Check the cluster | `task smoke:cluster` (add `-- --lifecycle` to also test down and up) |
 | Check PostgreSQL | `task smoke:postgres` |
 | Check LiteLLM & models | `task smoke:litellm` |
+| Check Temporal & sample workflow | `task smoke:temporal` |
 | Look at the cluster | `task kube -- get pods -A` |
 | Health check | `task doctor` (phase 6) |
 | Start from scratch | `task clean` then `task up` |
@@ -57,7 +58,8 @@ Each wait names what it waited for and the command that shows why. The common on
 | LiteLLM Admin UI | `http://litellm.localhost:8080/ui` | Username: `admin`, Password: the `masterkey` value in Secret `litellm-masterkey` |
 | LiteLLM OpenAI-compatible API | `http://litellm.localhost:8080/v1` | `Authorization: Bearer <key>` using an agent virtual key (`litellm-<agent>-key`) or the master key |
 | LiteLLM Swagger / OpenAPI docs | `http://litellm.localhost:8080/` | Master key or virtual key in the Swagger **Authorize** dialog |
-| Temporal Web UI (phase 5) | `http://temporal.localhost:8080` | None (local sandbox) |
+| Temporal Web UI | `http://temporal.localhost:8080` (`http://temporal.localhost:8080/namespaces/default/workflows`) | None (open in local sandbox) |
+| Temporal gRPC (Mac workers & CLI) | `localhost:7233` | None (cleartext gRPC in local sandbox) |
 
 ### Log in to the LiteLLM Admin UI (`http://litellm.localhost:8080/ui`)
 
@@ -87,6 +89,23 @@ curl -sS --noproxy '*' http://litellm.localhost:8080/v1/chat/completions \
     "max_tokens": 128
   }' | jq -r '.choices[0].message.content'
 ```
+
+### Open the Temporal Web UI and use the Temporal CLI from your Mac
+
+The Temporal Web UI requires no login in the local sandbox:
+- **Browser URL:** `http://temporal.localhost:8080/namespaces/default/workflows`
+- **REST API:** `http://temporal.localhost:8080/api/v1/namespaces/default/workflows`
+- **gRPC address for SDK workers and the `temporal` CLI on your Mac:** `localhost:7233`
+
+Check cluster health, inspect the `default` namespace, and list workflows from your Mac:
+
+```bash
+temporal operator cluster health --address localhost:7233
+temporal operator namespace describe --namespace default --address localhost:7233
+temporal workflow list --address localhost:7233 --namespace default
+```
+
+Run `task smoke:temporal` at any time to start and complete a real workflow from your Mac and verify that it appears as `Completed` in the Web UI.
 
 ## A secret leaked
 

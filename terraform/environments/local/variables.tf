@@ -71,6 +71,27 @@ variable "litellm_store_prompts" {
   nullable    = false
 }
 
+variable "temporal_chart_version" {
+  description = "Pinned Temporal Helm chart version."
+  type        = string
+  default     = "1.8.0"
+  nullable    = false
+}
+
+variable "temporal_server_image_tag" {
+  description = "Pinned container image tag for temporalio/server and temporalio/admin-tools."
+  type        = string
+  default     = "1.32.2"
+  nullable    = false
+}
+
+variable "temporal_ui_image_tag" {
+  description = "Pinned container image tag for temporalio/ui."
+  type        = string
+  default     = "2.56.1"
+  nullable    = false
+}
+
 variable "model_routes" {
   description = "Map of agent route name to Ollama model tag."
   type        = map(string)

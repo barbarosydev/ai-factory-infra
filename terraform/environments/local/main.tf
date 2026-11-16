@@ -40,3 +40,18 @@ module "litellm" {
     module.model_backend,
   ]
 }
+
+module "temporal" {
+  source = "../../modules/temporal"
+
+  namespace        = kubernetes_namespace_v1.ai_platform.metadata[0].name
+  chart_version    = var.temporal_chart_version
+  server_image_tag = var.temporal_server_image_tag
+  ui_image_tag     = var.temporal_ui_image_tag
+  db_endpoint      = module.postgres.rw_service_name
+  db_secret_name   = module.postgres.user_secret_names["temporal"]
+
+  depends_on = [
+    module.postgres,
+  ]
+}

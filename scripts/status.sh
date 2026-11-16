@@ -31,6 +31,6 @@ fi
 
 printf '\n== URLs\n'
 echo "LiteLLM gateway & UI: http://litellm.localhost:8080 (Admin UI: http://litellm.localhost:8080/ui)"
-echo "Temporal Web UI:      http://temporal.localhost:8080 (phase 5)"
-echo "Temporal gRPC:        localhost:7233 (phase 5)"
+echo "Temporal Web UI:      http://temporal.localhost:8080 (Workflows: http://temporal.localhost:8080/namespaces/default/workflows)"
+echo "Temporal gRPC:        localhost:7233"
 echo "Ollama:               $OLLAMA_URL"

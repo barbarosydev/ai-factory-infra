@@ -34,4 +34,11 @@ else
     kc rollout status deployment/litellm -n ai-platform --timeout=300s
     kc wait --for=condition=complete job -l app.kubernetes.io/instance=litellm -n ai-platform --timeout=300s >/dev/null 2>&1 || true
   fi
+  if kc get deployment/temporal-frontend -n ai-platform >/dev/null 2>&1; then
+    info "waiting for Temporal schema/namespace Jobs and server deployments"
+    kc wait --for=condition=complete job -l app.kubernetes.io/instance=temporal -n ai-platform --timeout=300s
+    for deploy in temporal-frontend temporal-history temporal-matching temporal-worker temporal-web; do
+      kc rollout status "deployment/$deploy" -n ai-platform --timeout=300s
+    done
+  fi
 fi
