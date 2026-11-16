@@ -3,9 +3,10 @@
 | Situation | Command |
 | --- | --- |
 | Check the Mac | `task doctor:prereqs` |
-| Lint and secret scan | `task ci` |
+| Lint and secret scan | `task ci` (`task lint` for linters, policies and module tests only) |
 | Start everything (and run doctor) | `task up` |
-| Full platform health check | `task doctor` (`task doctor -- --json` for JSON output; includes the `tfstate secrets` check, which fails if Terraform state holds a secret value) |
+| Preview or apply Terraform changes | `task plan` / `task apply` |
+| Full platform health check | `task doctor` (`task doctor -- --json` for JSON output; includes `task state:check`, which fails if Terraform state holds a secret value) |
 | Stop, keep data | `task down` |
 | Stop and start again | `task restart` |
 | Stop only one part | `task stop:cluster` or `task stop:ollama` |

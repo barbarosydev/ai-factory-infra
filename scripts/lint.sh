@@ -162,5 +162,6 @@ run "actionlint" actionlint -no-color
 # --- Docs ------------------------------------------------------------------
 
 run "doc links and paths" "$REPO_ROOT/scripts/lib/check_links.py"
+run "task commands in AGENTS.md and docs/runbook.md" "$REPO_ROOT/scripts/lib/check_commands.py"
 
 exit "$failed"

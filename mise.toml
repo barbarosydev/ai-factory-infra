@@ -4,6 +4,9 @@
 # Bump a version with the upgrade-version skill; `task doctor:prereqs` fails on a mismatch.
 # Docker Desktop and Ollama are desktop apps and are checked against minimum versions instead.
 
+[settings]
+lockfile = true
+
 [tools]
 # Cluster
 k3d = "5.9.0"

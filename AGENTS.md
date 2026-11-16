@@ -31,7 +31,7 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 | `task ci` | lint, the hook, state-check, script and Python tests, and gitleaks; must pass before every commit |
 | `task kube -- <kubectl args>` | kubectl against the project cluster only |
 
-Also `task restart`, `stop:cluster`, `stop:ollama`, `clean` (deletes the cluster and its data), and `clean:all` (also removes Terraform caches and, if confirmed, Ollama models).
+Also `task restart`, `task stop:cluster`, `task stop:ollama`, `task clean` (deletes the cluster and its data), and `task clean:all` (also removes Terraform caches and, if confirmed, Ollama models).
 
 ## Hard rules
 

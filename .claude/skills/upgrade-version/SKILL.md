@@ -8,7 +8,7 @@ description: Upgrade a pinned version (Terraform, a provider, a Helm chart, k3d,
 Every version in this repo is pinned exactly. An upgrade is a deliberate, checked change.
 
 1. Find where it is pinned: `grep -rn "<old version>" --exclude-dir=.terraform .` (component chart versions and all in-cluster image pins (`tag@sha256:digest`) are centralized in `terraform/environments/local/variables.tf`, some chart versions with matching defaults in `terraform/modules/*/variables.tf`; probe pods reuse the image the cluster runs, so only `PROBE_IMAGE` (busybox) lives in `scripts/lib/common.sh`; other places include `mise.toml` (every command line tool), `versions.tf`, `cluster/k3d-config.yaml`, `.mcp.json` (tag and digest), `.github/workflows/ci.yml`, `docs/`). You can delegate a full audit to the `version-security-auditor` agent.
-   - Command line tools are pinned in `mise.toml` only: change the version there, run `mise install`, then `task doctor:prereqs`. Terraform also appears as `required_version` in `versions.tf`.
+   - Command line tools are pinned in `mise.toml` only: change the version there, run `mise lock --platform macos-arm64,linux-x64,linux-arm64` to update `mise.lock` checksums, run `mise install`, then `task doctor:prereqs`. Terraform also appears as `required_version` in `versions.tf`.
    - GitHub Actions are pinned by commit SHA in `.github/workflows/ci.yml` with the tag in a comment: resolve the new tag's commit with `gh api repos/<owner>/<repo>/git/ref/tags/<tag>` and change both.
 2. Find the newest stable release from the official source (GitHub releases, the Terraform registry through the Terraform MCP server, the chart's index). Skip pre-releases.
 3. Check compatibility before choosing:

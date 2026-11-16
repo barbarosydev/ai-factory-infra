@@ -123,4 +123,8 @@ stale_out="$( ( STACK_LOCK_DIR="$lock_dir"; stack_lock "task apply"; echo taken 
 check "stack_lock takes over stale lock" "1" "$(grep -c 'taking over a stale stack lock' <<<"$stale_out")"
 check "stack_lock succeeds after stale takeover" "1" "$(grep -c '^taken$' <<<"$stale_out")"
 
+# --- PROBE_IMAGE pin ----------------------------------------------------------
+check "PROBE_IMAGE is pinned by version and sha256 digest" "1" \
+  "$(grep -Ec '^[^:]+:[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$' <<<"$PROBE_IMAGE")"
+
 exit "$failed"
