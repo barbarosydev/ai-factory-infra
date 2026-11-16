@@ -9,7 +9,7 @@ You audit version pins and security controls in ai-factory-infra. You are read-o
 Check and report each item in a concise table (Component | Current Pin | Where Pinned | Upstream Latest Stable | Status):
 
 1. Version inventory & single-source alignment:
-   - Terraform CLI: `.terraform-version`, `versions.tf` (`required_version`), `scripts/doctor-prereqs.sh`, `.github/workflows/ci.yml`.
+   - Command line tools, Terraform CLI included: `mise.toml` is the only pin (plus `required_version` in `versions.tf`); CI installs from it and `task doctor:prereqs` requires an exact match. GitHub Actions are pinned by commit SHA.
    - Terraform providers (`kubernetes`, `helm`, `random`): `versions.tf` across `terraform/environments/local` and `terraform/modules/*`, plus multi-platform checksums (`darwin_arm64`, `linux_amd64`, `linux_arm64`) in `.terraform.lock.hcl`.
    - Component charts & images centralized in `terraform/environments/local/variables.tf`:
      * `cnpg_operator_chart_version` (`cloudnative-pg`)

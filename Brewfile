@@ -1,30 +1,9 @@
-# Command line tools for ai-factory-infra.
-# Install with:  brew bundle --no-upgrade
-# --no-upgrade leaves tools you already have at their current version.
+# Homebrew installs only mise; mise installs every command line tool at the exact
+# version pinned in mise.toml.
+# Install with:  brew bundle --no-upgrade && mise install
 # Docker Desktop and Ollama are desktop apps; install them first (docs/prerequisites.md).
 
-# Cluster
-brew "k3d"             # pinned to 5.9.0; task doctor:prereqs checks the exact version
-brew "kubernetes-cli"  # kubectl
-brew "helm"
+brew "mise"
 
-# Infrastructure as code
-brew "tfenv"           # installs the Terraform version in .terraform-version
-brew "tflint"
-brew "terraform-docs"
-
-# Task runner and scripts
-brew "go-task"         # the `task` command
-brew "jq"
-brew "yq"
-brew "shellcheck"
-
-# Checks before commit
-brew "pre-commit"
-brew "gitleaks"
-brew "ruff"            # lints and format-checks the Python helpers
-brew "conftest"        # runs the Rego policies in policy/
-
-# Day-to-day helpers
-brew "temporal"        # Temporal CLI, used by task doctor
+# Optional helper, not used by any script
 brew "k9s"

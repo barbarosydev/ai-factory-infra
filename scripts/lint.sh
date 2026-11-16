@@ -48,6 +48,19 @@ else
   require_cmd terraform tflint
   run "terraform fmt" terraform fmt -check -recursive -diff terraform
 
+  # mise.toml is the one pin for the Terraform CLI; required_version must agree with it.
+  # shellcheck disable=SC2317,SC2329  # called through run
+  terraform_pin_matches() {
+    local pin bad
+    pin="$(sed -n 's/^terraform[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' mise.toml)"
+    bad="$(grep -rL --include=versions.tf "required_version = \"= $pin\"" terraform/environments terraform/modules || true)" # no mismatch: empty
+    [[ -n "$pin" && -z "$bad" ]] || {
+      echo "required_version differs from the terraform pin ($pin) in mise.toml: $bad" >&2
+      return 1
+    }
+  }
+  run "terraform required_version matches mise.toml" terraform_pin_matches
+
   for env_dir in terraform/environments/*/; do
     [[ -n "$(find "$env_dir" -maxdepth 1 -name '*.tf' | head -n1)" ]] || continue
     run "terraform validate ${env_dir%/}" bash -c \
@@ -138,8 +151,13 @@ run "policy: providers use the project kubeconfig" ct --namespace terraform.prov
 run "policy: images pinned by digest" ct --namespace images terraform/environments/local/variables.tf cluster/k3d-config.yaml .mcp.json
 run "policy: k3d binds to loopback only" ct --namespace k3d cluster/k3d-config.yaml
 # shellcheck disable=SC2046
-run "policy: workflows have a read-only token" ct --namespace github $(tracked '.github/workflows/*.yml')
+run "policy: workflows have a read-only token, actions pinned by SHA" ct --namespace github $(tracked '.github/workflows/*.yml')
 run "policy: Claude Code deny rules and guard hooks" ct --namespace claude .claude/settings.json
+
+# --- Workflows -------------------------------------------------------------
+
+require_cmd actionlint
+run "actionlint" actionlint -no-color
 
 # --- Docs ------------------------------------------------------------------
 
