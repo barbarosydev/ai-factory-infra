@@ -23,7 +23,7 @@ Open Docker Desktop, Settings, Resources, and set:
 | Setting | Value | Why |
 | --- | --- | --- |
 | CPU limit | 8 | Every pod can start in parallel; the rest stays with macOS and Ollama |
-| Memory limit | 12 GB | More than twice the expected use of about 5 GB |
+| Memory limit | 12 GB | More than twice the expected use of about 2.6 GiB measured (see `docs/architecture.md`) |
 | Swap | 2 GB | Absorbs short spikes, such as Temporal's first schema setup |
 | Disk usage limit | 511 GB (at least 100 GB) | A ceiling only; images and volumes take about 8 GB |
 
@@ -86,7 +86,7 @@ It also warns when the running Ollama server still carries proxy variables. Olla
 
 If you need a proxy again later, pass the proxy settings into k3d and add the cluster and host names to `NO_PROXY`.
 
-Docker Desktop's own proxy setting ("system", following macOS) does not get in the way: the cluster pulls its images through it without any change. Checked in phase 2 on 15 Nov 2026.
+Docker Desktop's own proxy setting ("system", following macOS) does not get in the way: the cluster pulls its images through it without any change. Checked on 15 Nov 2026.
 
 ## Registry access
 

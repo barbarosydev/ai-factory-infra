@@ -1,13 +1,13 @@
 # ai-factory-infra
 
-Local K3d Cluster + Terraform + Helm for LiteLLM and Temporal. No external API keys are allowed for the local sandbox phase.
+Local K3d Cluster + Terraform + Helm for LiteLLM and Temporal. No external API keys are allowed in this local sandbox.
 
 ## Architecture
 
 - k3d cluster `ai-factory` (one k3s server, `cluster/k3d-config.yaml`) in Docker Desktop. `scripts/cluster-setup.sh` creates or resumes it and writes `.kube/config`; k3d never touches the global kubeconfig. Pods reach Ollama on the Mac at `host.k3d.internal:11434`. Port 8080 serves web pages through the built-in Traefik ingress (`litellm.localhost:8080`, `temporal.localhost:8080`); port 7233 exposes Temporal to workers on the Mac.
 - Terraform (`terraform/environments/local`, modules in `terraform/modules/`) installs everything inside the cluster in namespace `ai-platform`: CloudNativePG with one PostgreSQL server (databases `temporal`, `temporal_visibility`, `litellm`), LiteLLM, Temporal, and the `ollama` Service.
 - Ollama runs natively on the Mac for the GPU. LiteLLM reaches it only through the `ollama` Service. Model routes: pm-agent on gemma4:12b, dev-agent and sec-agent on gemma4:e4b.
-- The full plan and every decision: the master plan doc, mirrored in `docs/decisions/`.
+- Decisions and their reasons: `docs/adr/`.
 
 ## Commands
 
@@ -52,22 +52,14 @@ Also `task restart`, `stop:cluster`, `stop:ollama`, `clean` (deletes the cluster
 
 ## Workflow
 
-1. One branch and one pull request per phase or task; never commit on main.
+1. One branch and one pull request per task; never commit on main.
 2. Before every commit run `git status -sb`: the IDE has switched this checkout to another branch mid-task before. The branch-guard hook blocks commits on main, but not a wrong feature branch.
 3. `task ci` must pass (pre-commit runs it on the staged changes anyway).
-4. Record a fact a later session would need (a version found, a Mac quirk) in the docs or the master plan, not only in the conversation.
+4. Record a fact a later session would need (a version found, a Mac quirk) in the docs or an ADR, not only in the conversation.
 
-## Known behaviour on this Mac
+## Troubleshooting on this Mac
 
-Found in phases 0 to 2. Check these before debugging from scratch:
-
-- **Resume is slow on purpose.** After `task up` resumes a stopped cluster, pods cannot resolve `host.k3d.internal` for about 90 s. `cluster-setup.sh` waits for it; a fresh create takes about 50 s.
-- **Ollama keeps the proxy it started with.** If it started while a proxy was set, `ollama pull` fails with `proxyconnect ... refused`. Fix: `task stop:ollama`, then `task up`. `task doctor:prereqs` warns.
-- **A Docker Desktop sign-in can block images.** A work organization's registry rules refused `curlimages/curl` (`image access restricted`). Signing out lifts them; `task doctor:prereqs` warns while signed in. Probe pods use the official `busybox` image.
-- **Docker Desktop's "system" proxy and the macOS PAC proxy are harmless.** In-cluster image pulls work through them.
-- **Model sizes.** `gemma4:e4b` is 9.5 GB on disk (larger than its name suggests) and `gemma4:12b` 7.6 GB. Do not add models above about 10 GB while the cluster runs.
-- **`gemma4` models use thinking tokens by default.** With `max_tokens: 16`, `gemma4:12b` and `gemma4:e4b` spend all 16 tokens in `thinking` and return an empty `content`. Completion probes should pass `max_tokens: 128` (or check `reasoning_content` / disable thinking).
-- **Temporal chart `1.8.0` SQL setup and host gRPC.** Because CloudNativePG creates `temporal` and `temporal_visibility` owned by the non-superuser `temporal` role with strict `pg_hba` isolation, both SQL datastores in `terraform/modules/temporal/values.yaml.tftpl` must set `createDatabase: false` so `temporal-sql-tool` skips connecting to the admin `postgres` DB. `server.frontend.service.type: LoadBalancer` exposes `temporal-frontend:7233` directly to `localhost:7233` on the Mac via k3s ServiceLB (`127.0.0.1:7233:7233` in `cluster/k3d-config.yaml`). Raw HTTP/2 gRPC calls to `localhost:7233` require a `grpc-timeout` header (e.g. `grpc-timeout: 15S`).
+Check `docs/runbook.md`, section "Troubleshooting on this Mac", before debugging from scratch. Design reasons live in `docs/adr/`. Two facts apply to every task: completion probes need `max_tokens: 128` (`gemma4` models spend small budgets on thinking tokens), and do not add models above about 10 GB while the cluster runs.
 
 ## Docs
 

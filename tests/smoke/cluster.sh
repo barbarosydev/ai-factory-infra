@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 2 smoke test for the cluster. Prints one PASS/WARN/FAIL line per check.
+# Smoke test for the cluster. Prints one PASS/WARN/FAIL line per check.
 #
 # Usage: tests/smoke/cluster.sh [--lifecycle] [--json]      (task smoke:cluster -- [--lifecycle])
 #   default      read-only checks against the running cluster
@@ -72,7 +72,7 @@ fi
 
 code="$(curl -s --noproxy '*' --max-time 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/ || true)"
 if [[ "$code" == "404" ]]; then
-  check_pass "ingress :8080" "Traefik answers (404 until routes exist)"
+  check_pass "ingress :8080" "Traefik answers on port 8080 (404 for an unknown host)"
 else
   check_fail "ingress :8080" "got HTTP ${code:-none}: task kube -- -n kube-system get pods"
 fi

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 4 smoke test for the ollama Service, LiteLLM, Admin UI, completions and virtual key isolation.
+# Smoke test for the ollama Service, LiteLLM, Admin UI, completions and virtual key isolation.
 # Prints one PASS/WARN/FAIL line per check; never reads or prints Secret values.
 #
 # Usage: tests/smoke/litellm.sh [--json]      (task smoke:litellm)

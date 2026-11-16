@@ -42,4 +42,4 @@ task down
 - [Runbook](docs/runbook.md)
 - [Secrets](docs/secrets.md)
 - [Claude Code harness](docs/harness.md)
-- [Decision records](docs/decisions/)
+- [Architecture decision records](docs/adr/README.md)

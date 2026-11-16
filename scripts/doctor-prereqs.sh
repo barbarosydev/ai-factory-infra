@@ -23,7 +23,7 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
-# Expected values. These follow the Decisions and Pinned versions tables in the master plan.
+# Expected values. See docs/adr/0002-toolchain-versions-and-pinning.md.
 K3D_VERSION="5.9.0"
 TERRAFORM_VERSION="$(tr -d '[:space:]' <"$REPO_ROOT/.terraform-version")"
 DOCKER_MIN_CPUS=8
@@ -144,7 +144,7 @@ if docker info >/dev/null 2>&1; then
   fi
 
   # Signed in to an organization, Docker Desktop applies its registry rules and
-  # can refuse images ("image access restricted"); phase 2 hit this. Only the
+  # can refuse images ("image access restricted"). Only the
   # server names of stored logins are read, never the credentials.
   if command -v docker-credential-desktop >/dev/null 2>&1; then
     if docker-credential-desktop list 2>/dev/null | jq -e 'keys | any(test("index\\.docker\\.io"))' >/dev/null 2>&1; then
