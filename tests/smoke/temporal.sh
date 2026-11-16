@@ -84,8 +84,16 @@ if "$REPO_ROOT/scripts/lib/temporal_grpc.py" complete-one \
   --namespace default \
   --task-queue "$tq" \
   --result '{"status":"ok","worker":"mac-host"}'; then
-  wf_status="$(temporal workflow describe --address "$GRPC_ADDR" --namespace default --workflow-id "$wf_id" -o json 2>/dev/null \
-    | jq -r '.workflowExecutionInfo.status // empty' || true)"
+  wf_status=""
+  deadline=$((SECONDS + 10))
+  while (( SECONDS < deadline )); do
+    wf_status="$(temporal workflow describe --address "$GRPC_ADDR" --namespace default --workflow-id "$wf_id" -o json 2>/dev/null \
+      | jq -r '.workflowExecutionInfo.status // empty' || true)" # transient CLI/visibility lag: keep polling
+    if [[ "$wf_status" == "WORKFLOW_EXECUTION_STATUS_COMPLETED" || "$wf_status" == "Completed" ]]; then
+      break
+    fi
+    sleep 1
+  done
   if [[ "$wf_status" == "WORKFLOW_EXECUTION_STATUS_COMPLETED" || "$wf_status" == "Completed" ]]; then
     wf_completed=1
     check_pass "workflow completion" "$wf_id completed ($wf_status)"

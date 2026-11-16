@@ -191,6 +191,56 @@ if command -v gitleaks >/dev/null 2>&1; then
       failed=1
     fi
   done
+
+  # Edit (new_string), MultiEdit (edits[].new_string) and empty content
+  for extra in \
+    "2|edit|$(jq -cn --arg s "token = \"$fake\"" '{tool_input: {file_path: "x.tf", new_string: $s}}')" \
+    "2|multiedit|$(jq -cn --arg s "token = \"$fake\"" '{tool_input: {file_path: "x.tf", edits: [{new_string: "ok = 1"}, {new_string: $s}]}}')" \
+    "0|empty|$(jq -cn '{tool_input: {file_path: "x.tf"}}')"; do
+    want="${extra%%|*}"; rest="${extra#*|}"
+    label="${rest%%|*}"; payload="${rest#*|}"
+    got=0
+    "$HOOKS/secret-guard.sh" <<<"$payload" >/dev/null 2>&1 || got=$?
+    if [[ "$got" == "$want" ]]; then
+      printf '%sPASS%s  %-16s %s\n' "$C_GREEN" "$C_RESET" secret-guard.sh "$label"
+    else
+      printf '%sFAIL%s  %-16s %s (exit %s, want %s)\n' "$C_RED" "$C_RESET" secret-guard.sh "$label" "$got" "$want"
+      failed=1
+    fi
+  done
 fi
+
+# --- terraform-fmt.sh: formats .tf, ignores non-.tf, surfaces syntax errors ---
+fmt_dir="$tmp/fmt"
+mkdir -p "$fmt_dir"
+cat >"$fmt_dir/main.tf" <<'EOF'
+variable   "x" {
+type=string
+}
+EOF
+cat >"$fmt_dir/README.md" <<'EOF'
+<!-- BEGIN_TF_DOCS -->
+stale
+<!-- END_TF_DOCS -->
+EOF
+cat >"$fmt_dir/note.sh" <<'EOF'
+x=1
+EOF
+
+jq -cn --arg f "$fmt_dir/main.tf" '{tool_input: {file_path: $f}}' | "$HOOKS/terraform-fmt.sh" >/dev/null 2>&1
+wt_check "terraform-fmt formats .tf file" "$(grep -c '^  type = string$' "$fmt_dir/main.tf")" 1
+if command -v terraform-docs >/dev/null 2>&1; then
+  wt_check "terraform-fmt refreshes terraform-docs" "$(grep -c 'variable.*x\|n/a' "$fmt_dir/README.md")" 1
+fi
+jq -cn --arg f "$fmt_dir/note.sh" '{tool_input: {file_path: $f}}' | "$HOOKS/terraform-fmt.sh" >/dev/null 2>&1
+wt_check "terraform-fmt ignores non-.tf file" "$(cat "$fmt_dir/note.sh")" "x=1"
+
+cat >"$fmt_dir/bad.tf" <<'EOF'
+variable "broken" {
+EOF
+bad_rc=0
+bad_err="$(jq -cn --arg f "$fmt_dir/bad.tf" '{tool_input: {file_path: $f}}' | "$HOOKS/terraform-fmt.sh" 2>&1 >/dev/null)" || bad_rc=$?
+wt_check "terraform-fmt exits 0 on syntax error" "$bad_rc" 0
+wt_check "terraform-fmt prints syntax error to stderr" "$(grep -ci 'error\|unclosed' <<<"$bad_err" | awk '{print ($1 > 0) ? 1 : 0}')" 1
 
 exit "$failed"
