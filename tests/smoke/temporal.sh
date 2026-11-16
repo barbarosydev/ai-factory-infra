@@ -59,6 +59,13 @@ fi
 
 wf_id="ai-factory-smoke-$(date +%s)-$$"
 tq="ai-factory-smoke-tq-$$"
+wf_completed=0
+cleanup_wf() {
+  if [[ "$wf_completed" -eq 0 ]]; then
+    temporal workflow terminate --address "$GRPC_ADDR" --namespace default --workflow-id "$wf_id" --reason "smoke test cleanup" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup_wf EXIT
 
 if temporal workflow start \
   --address "$GRPC_ADDR" \
@@ -73,7 +80,7 @@ else
 fi
 
 if python3 - "$GRPC_ADDR" "$tq" <<'PY'
-import subprocess, sys
+import subprocess, sys, tempfile
 
 addr, tq = sys.argv[1], sys.argv[2]
 
@@ -104,17 +111,16 @@ def field_varint(num, val):
     return varint((num << 3) | 0) + varint(val)
 
 def grpc_call(method, payload):
-    import tempfile
     frame = b"\x00" + len(payload).to_bytes(4, "big") + payload
     url = f"http://{addr}/temporal.api.workflowservice.v1.WorkflowService/{method}"
-    with tempfile.NamedTemporaryFile() as tf:
+    with tempfile.NamedTemporaryFile() as tf, tempfile.NamedTemporaryFile() as hf:
         tf.write(frame)
         tf.flush()
         proc = subprocess.run(
             [
                 "curl", "-sS", "--noproxy", "*", "--http2-prior-knowledge",
                 "--max-time", "20",
-                "-D", "/dev/stderr",
+                "-D", hf.name,
                 "-H", "Content-Type: application/grpc",
                 "-H", "TE: trailers",
                 "-H", "grpc-timeout: 15S",
@@ -125,9 +131,10 @@ def grpc_call(method, payload):
             capture_output=True,
             check=True,
         )
+        headers = hf.read().decode(errors="replace")
     resp = proc.stdout
     if len(resp) < 5:
-        raise RuntimeError(f"empty gRPC frame from {method}: headers={proc.stderr.decode(errors='replace')}")
+        raise RuntimeError(f"empty gRPC frame from {method}: headers={headers}")
     msg_len = int.from_bytes(resp[1:5], "big")
     return resp[5 : 5 + msg_len]
 
@@ -176,6 +183,7 @@ then
   wf_status="$(temporal workflow describe --address "$GRPC_ADDR" --namespace default --workflow-id "$wf_id" -o json 2>/dev/null \
     | jq -r '.workflowExecutionInfo.status // empty' || true)"
   if [[ "$wf_status" == "WORKFLOW_EXECUTION_STATUS_COMPLETED" || "$wf_status" == "Completed" ]]; then
+    wf_completed=1
     check_pass "workflow completion" "$wf_id completed ($wf_status)"
   else
     check_fail "workflow completion" "expected COMPLETED for $wf_id, got '${wf_status:-unknown}'"

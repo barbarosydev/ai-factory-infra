@@ -10,10 +10,11 @@ server:
     repository: temporalio/server
     tag: "${server_image_tag}"
     pullPolicy: IfNotPresent
+  podLabels:
+    app.kubernetes.io/part-of: ai-factory
 
   config:
     logLevel: "info"
-    numHistoryShards: 512
     persistence:
       defaultStore: default
       visibilityStore: visibility
@@ -92,6 +93,8 @@ web:
     repository: temporalio/ui
     tag: "${ui_image_tag}"
     pullPolicy: IfNotPresent
+  podLabels:
+    app.kubernetes.io/part-of: ai-factory
   ingress:
     enabled: true
     className: traefik
@@ -101,3 +104,5 @@ web:
 schema:
   useHelmHooks: false
   ttlSecondsAfterFinished: 86400
+  podLabels:
+    app.kubernetes.io/part-of: ai-factory

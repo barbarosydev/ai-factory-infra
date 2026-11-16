@@ -41,9 +41,9 @@ Rules in a text file depend on the model following them. The permissions and hoo
 
 Three lists, checked in this order: **deny** wins over **ask**, which wins over **allow**. Anything not listed asks.
 
-- **Allow** (runs without a prompt): read-only and safe task commands (`task doctor`, `lint`, `ci`, `plan`, `status`, `down`), read-only `task kube -- get/describe/logs`, `terraform fmt`, `validate`, `init` and `plan`, read-only git (`status`, `diff`, `log`) and the hook tests.
-- **Ask** (you confirm each time): anything that changes the cluster or the Mac. That covers `task up`, `apply` and `clean`, other `task kube` commands, `terraform apply` and `destroy`, `ollama pull` and `k3d`.
-- **Deny** (never): reading `*.tfstate`, `*.tfvars`, `.env` files, any kubeconfig and Docker's `~/.docker/config.json`; `terraform state`, `show`, `output` and `console`; `kubectx`, `kubens` and `kubectl config use-context`.
+- **Allow** (runs without a prompt): read-only and safe task commands (`task doctor`, `smoke:*`, `lint`, `ci`, `plan`, `status`, `access`, `down`), read-only `task kube -- get/describe/logs/top/events`, read-only `temporal` CLI queries (`operator cluster health`, `operator namespace describe/list`, `workflow list/describe/count/show`, `task-queue describe`), `terraform fmt`, `validate`, `init`, `plan` and `terraform-docs`, read-only git (`status`, `diff`, `log`) and the hook tests.
+- **Ask** (you confirm each time): anything that changes the cluster, Temporal workflows or the Mac. That covers `task up`, `apply` and `clean`, other `task kube` commands, `terraform apply` and `destroy`, mutating `temporal` CLI commands (`workflow start/terminate/delete`, `operator`, `activity`, `schedule`, `batch`), `ollama pull` and `k3d`.
+- **Deny** (never): reading `*.tfstate`, `*.tfvars`, `.env` files, any kubeconfig and Docker's `~/.docker/config.json`; `terraform state`, `show`, `output` and `console`; `kubectx`, `kubens` and `kubectl config use-context`; `temporal server` (since Temporal runs inside the cluster on `localhost:7233`).
 
 Personal overrides go in `.claude/settings.local.json`, which is gitignored.
 
@@ -53,10 +53,10 @@ A hook is a script Claude Code runs on every matching tool call. A `PreToolUse` 
 
 | Hook | When | What it does |
 | --- | --- | --- |
-| `kube-guard.py` | Before every shell command | Blocks kubectl, helm or k9s unless they use this repo's `.kube/config`, and any context other than `k3d-ai-factory`. Blocks kubectx, kubens and `kubectl config` edits, provider overrides like `KUBE_CONFIG_PATH`, `terraform state/show/output/console`, `get secret -o ...`, and reading state, tfvars, `.env` or a kubeconfig with `cat`, `grep` and similar tools |
+| `kube-guard.py` | Before every shell command | Blocks kubectl, helm or k9s unless they use this repo's `.kube/config`, and any context other than `k3d-ai-factory`. Blocks kubectx, kubens and `kubectl config` edits, provider overrides like `KUBE_CONFIG_PATH`, `terraform state/show/output/console`, `temporal server` or `temporal` CLI pointing outside `localhost:7233`, `get secret -o ...`, and reading state, tfvars, `.env` or a kubeconfig with `cat`, `grep` and similar tools |
 | `branch-guard.sh` | Before every shell command | Blocks `git commit` while main is checked out and `git push` to main. Added after the IDE switched this checkout to main in the middle of phase 1 |
 | `secret-guard.sh` | Before every file write or edit | Pipes the new content through `gitleaks stdin` and blocks the write if it looks like a key, token or password |
-| `terraform-fmt.sh` | After every file write or edit | Runs `terraform fmt` on an edited `.tf` or `.tfvars` file |
+| `terraform-fmt.sh` | After every file write or edit | Runs `terraform fmt` on an edited `.tf` or `.tfvars` file and refreshes `terraform-docs` in its `README.md` |
 | `session-context.sh` | When a session starts | Prints the branch, the number of uncommitted files and whether the project kubeconfig exists. For `SessionStart`, what a hook prints becomes part of Claude's context |
 
 The kube guard parses each part of a command line separately, so `echo hi && kubectl get ns` is still caught, and it also checks commands nested in `bash -c "..."`, `eval`, `$(...)` and backticks. No pattern matcher catches everything (a script file Claude writes and then runs is not inspected), which is why the deny rules and the project-only kubeconfig sit behind it. `task kube -- <args>` is the normal way in: `scripts/kube.sh` always passes the project kubeconfig and context.
