@@ -149,8 +149,24 @@ run "secret_version_bump_changes_every_key_revision" {
   }
 
   assert {
-    condition     = yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name == "litellm-bootstrap-keys-v2"
+    condition     = startswith(yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name, "litellm-bootstrap-keys-v2-")
     error_message = "A secret_version bump must rename the bootstrap-keys Job so it runs again."
+  }
+}
+
+run "image_bump_renames_bootstrap_keys_job" {
+  command = plan
+
+  variables {
+    image_tag = "1.99.0@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+
+  assert {
+    condition = (
+      yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name == "litellm-bootstrap-keys-v1-${substr(sha256(var.image_tag), 0, 8)}" &&
+      yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name != "litellm-bootstrap-keys-v1-${substr(sha256("1.79.0@sha256:0000000000000000000000000000000000000000000000000000000000000000"), 0, 8)}"
+    )
+    error_message = "An image_tag bump must rename the bootstrap-keys Job so it does not collide with the finished Job within its 10-minute TTL."
   }
 }
 

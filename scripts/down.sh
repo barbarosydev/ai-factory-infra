@@ -6,6 +6,7 @@ set -euo pipefail
 
 # shellcheck source=scripts/lib/common.sh
 source "$(dirname "$0")/lib/common.sh"
+stack_lock "task down"
 
 "$REPO_ROOT/scripts/cluster-stop.sh"
 "$REPO_ROOT/scripts/ollama.sh" unload

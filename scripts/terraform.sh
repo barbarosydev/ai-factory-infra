@@ -13,6 +13,11 @@ case "$action" in
   *) die "usage: scripts/terraform.sh <plan|apply> [args...]" ;;
 esac
 
+# apply changes the shared stack: one at a time (plan only reads it).
+if [[ "$action" == "apply" ]]; then
+  stack_lock "task apply"
+fi
+
 [[ -f "$KUBECONFIG" ]] || die "project kubeconfig not found at $KUBECONFIG: run task up first"
 
 tf_dir="$REPO_ROOT/terraform/environments/local"

@@ -16,6 +16,8 @@ crash.*.log
 .envrc
 # Project-only kubeconfig (written by the cluster scripts)
 .kube/
+# Stack lock held while a script changes the shared stack (scripts/lib/common.sh)
+.stack.lock/
 
 # --- Terraform caches ----------------------------------------------------
 # The lock file (.terraform.lock.hcl) IS committed.

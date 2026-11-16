@@ -99,6 +99,52 @@ require_cmd() {
   done
 }
 
+# --- Stack lock --------------------------------------------------------------
+# Every worktree shares one live stack, so only one script may change it at a time.
+# stack_lock takes the lock for the rest of the calling script and releases it on exit.
+# The lock is a directory in STACK_HOME (mkdir is atomic); it records the holder's pid,
+# checkout and command. A lock whose pid is gone is stale and is taken over. Scripts the
+# holder calls (task up runs terraform.sh apply) see STACK_LOCK_HELD and do not lock again.
+# Nothing waits: a busy stack fails at once and names the holder.
+
+STACK_LOCK_DIR="${STACK_LOCK_DIR:-$STACK_HOME/.stack.lock}"
+export STACK_LOCK_DIR
+
+# stack_lock_holder: prints the holder recorded in the lock, or nothing.
+stack_lock_holder() { cat "$STACK_LOCK_DIR/holder" 2>/dev/null || true; } # no lock: no holder
+
+# stack_lock WHAT: take the lock for WHAT (for example "task apply"), or die naming the holder.
+stack_lock() {
+  local what="$1" pid
+  [[ "${STACK_LOCK_HELD:-}" == "1" ]] && return 0
+  if ! mkdir "$STACK_LOCK_DIR" 2>/dev/null; then
+    pid="$(sed -n 's/^pid=//p' "$STACK_LOCK_DIR/holder" 2>/dev/null || true)" # no holder yet: checked below
+    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+      die "the stack is busy: $(stack_lock_holder | tr '\n' ' ')- wait for it to finish, then run $what again"
+    fi
+    # A lock without a holder is being written right now, unless it is over a minute old.
+    if [[ -z "$pid" && -z "$(find "$STACK_LOCK_DIR" -maxdepth 0 -mmin +1 2>/dev/null)" ]]; then
+      die "the stack is busy (another run is taking the lock) - run $what again in a moment"
+    fi
+    warn "taking over a stale stack lock ($(stack_lock_holder | tr '\n' ' '))"
+    rm -rf "$STACK_LOCK_DIR"
+    mkdir "$STACK_LOCK_DIR" 2>/dev/null || die "another run took the stack lock just now; run $what again"
+  fi
+  printf 'pid=%s\ncheckout=%s\ncommand=%s\nsince=%s\n' "$$" "$REPO_ROOT" "$what" \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >"$STACK_LOCK_DIR/holder"
+  STACK_LOCK_HELD=1
+  export STACK_LOCK_HELD
+  trap stack_unlock EXIT
+}
+
+# stack_unlock: release the lock if this process holds it. Runs on exit after stack_lock.
+stack_unlock() {
+  local pid
+  pid="$(sed -n 's/^pid=//p' "$STACK_LOCK_DIR/holder" 2>/dev/null || true)" # already gone: nothing to release
+  [[ "$pid" == "$$" ]] && rm -rf "$STACK_LOCK_DIR"
+  return 0
+}
+
 # --- Cluster helpers -------------------------------------------------------
 
 # kc ARGS...: kubectl pinned to the project kubeconfig and context.
