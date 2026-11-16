@@ -9,12 +9,17 @@ set -euo pipefail
 
 command -v jq >/dev/null 2>&1 || exit 0
 
-cmd="$(jq -r '.tool_input.command // empty')"
+input="$(cat)"
+cmd="$(jq -r '.tool_input.command // empty' <<<"$input")"
 # Only lines that run git commit or git push (also with -C <dir> or -c k=v first).
 git_sub='(^|[;&|(`[:space:]])git([[:space:]]+-[Cc][[:space:]]+[^[:space:]]+)*[[:space:]]+'
 grep -Eq "${git_sub}(commit|push)([[:space:]]|$)" <<<"$cmd" || exit 0
 
-branch="$(git -C "${CLAUDE_PROJECT_DIR:-.}" branch --show-current 2>/dev/null || true)"
+# Check the directory the command runs in (the hook input's cwd), not the project
+# directory: in a git worktree session the two differ and have different branches.
+dir="$(jq -r '.cwd // empty' <<<"$input")"
+[[ -n "$dir" && -d "$dir" ]] || dir="${CLAUDE_PROJECT_DIR:-.}"
+branch="$(git -C "$dir" branch --show-current 2>/dev/null || true)"
 
 if [[ "$branch" == "main" ]]; then
   echo "Blocked by .claude/hooks/branch-guard.sh: main is checked out (did the IDE switch branches?)." >&2
