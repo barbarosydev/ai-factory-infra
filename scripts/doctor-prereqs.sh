@@ -72,6 +72,9 @@ check_tool gitleaks    gitleaks   8.20  gitleaks version
 check_tool ollama         ollama         0.40  ollama --version
 check_tool temporal       temporal       1.0   temporal --version
 check_tool terraform-docs terraform-docs 0.19  terraform-docs --version
+check_tool ruff           ruff           0.17  ruff --version
+# The Homebrew build of conftest reports its own version as "dev"; ask Homebrew instead.
+check_tool conftest       conftest       0.70  brew list --versions conftest
 
 # k3d is pinned exactly.
 if command -v k3d >/dev/null 2>&1; then

@@ -1,0 +1,15 @@
+# Ruff settings for the repo's Python (scripts/lib, .claude/hooks, tests/python).
+# Run: ruff check scripts/lib .claude/hooks/kube-guard.py tests/python
+target-version = "py312"
+line-length = 120
+extend-exclude = [".terraform", ".kube"]
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+ignore = ["S603", "S607"]  # curl and yq are called from PATH on purpose
+
+[lint.per-file-ignores]
+# Tests may assert and build throwaway paths.
+"tests/**" = ["S101"]
+# validate_tftpl.py holds mock image digests that cannot be wrapped.
+"scripts/lib/validate_tftpl.py" = ["E501"]

@@ -64,7 +64,7 @@ Once per clone, from the repo root:
 pre-commit install
 ```
 
-Every commit then runs `task ci -- --staged`: lint, the hook tests and a gitleaks scan of the staged changes. `task doctor:prereqs` warns (`pre-commit-hook`) when this step was skipped.
+Every commit then runs `task ci -- --staged`: lint, the tests and a gitleaks scan of the staged changes. `task doctor:prereqs` warns (`pre-commit-hook`) when this step was skipped.
 
 ## 5. Models
 

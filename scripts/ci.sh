@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# The one check that pre-commit and GitHub Actions both run: lint, the hook tests and a secret scan.
+# The one check that pre-commit and GitHub Actions both run: lint (with the Terraform module tests and
+# the policies), the hook, state-check, script library and Python tests, and a secret scan.
 # Usage: scripts/ci.sh [--staged]
 #   --staged  scan only the staged changes (pre-commit uses this)
 #   default   scan the whole git history (GitHub Actions and manual runs)
@@ -26,6 +27,12 @@ info "hook tests"
 
 info "state check tests"
 "$REPO_ROOT/tests/state/run.sh"
+
+info "script library tests"
+"$REPO_ROOT/tests/lib/run.sh"
+
+info "python tests"
+python3 -B -m unittest discover -s "$REPO_ROOT/tests/python" -q
 
 require_cmd gitleaks
 # Git mode only: a directory scan would read gitignored files such as .kube/config.

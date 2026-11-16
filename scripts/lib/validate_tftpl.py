@@ -9,6 +9,7 @@ Checks every module under `terraform/modules/*/`:
 
 Runs in `<100ms` inside `scripts/lint.sh` (`task lint` and `task ci`).
 """
+
 from __future__ import annotations
 
 import pathlib
@@ -69,8 +70,21 @@ def extract_tftpl_variables(tpl_text: str) -> set[str]:
     """Extract Terraform template variable identifiers referenced in `.yaml.tftpl`."""
     vars_found: set[str] = set()
     builtins = {
-        "true", "false", "in", "for", "if", "endif", "endfor",
-        "agent", "model", "_", "sha256", "jsonencode", "keys", "upper", "replace",
+        "true",
+        "false",
+        "in",
+        "for",
+        "if",
+        "endif",
+        "endfor",
+        "agent",
+        "model",
+        "_",
+        "sha256",
+        "jsonencode",
+        "keys",
+        "upper",
+        "replace",
     }
     # Match `${...}` (allowing one level of nested `{...}`) and `%{ ... ~}`
     for expr in re.findall(

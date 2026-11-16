@@ -17,6 +17,7 @@ Commands nested in `bash -c "..."`, `sh -c`, `eval`, `$(...)` and backticks are
 checked too. Everything else passes (exit 0). Standard library only.
 Tests: tests/hooks/run.sh (task ci runs them).
 """
+
 import json
 import os
 import re
@@ -30,14 +31,46 @@ PROJECT_KUBECONFIG = os.path.realpath(os.path.join(PROJECT_DIR, ".kube", "config
 CLUSTER_TOOLS = {"kubectl", "helm", "k9s"}
 CONTEXT_SWITCHERS = {"kubectx", "kubens"}
 KUBECTL_CONFIG_WRITES = {
-    "use-context", "set-context", "delete-context", "rename-context",
-    "set-cluster", "set-credentials", "unset", "set", "view",
+    "use-context",
+    "set-context",
+    "delete-context",
+    "rename-context",
+    "set-cluster",
+    "set-credentials",
+    "unset",
+    "set",
+    "view",
 }
 TERRAFORM_STATE_READERS = {"state", "show", "output", "console"}
 READERS = {
-    "cat", "less", "more", "head", "tail", "bat", "strings", "xxd", "od", "base64",
-    "grep", "rg", "ag", "sed", "awk", "jq", "yq", "cp", "scp", "open", "code", "vim", "nano",
-    "python", "python3", "node", "ruby", "perl",
+    "cat",
+    "less",
+    "more",
+    "head",
+    "tail",
+    "bat",
+    "strings",
+    "xxd",
+    "od",
+    "base64",
+    "grep",
+    "rg",
+    "ag",
+    "sed",
+    "awk",
+    "jq",
+    "yq",
+    "cp",
+    "scp",
+    "open",
+    "code",
+    "vim",
+    "nano",
+    "python",
+    "python3",
+    "node",
+    "ruby",
+    "perl",
 }
 SECRET_PATH = re.compile(
     r"(\.tfstate(\.[A-Za-z0-9_.-]+)?|\.tfplan|\.tfvars(\.json)?|(^|/|['\"])\.env(\.[A-Za-z0-9_.-]+)?|(^|/|['\"])\.kube/config)(['\")]|\s|$)"
@@ -126,7 +159,11 @@ def check_segment(words) -> None:
         block(f"{tool} changes your global kube context. Use `task kube -- ...` instead.")
 
     if tool in CLUSTER_TOOLS:
-        if tool == "kubectl" and "config" in args and any(a in KUBECTL_CONFIG_WRITES for a in args[args.index("config") + 1:]):
+        if (
+            tool == "kubectl"
+            and "config" in args
+            and any(a in KUBECTL_CONFIG_WRITES for a in args[args.index("config") + 1 :])
+        ):
             block("kubectl config commands can switch, edit or print kube contexts and credentials.")
         kubeconfig = flag_value(args, "--kubeconfig") or env.get("KUBECONFIG")
         if not kubeconfig or resolve(kubeconfig) != PROJECT_KUBECONFIG:
@@ -149,7 +186,8 @@ def check_segment(words) -> None:
             block("`temporal server` is blocked: Temporal runs in the k3d cluster on localhost:7233 via Terraform.")
         t_addr = flag_value(args, "--address") or env.get("TEMPORAL_ADDRESS") or env.get("TEMPORAL_CLI_ADDRESS")
         if t_addr and t_addr not in ALLOWED_TEMPORAL_ADDRS:
-            block(f"only local Temporal addresses ({', '.join(sorted(ALLOWED_TEMPORAL_ADDRS))}) are allowed, not {t_addr}.")
+            allowed = ", ".join(sorted(ALLOWED_TEMPORAL_ADDRS))
+            block(f"only local Temporal addresses ({allowed}) are allowed, not {t_addr}.")
 
     # Secret values from the cluster, through kubectl or task kube.
     joined = " ".join(args)
@@ -157,7 +195,9 @@ def check_segment(words) -> None:
     has_secret = any(re.match(r"^secrets?(/|$)", a) for a in args)
     if (tool == "kubectl" or (tool == "task" and args[:1] == ["kube"])) and has_get and has_secret:
         if re.search(r"(^|\s)(-o|--output|--template)(\s|=|$)|\s-o\w", " " + joined):
-            block("printing Kubernetes Secret values is not allowed; list names with `task kube -- get secrets -n <ns>`.")
+            block(
+                "printing Kubernetes Secret values is not allowed; list names with `task kube -- get secrets -n <ns>`."
+            )
     if tool in CLUSTER_TOOLS | {"task"} and re.search(r"\bsecrets?\b.*(jsonpath|go-template|base64)", joined):
         block("printing Kubernetes Secret values is not allowed.")
 

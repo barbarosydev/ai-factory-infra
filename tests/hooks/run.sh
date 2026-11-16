@@ -3,7 +3,7 @@
 # Tests for the Claude Code hooks in .claude/hooks/. Each case feeds the hook the
 # same JSON that Claude Code sends and checks the exit code: 2 = blocked, 0 = allowed.
 # Usage: tests/hooks/run.sh      (task ci runs it through scripts/lint.sh)
-# Needs: python3, jq, git. Changes nothing outside a temporary directory.
+# Needs: python3 (kube-guard.py is Python), jq, git. Python helper tests live in tests/python/. Changes nothing outside a temporary directory.
 set -euo pipefail
 
 # shellcheck source=scripts/lib/common.sh
@@ -191,44 +191,6 @@ if command -v gitleaks >/dev/null 2>&1; then
       failed=1
     fi
   done
-fi
-
-# --- Python helpers: temporal_grpc.py & validate_tftpl.py ----------------------
-if python3 -B - "$REPO_ROOT" <<'PY'
-import pathlib, sys
-repo = pathlib.Path(sys.argv[1])
-sys.path.insert(0, str(repo / "scripts" / "lib"))
-import temporal_grpc as tg
-import validate_tftpl as vt
-
-# 1. Varint round-trip across single-byte and multi-byte boundaries
-for val in [0, 1, 127, 128, 300, 16384, 2**32 - 1]:
-    enc = tg.encode_varint(val)
-    dec, pos = tg.decode_varint(enc, 0)
-    assert dec == val and pos == len(enc), f"varint mismatch for {val}"
-
-# 2. gRPC frame pack/unpack and PollWorkflowTaskQueueResponse token extraction
-fake_token = b"temporal-task-token-12345"
-poll_resp = tg.field_bytes(1, fake_token) + tg.field_varint(4, 42)
-frame = tg.pack_grpc_frame(poll_resp)
-unpacked = tg.unpack_grpc_frame(frame)
-assert tg.extract_task_token(unpacked) == fake_token
-
-# 3. RespondWorkflowTaskCompletedRequest builder & gRPC trailer status parser
-comp_req = tg.build_complete_workflow_task_request("default", fake_token, "worker-1", '{"ok":true}')
-assert fake_token in comp_req and b'{"ok":true}' in comp_req
-status, msg = tg.parse_grpc_status("HTTP/2 200\r\ngrpc-status: 3\r\ngrpc-message: Context timeout is not set.\r\n")
-assert status == 3 and "Context timeout" in msg
-
-# 4. Template validator detects missing variables and passes current repo
-assert vt.validate_all() == 0
-assert vt.extract_tftpl_variables("host: ${ingress_host}\nport: ${grpc_port}") == {"ingress_host", "grpc_port"}
-PY
-then
-  printf '%sPASS%s  %-16s %s\n' "$C_GREEN" "$C_RESET" "python-helpers" "temporal_grpc.py & validate_tftpl.py unit tests"
-else
-  printf '%sFAIL%s  %-16s %s\n' "$C_RED" "$C_RESET" "python-helpers" "temporal_grpc.py & validate_tftpl.py unit tests"
-  failed=1
 fi
 
 exit "$failed"

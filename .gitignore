@@ -20,6 +20,8 @@ crash.*.log
 # --- Terraform caches ----------------------------------------------------
 # The lock file (.terraform.lock.hcl) IS committed.
 .terraform/
+# terraform test initialises each module; lock files are committed for environments only.
+terraform/modules/*/.terraform.lock.hcl
 override.tf
 override.tf.json
 *_override.tf
