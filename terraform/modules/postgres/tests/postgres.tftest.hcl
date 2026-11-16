@@ -23,7 +23,7 @@ mock_provider "random" {}
 variables {
   namespace           = "ai-platform"
   operator_image_tag  = "1.30.1@sha256:0000000000000000000000000000000000000000000000000000000000000000"
-  postgres_image_name = "ghcr.io/cloudnative-pg/postgresql:16.9@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  postgres_image_name = "ghcr.io/cloudnative-pg/postgresql:18.6@sha256:0000000000000000000000000000000000000000000000000000000000000000"
 }
 
 run "helm_releases_pin_the_chart_and_keep_safe_release_settings" {
@@ -81,7 +81,7 @@ run "cluster_values_declare_databases_roles_image_and_resources" {
   }
 
   assert {
-    condition     = yamldecode(helm_release.cnpg_cluster.values[0]).version.postgresql == "16"
+    condition     = yamldecode(helm_release.cnpg_cluster.values[0]).version.postgresql == "18"
     error_message = "version.postgresql must carry postgres_version."
   }
 

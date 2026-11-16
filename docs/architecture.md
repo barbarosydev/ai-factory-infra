@@ -16,7 +16,7 @@ flowchart LR
           litellm["LiteLLM Gateway & Admin UI<br/>(1.109.1)"]
           temporal["Temporal Server & Web UI<br/>(chart 1.8.0, server 1.32.2, UI 2.56.1)"]
           svc["Service ollama<br/>(ExternalName -> host.k3d.internal)"]
-          pg[("PostgreSQL 16 (CloudNativePG)<br/>DBs: temporal, temporal_visibility, litellm")]
+          pg[("PostgreSQL 18 (CloudNativePG)<br/>DBs: temporal, temporal_visibility, litellm")]
         end
       end
     end
@@ -71,7 +71,7 @@ Measured on 16 Nov 2026 with `task status` (`docker stats --no-stream`, `kubectl
 | `temporal-worker` | `6m` | **51 MiB** | 64Mi / 128Mi | Internal system workflows |
 | `temporal-web` | `1m` | **32 MiB** | 32Mi / 64Mi | Web UI (`temporalio/ui:2.56.1`) |
 | *Temporal subtotal (5 pods)* | *`48m`* | ***390 MiB*** | *416Mi / 960Mi* | SQL visibility avoids Elasticsearch overhead |
-| `ai-postgres-cluster-1` | `10m` | **150 MiB** | 256Mi / 1Gi | PostgreSQL 16 (`shared_buffers = 128MB`) |
+| `ai-postgres-cluster-1` | `10m` | **150 MiB** | 256Mi / 1Gi | PostgreSQL 18 (`shared_buffers = 128MB`) |
 | `cnpg-cloudnative-pg` | `2m` | **36 MiB** | 64Mi / 128Mi | CloudNativePG operator |
 | *PostgreSQL subtotal (2 pods)* | *`12m`* | ***186 MiB*** | *320Mi / 1.125Gi* | Shared server across 3 databases |
 
