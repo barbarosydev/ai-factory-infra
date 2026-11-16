@@ -127,4 +127,55 @@ check "stack_lock succeeds after stale takeover" "1" "$(grep -c '^taken$' <<<"$s
 check "PROBE_IMAGE is pinned by version and sha256 digest" "1" \
   "$(grep -Ec '^[^:]+:[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$' <<<"$PROBE_IMAGE")"
 
+# --- scripts/terraform.sh preserves local state in main checkout and worktrees -
+if command -v terraform >/dev/null 2>&1; then
+  tf_repo="$tmp/tf-repo"
+  mkdir -p "$tf_repo/scripts/lib" "$tf_repo/terraform/environments/local" "$tf_repo/.kube"
+  cp "$REPO_ROOT/scripts/terraform.sh" "$tf_repo/scripts/terraform.sh"
+  cp "$REPO_ROOT/scripts/lib/common.sh" "$tf_repo/scripts/lib/common.sh"
+  chmod +x "$tf_repo/scripts/terraform.sh"
+  : >"$tf_repo/.kube/config"
+  cat >"$tf_repo/terraform/environments/local/versions.tf" <<'EOF'
+terraform {
+  backend "local" {
+    path = "terraform.tfstate"
+  }
+}
+EOF
+  cat >"$tf_repo/terraform/environments/local/main.tf" <<'EOF'
+variable "kubeconfig_path" { type = string }
+resource "terraform_data" "x" { input = "ok" }
+EOF
+  (
+    # shellcheck disable=SC2046
+    unset $(git rev-parse --local-env-vars)
+    git -C "$tf_repo" init -q -b main
+    git -C "$tf_repo" add -A
+    git -C "$tf_repo" -c user.name=t -c user.email=t@example.invalid commit -q -m init
+    git -C "$tf_repo" worktree add -q "$tmp/tf-wt" -b wt
+  )
+  tf_rc=0
+  (
+    # shellcheck disable=SC2046
+    unset $(git rev-parse --local-env-vars)
+    env -u STACK_HOME "$tf_repo/scripts/terraform.sh" apply >/dev/null 2>&1
+    env -u STACK_HOME "$tf_repo/scripts/terraform.sh" plan -detailed-exitcode >/dev/null 2>&1
+  ) || tf_rc=$?
+  check "terraform.sh plan in main checkout preserves state (no-op)" "0" "$tf_rc"
+  tf_rc=0
+  (
+    # shellcheck disable=SC2046
+    unset $(git rev-parse --local-env-vars)
+    env -u STACK_HOME "$tmp/tf-wt/scripts/terraform.sh" plan -detailed-exitcode >/dev/null 2>&1
+  ) || tf_rc=$?
+  check "terraform.sh plan in worktree preserves state (no-op)" "0" "$tf_rc"
+  tf_rc=0
+  (
+    # shellcheck disable=SC2046
+    unset $(git rev-parse --local-env-vars)
+    env -u STACK_HOME "$tf_repo/scripts/terraform.sh" plan -detailed-exitcode >/dev/null 2>&1
+  ) || tf_rc=$?
+  check "terraform.sh plan back in main checkout preserves state (no-op)" "0" "$tf_rc"
+fi
+
 exit "$failed"

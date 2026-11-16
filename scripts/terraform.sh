@@ -25,8 +25,17 @@ tf_dir="$REPO_ROOT/terraform/environments/local"
 info "initializing Terraform in ${tf_dir#"$REPO_ROOT"/}"
 # State and kubeconfig live in STACK_HOME (the main checkout), also when this runs
 # from a git worktree; see scripts/lib/common.sh.
+# In the main checkout TF_STATE_FILE is already the backend's default "terraform.tfstate";
+# passing it as an absolute -backend-config path makes Terraform's local backend truncate
+# the existing state file to 0 bytes during init -reconfigure.
 export TF_VAR_kubeconfig_path="$KUBECONFIG"
-terraform -chdir="$tf_dir" init -input=false -upgrade=false -reconfigure -backend-config="path=$TF_STATE_FILE" >/dev/null
+tf_dir_real="$(cd "$tf_dir" && pwd -P)"
+state_dir_real="$(cd "$(dirname "$TF_STATE_FILE")" 2>/dev/null && pwd -P || true)" # missing dir: treated as non-local path
+init_args=(-input=false -upgrade=false -reconfigure)
+if [[ -z "$state_dir_real" || "$state_dir_real/$(basename "$TF_STATE_FILE")" != "$tf_dir_real/terraform.tfstate" ]]; then
+  init_args+=(-backend-config="path=$TF_STATE_FILE")
+fi
+terraform -chdir="$tf_dir" init "${init_args[@]}" >/dev/null
 
 if [[ "$action" == "plan" ]]; then
   terraform -chdir="$tf_dir" plan -input=false "$@"
