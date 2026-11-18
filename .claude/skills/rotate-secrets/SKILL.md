@@ -24,7 +24,7 @@ All credentials in `ai-factory-infra` are generated via `ephemeral "random_passw
 1. Increment `variable "secret_version"` default in `terraform/modules/litellm/variables.tf` (e.g. `1` -> `2`).
 2. Run `task lint` and `task plan`:
    - `kubernetes_secret_v1.master_key` and `kubernetes_secret_v1.agent_key[*]` update `data_wo_revision`.
-   - `helm_release.litellm` updates the bootstrap Job name (`litellm-bootstrap-keys-v<N>`) so Kubernetes runs a fresh Job that updates each agent's virtual key via `/key/update`.
+   - `helm_release.litellm` updates the bootstrap Job name (`litellm-bootstrap-keys-v<N>-<image_hash>`) so Kubernetes runs a fresh Job that updates each agent's virtual key via `/key/update`.
 3. Ask before running `task apply`.
 4. After `task apply`, restart `deployment/litellm` (`task kube -- rollout restart deployment/litellm -n ai-platform`) if the master key changed, then verify with `task doctor -- --only litellm`.
 

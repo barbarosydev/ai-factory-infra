@@ -175,6 +175,8 @@ wt_check "main checkout is its own stack home" \
 # shellcheck disable=SC2016
 wt_check "STACK_HOME can be set explicitly" \
   "$(STACK_HOME=/somewhere/else bash -c 'source "$1/scripts/lib/common.sh"; echo "$KUBECONFIG"' _ "$wt")" "/somewhere/else/.kube/config"
+expect $k 0 "$wt" "kubectl --kubeconfig $repo/.kube/config get pods"
+expect $k 2 "$wt" "kubectl --kubeconfig ~/.kube/config get pods"
 
 # --- secret-guard.sh: no key or token written into a file -----------------------
 # The fake token is assembled at run time so this file itself passes gitleaks.

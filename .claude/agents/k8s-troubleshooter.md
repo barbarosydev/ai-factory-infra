@@ -13,7 +13,7 @@ Allowed reads: `get`, `describe`, `logs` (including `--previous`), `get events`,
 Method:
 1. Start from the symptom and the namespace (usually ai-platform).
 2. Narrow to one pod, then read its events, then its logs, then the previous container's logs.
-3. Check its dependencies: Postgres (`ai-postgres-cluster-rw`) for Temporal and LiteLLM, the `ollama` Service for LiteLLM, and for Temporal also check the `temporal-schema-*` and `temporal-namespace-*` Jobs in `ai-platform` and the `svclb-temporal-frontend-*` DaemonSet pod in `kube-system` (which exposes `localhost:7233`).
+3. Check its dependencies: Postgres (`ai-postgres-cluster-rw`) for Temporal and LiteLLM, the `ollama` Service for LiteLLM, and for Temporal also check any `app.kubernetes.io/instance=temporal` setup Jobs in `ai-platform` and the `svclb-temporal-frontend-*` DaemonSet pod in `kube-system` (which exposes `localhost:7233`). Note that LiteLLM setup Jobs (`ttlSecondsAfterFinished: 300`/`600`) and Temporal setup Jobs (`schema.ttlSecondsAfterFinished: 86400`, 24h) are deleted by Kubernetes once their TTL expires — `0` Jobs in `ai-platform` on a cluster older than 24h is normal when `temporal operator namespace describe --namespace default --address localhost:7233` succeeds.
 4. Before blaming DNS: right after a resume, pods cannot resolve `host.k3d.internal` for about 90 s, which is normal. For an image pull refused with `image access restricted`, the cause is a Docker Desktop sign-in (see `docs/runbook.md`, "Troubleshooting on this Mac").
 5. Stop as soon as the cause is supported by evidence.
 

@@ -67,7 +67,7 @@ Pick the model by tier, whatever the vendor: **deep reasoning** (the strongest m
 2. Before every commit run `git status -sb`: the IDE has switched this checkout to another branch mid-task before. The branch-guard hook blocks commits on main, but not a wrong feature branch.
 3. `task ci` must pass (pre-commit runs it on the staged changes anyway).
 4. Record a fact a later session would need (a version found, a Mac quirk) in the docs or an ADR, not only in the conversation.
-5. Every worktree runs its own branch's code against the one live stack. The stack's kubeconfig and Terraform state live in the main checkout (see `STACK_HOME` in `scripts/lib/common.sh`). Only one agent should run `task up` or `task apply` at a time; `task ci`, `task plan` and `task doctor` are safe from any worktree.
+5. Every worktree runs its own branch's code against the one live stack. The stack's kubeconfig and Terraform state live in the main checkout (see `STACK_HOME` in `scripts/lib/common.sh`). Mutating stack commands (`task up`, `task down`, `task apply`, `task stop:cluster`, `task clean`, `task clean:all`) serialize via `stack_lock` (`$STACK_HOME/.stack.lock`); `task ci`, `task plan` and `task doctor` are safe from any worktree.
 
 ## Definition of done
 

@@ -15,6 +15,7 @@ Follow these steps in order before committing or opening a pull request:
    - Delegate to the `platform-verifier` agent (or run `task ci`, `task plan`, and `task doctor`) to verify:
      - `task ci` passes (`terraform fmt`, `validate`, lockfile, `tflint`, `terraform-docs`, `.yaml.tftpl` validation, `shellcheck`, hook & Python helper unit tests, `gitleaks`).
      - `task plan` reports `No changes. Your infrastructure matches the configuration.`
+     - If cluster lifecycle or rollout-wait scripts (`scripts/up.sh`, `scripts/down.sh`, `scripts/cluster-*.sh`, `scripts/terraform.sh`, `cluster/`) changed, run `task smoke:cluster -- --lifecycle` in the main session to verify `task down` followed by `task up` on the live stack.
      - `task doctor` passes with `0 failed`; its `tfstate secrets` check is a blocking gate. Agents run the script and see only its count, never the state.
 4. **Commit & Push**:
    - Stage intentional changes (`git add -A`), check `git status -sb` one last time, commit with a conventional commit message (`feat(...)`, `fix(...)`, `chore(...)`, `docs(...)`), and push (`git push -u origin <branch>`).

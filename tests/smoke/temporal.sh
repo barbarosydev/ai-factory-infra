@@ -32,12 +32,19 @@ for svc in frontend history matching worker web; do
   fi
 done
 
-jobs_ok="$(kc get jobs -n "$NS" -l app.kubernetes.io/instance=temporal -o json 2>/dev/null \
-  | jq -r '[.items[] | select((.status.succeeded // 0) >= 1)] | length' || echo 0)"
-if [[ "${jobs_ok:-0}" -ge 2 ]]; then
+jobs_json="$(kc get jobs -n "$NS" -l app.kubernetes.io/instance=temporal -o json 2>/dev/null || echo '{"items":[]}')" # missing API response: checked below
+jobs_total="$(jq -r '.items | length' <<<"$jobs_json")"
+jobs_ok="$(jq -r '[.items[] | select((.status.succeeded // 0) >= 1)] | length' <<<"$jobs_json")"
+if (( jobs_ok < jobs_total )); then
+  check_fail "temporal schema & namespace jobs" "expected all Jobs succeeded, found $jobs_ok of $jobs_total"
+elif (( jobs_ok >= 2 )); then
   check_pass "temporal schema & namespace jobs" "$jobs_ok Jobs succeeded"
+elif temporal operator namespace describe --namespace default --address "$GRPC_ADDR" >/dev/null 2>&1; then
+  # schema.ttlSecondsAfterFinished (86400s) garbage-collects finished Jobs after 24h;
+  # an active default namespace proves both schema setup and namespace registration succeeded.
+  check_pass "temporal schema & namespace jobs" "reaped after 24h TTL (schema & default namespace active)"
 else
-  check_fail "temporal schema & namespace jobs" "expected 2 succeeded Jobs, found ${jobs_ok:-0}"
+  check_fail "temporal schema & namespace jobs" "expected 2 succeeded Jobs, found $jobs_ok"
 fi
 
 # --- Host gRPC health & default namespace ----------------------------------

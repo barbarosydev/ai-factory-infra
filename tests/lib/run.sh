@@ -176,6 +176,105 @@ EOF
     env -u STACK_HOME "$tf_repo/scripts/terraform.sh" plan -detailed-exitcode >/dev/null 2>&1
   ) || tf_rc=$?
   check "terraform.sh plan back in main checkout preserves state (no-op)" "0" "$tf_rc"
+
+  # --- scripts/terraform.sh handles Temporal Jobs across TTL lifecycle ---------
+  mkdir -p "$tmp/tf-bin"
+  cat >"$tmp/tf-bin/kubectl" <<'STUB'
+#!/usr/bin/env bash
+# Drop --kubeconfig <path> --context <ctx>
+shift 4
+case "${KUBECTL_MODE:-}:${*}" in
+  *:get\ deployment/temporal-frontend*) exit 0 ;;
+  *:get\ cluster.postgresql.cnpg.io/*|*:get\ deployment/cnpg-*|*:get\ deployment/litellm*) exit 1 ;;
+  ttl_reaped:get\ job\ -l\ app.kubernetes.io/instance=temporal*) exit 0 ;;
+  ttl_reaped:wait*) echo "error: no matching resources found" >&2; exit 1 ;;
+  vanished:get\ job\ -l\ app.kubernetes.io/instance=temporal*) echo "job.batch/temporal-schema"; exit 0 ;;
+  vanished:wait*job.batch/temporal-schema*) exit 1 ;;
+  vanished:get\ job.batch/temporal-schema*) exit 1 ;;
+  failed:get\ job\ -l\ app.kubernetes.io/instance=temporal*) echo "job.batch/temporal-schema"; exit 0 ;;
+  failed:wait*job.batch/temporal-schema*) exit 1 ;;
+  failed:get\ job.batch/temporal-schema*) echo "NAME COMPLETIONS"; exit 0 ;;
+  failed:logs\ job.batch/temporal-schema*) echo "schema error"; exit 0 ;;
+  *:rollout\ status\ deployment/temporal-*) exit 0 ;;
+  *) exit 1 ;;
+esac
+STUB
+  chmod +x "$tmp/tf-bin/kubectl"
+
+  run_tf_apply_with_mode() {
+    (
+      # shellcheck disable=SC2046
+      unset $(git rev-parse --local-env-vars)
+      PATH="$tmp/tf-bin:$PATH" KUBECTL_MODE="$1" env -u STACK_HOME "$tf_repo/scripts/terraform.sh" apply
+    )
+  }
+  check "terraform.sh apply succeeds when Temporal Jobs were reaped by TTL" "0" \
+    "$(rc run_tf_apply_with_mode ttl_reaped)"
+  check "terraform.sh apply succeeds when Temporal Job vanishes mid-wait (TTL)" "0" \
+    "$(rc run_tf_apply_with_mode vanished)"
+  failed_out="$(run_tf_apply_with_mode failed 2>&1 || true)"
+  check "terraform.sh apply fails when a Temporal Job fails" "1" \
+    "$(grep -c 'job.batch/temporal-schema failed or timed out' <<<"$failed_out")"
 fi
+
+# --- tests/smoke/temporal.sh handles Temporal Jobs before and after 24h TTL ----
+smoke_repo="$tmp/smoke-repo"
+mkdir -p "$smoke_repo/scripts/lib" "$smoke_repo/tests/smoke" "$tmp/smoke-bin"
+cp "$REPO_ROOT/scripts/lib/common.sh" "$smoke_repo/scripts/lib/common.sh"
+cp "$REPO_ROOT/tests/smoke/temporal.sh" "$smoke_repo/tests/smoke/temporal.sh"
+chmod +x "$smoke_repo/tests/smoke/temporal.sh"
+cat >"$smoke_repo/scripts/lib/temporal_grpc.py" <<'STUB'
+#!/usr/bin/env bash
+exit 0
+STUB
+chmod +x "$smoke_repo/scripts/lib/temporal_grpc.py"
+cat >"$tmp/smoke-bin/kubectl" <<'STUB'
+#!/usr/bin/env bash
+shift 4
+case "$*" in
+  get\ deployment\ temporal-*) printf '1' ;;
+  get\ jobs*)
+    case "${SMOKE_MODE:-}" in
+      2_ok) printf '{"items":[{"status":{"succeeded":1}},{"status":{"succeeded":1}}]}' ;;
+      job_failed) printf '{"items":[{"status":{"succeeded":1}},{"status":{"failed":1}}]}' ;;
+      *) printf '{"items":[]}' ;;
+    esac
+    ;;
+esac
+STUB
+cat >"$tmp/smoke-bin/temporal" <<'STUB'
+#!/usr/bin/env bash
+case "$*" in
+  operator\ cluster\ health*) echo "temporal.api.workflowservice.v1.WorkflowService: SERVING" ;;
+  operator\ namespace\ describe*) [[ "${SMOKE_MODE:-}" != "no_ns" ]] ;;
+  workflow\ start*) exit 0 ;;
+  workflow\ describe*) printf '{"workflowExecutionInfo":{"status":"WORKFLOW_EXECUTION_STATUS_COMPLETED"}}' ;;
+  *) exit 0 ;;
+esac
+STUB
+cat >"$tmp/smoke-bin/curl" <<'STUB'
+#!/usr/bin/env bash
+if [[ "$*" == *"%{http_code}"* ]]; then
+  printf '200'
+else
+  wf="${*#*WorkflowId%3D%22}"
+  wf="${wf%%%22*}"
+  printf '{"executions":[{"execution":{"workflowId":"%s"},"status":"WORKFLOW_EXECUTION_STATUS_COMPLETED"}]}' "$wf"
+fi
+STUB
+chmod +x "$tmp/smoke-bin/kubectl" "$tmp/smoke-bin/temporal" "$tmp/smoke-bin/curl"
+
+run_temporal_smoke() {
+  ( PATH="$tmp/smoke-bin:$PATH" SMOKE_MODE="$1" "$smoke_repo/tests/smoke/temporal.sh" --json || true ) \
+    | jq -r '.checks[] | select(.check == "temporal schema & namespace jobs") | "\(.status)|\(.detail)"'
+}
+check "temporal.sh passes when 2 setup Jobs succeeded" \
+  "PASS|2 Jobs succeeded" "$(run_temporal_smoke 2_ok)"
+check "temporal.sh passes when setup Jobs reaped by 24h TTL and default ns active" \
+  "PASS|reaped after 24h TTL (schema & default namespace active)" "$(run_temporal_smoke ttl_reaped)"
+check "temporal.sh fails when a present setup Job failed" \
+  "FAIL|expected all Jobs succeeded, found 1 of 2" "$(run_temporal_smoke job_failed)"
+check "temporal.sh fails when 0 Jobs and default ns not registered" \
+  "FAIL|expected 2 succeeded Jobs, found 0" "$(run_temporal_smoke no_ns)"
 
 exit "$failed"
