@@ -22,7 +22,7 @@ flowchart TD
   P -- ask --> U{You approve?}
   U -- no --> X
   U -- yes --> H
-  P -- allow --> H{PreToolUse hooks<br/>kube-guard, branch-guard, secret-guard}
+  P -- allow --> H{PreToolUse hooks<br/>kube-guard, branch-guard, agent-guard, secret-guard}
   H -- exit 2 --> B[Blocked: Claude reads the reason and adjusts]
   H -- exit 0 --> R[Tool runs]
   R --> Q[PostToolUse hook<br/>terraform-fmt]
@@ -99,8 +99,8 @@ An agent (subagent) is a separate Claude with its own instructions and tool list
 
 Claude Code can work in a git worktree, so several sessions do not share one checkout. Three things make that safe here:
 
-- **One stack.** There is one cluster, so there is one kubeconfig and one Terraform state. They live in the main checkout (`STACK_HOME` in `scripts/lib/common.sh`). A session in a worktree runs its own branch's scripts and Terraform against that stack, so `task plan` and `task doctor` work from anywhere. Only one session should run `task up` or `task apply` at a time.
-- **Hooks follow the command.** `branch-guard.sh` and `session-context.sh` look at the directory the command runs in, not the project directory, which in a desktop-app worktree session is the main checkout.
+- **One stack.** There is one cluster, so there is one kubeconfig and one Terraform state. They live in the main checkout (`STACK_HOME` in `scripts/lib/common.sh`). A session in a worktree runs its own branch's scripts and Terraform against that stack, so `task plan` and `task doctor` work from anywhere. Mutating stack commands (`task up`, `task down`, `task apply`, `task stop:cluster`, `task clean`, `task clean:all`) take an atomic directory lock at `$STACK_HOME/.stack.lock` (`stack_lock` in `scripts/lib/common.sh`) so two worktrees cannot modify the live stack at the same time; a stale lock whose PID is gone is reclaimed automatically.
+- **Hooks follow the command.** `kube-guard.py`, `branch-guard.sh` and `session-context.sh` look at the directory the command runs in (and resolve the main worktree's `.kube/config`), not only the project directory, which in a desktop-app worktree session is the main checkout.
 - **Settings come from the main checkout.** In a desktop-app worktree session Claude Code reads `.claude/settings.json` and runs the hooks from the main checkout, so a change to a hook or a permission takes effect only after it is merged and the main checkout is pulled.
 
 ## Other agent tools

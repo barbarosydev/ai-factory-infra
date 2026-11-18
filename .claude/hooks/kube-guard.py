@@ -22,11 +22,32 @@ import json
 import os
 import re
 import shlex
+import subprocess
 import sys
 
 KUBE_CONTEXT = "k3d-ai-factory"
 PROJECT_DIR = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
-PROJECT_KUBECONFIG = os.path.realpath(os.path.join(PROJECT_DIR, ".kube", "config"))
+COMMAND_CWD = PROJECT_DIR
+
+
+def allowed_kubeconfigs() -> set[str]:
+    """Return realpaths of valid project kubeconfigs (checkout, cwd, and main worktree stack home)."""
+    dirs = {PROJECT_DIR, COMMAND_CWD}
+    clean_env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    for d in (COMMAND_CWD, PROJECT_DIR):
+        res = subprocess.run(
+            ["git", "-C", d, "worktree", "list", "--porcelain"],
+            check=False,
+            capture_output=True,
+            env=clean_env,
+            text=True,
+        )
+        for line in res.stdout.splitlines():
+            if line.startswith("worktree "):
+                dirs.add(line.split(" ", 1)[1])
+                break
+    return {os.path.realpath(os.path.join(d, ".kube", "config")) for d in dirs if d}
+
 
 CLUSTER_TOOLS = {"kubectl", "helm", "k9s"}
 CONTEXT_SWITCHERS = {"kubectx", "kubens"}
@@ -90,7 +111,7 @@ def block(reason: str) -> None:
 def resolve(path: str) -> str:
     path = os.path.expanduser(os.path.expandvars(path))
     if not os.path.isabs(path):
-        path = os.path.join(PROJECT_DIR, path)
+        path = os.path.join(COMMAND_CWD, path)
     return os.path.realpath(path)
 
 
@@ -166,7 +187,7 @@ def check_segment(words) -> None:
         ):
             block("kubectl config commands can switch, edit or print kube contexts and credentials.")
         kubeconfig = flag_value(args, "--kubeconfig") or env.get("KUBECONFIG")
-        if not kubeconfig or resolve(kubeconfig) != PROJECT_KUBECONFIG:
+        if not kubeconfig or resolve(kubeconfig) not in allowed_kubeconfigs():
             block(
                 f"{tool} must use this repo's .kube/config, never your global kubeconfig with its AKS contexts. "
                 "Use `task kube -- <args>`, or pass --kubeconfig .kube/config."
@@ -216,10 +237,14 @@ def check_line(command: str) -> None:
 
 
 def main() -> None:
+    global COMMAND_CWD
     try:
         payload = json.load(sys.stdin)
     except json.JSONDecodeError:
         return
+    cwd = payload.get("cwd")
+    if isinstance(cwd, str) and os.path.isdir(cwd):
+        COMMAND_CWD = cwd
     check_line((payload.get("tool_input") or {}).get("command") or "")
 
 
