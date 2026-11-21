@@ -129,7 +129,7 @@ variable "store_prompts_in_spend_logs" {
 variable "secret_version" {
   description = "Increment to rotate the LiteLLM master key and agent virtual keys."
   type        = number
-  default     = 1
+  default     = 4
   nullable    = false
 
   validation {

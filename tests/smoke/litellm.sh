@@ -49,7 +49,7 @@ pod="litellm-smoke-$$"
 py_script='
 import json, os, sys, time, urllib.error, urllib.request
 base = "http://litellm:4000/v1/chat/completions"
-for agent in ["pm-agent", "dev-agent", "sec-agent"]:
+for agent in ["pm-agent", "dev-agent", "test-agent", "sec-agent"]:
     key = os.environ["KEY_" + agent.upper().replace("-", "_")]
     body = json.dumps({
         "model": agent,
@@ -100,16 +100,17 @@ overrides="$(jq -cn --arg pod "$pod" --arg img "$LITELLM_IMAGE" --arg py "$py_sc
       imagePullPolicy: "IfNotPresent",
       command: ["python3", "-c", $py],
       env: [
-        {name: "KEY_PM_AGENT",  valueFrom: {secretKeyRef: {name: "litellm-pm-agent-key",  key: "api_key"}}},
-        {name: "KEY_DEV_AGENT", valueFrom: {secretKeyRef: {name: "litellm-dev-agent-key", key: "api_key"}}},
-        {name: "KEY_SEC_AGENT", valueFrom: {secretKeyRef: {name: "litellm-sec-agent-key", key: "api_key"}}}
+        {name: "KEY_PM_AGENT",   valueFrom: {secretKeyRef: {name: "litellm-pm-agent-key",   key: "api_key"}}},
+        {name: "KEY_DEV_AGENT",  valueFrom: {secretKeyRef: {name: "litellm-dev-agent-key",  key: "api_key"}}},
+        {name: "KEY_TEST_AGENT", valueFrom: {secretKeyRef: {name: "litellm-test-agent-key", key: "api_key"}}},
+        {name: "KEY_SEC_AGENT",  valueFrom: {secretKeyRef: {name: "litellm-sec-agent-key",  key: "api_key"}}}
       ]
     }]
   }
 }')"
 
 if out="$(kc run "$pod" --rm -i --restart=Never -n "$NS" --image="$LITELLM_IMAGE" --overrides="$overrides" 2>/dev/null)"; then
-  for agent in pm-agent dev-agent sec-agent; do
+  for agent in pm-agent dev-agent test-agent sec-agent; do
     if grep -q "OK:${agent}:" <<<"$out"; then
       check_pass "route $agent" "HTTP 200 non-empty completion with scoped virtual key"
     else

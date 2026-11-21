@@ -1,6 +1,6 @@
 # terraform/modules/litellm
 
-Installs the official LiteLLM Helm chart (`oci://ghcr.io/berriai/litellm-helm`, version `1.109.1`) backed by PostgreSQL, configures the Ollama model routes (`pm-agent`, `dev-agent`, `sec-agent`), exposes `http://litellm.localhost:8080` through Traefik, and provisions the master key and one virtual key per agent without storing any key in Terraform state.
+Installs the official LiteLLM Helm chart (`oci://ghcr.io/berriai/litellm-helm`, version `1.109.1`) backed by PostgreSQL, configures the Ollama model routes (`pm-agent`, `dev-agent`, `test-agent`, `sec-agent`), exposes `http://litellm.localhost:8080` through Traefik, and provisions the master key and one virtual key per agent without storing any key in Terraform state.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -46,7 +46,7 @@ No modules.
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Kubernetes namespace where LiteLLM is deployed. | `string` | n/a | yes |
 | <a name="input_ollama_api_base"></a> [ollama\_api\_base](#input\_ollama\_api\_base) | In-cluster HTTP base URL for the Ollama Service. | `string` | n/a | yes |
 | <a name="input_release_name"></a> [release\_name](#input\_release\_name) | Helm release name for LiteLLM. | `string` | `"litellm"` | no |
-| <a name="input_secret_version"></a> [secret\_version](#input\_secret\_version) | Increment to rotate the LiteLLM master key and agent virtual keys. | `number` | `1` | no |
+| <a name="input_secret_version"></a> [secret\_version](#input\_secret\_version) | Increment to rotate the LiteLLM master key and agent virtual keys. | `number` | `4` | no |
 | <a name="input_store_prompts_in_spend_logs"></a> [store\_prompts\_in\_spend\_logs](#input\_store\_prompts\_in\_spend\_logs) | Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI. | `bool` | `true` | no |
 
 ## Outputs

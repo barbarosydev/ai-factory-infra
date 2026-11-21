@@ -4,7 +4,7 @@
 #
 # Usage:
 #   scripts/access.sh                        (task access)
-#   scripts/access.sh --copy <target>        (task access -- --copy master|pm-agent|dev-agent|sec-agent)
+#   scripts/access.sh --copy <target>        (task access -- --copy master|pm-agent|dev-agent|test-agent|sec-agent)
 set -euo pipefail
 
 # shellcheck source=scripts/lib/common.sh
@@ -14,12 +14,12 @@ copy_target=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --copy)
-      [[ $# -ge 2 ]] || die "usage: task access -- --copy <master|pm-agent|dev-agent|sec-agent>"
+      [[ $# -ge 2 ]] || die "usage: task access -- --copy <master|pm-agent|dev-agent|test-agent|sec-agent>"
       copy_target="$2"
       shift 2
       ;;
     *)
-      die "unknown argument: $1 (usage: task access [-- --copy <master|pm-agent|dev-agent|sec-agent>])"
+      die "unknown argument: $1 (usage: task access [-- --copy <master|pm-agent|dev-agent|test-agent|sec-agent>])"
       ;;
   esac
 done
@@ -33,12 +33,12 @@ if [[ -n "$copy_target" ]]; then
       secret_name="litellm-masterkey"
       secret_key="masterkey"
       ;;
-    pm-agent | dev-agent | sec-agent)
+    pm-agent | dev-agent | test-agent | sec-agent)
       secret_name="litellm-${copy_target}-key"
       secret_key="api_key"
       ;;
     *)
-      die "unknown copy target '$copy_target': choose master, pm-agent, dev-agent or sec-agent"
+      die "unknown copy target '$copy_target': choose master, pm-agent, dev-agent, test-agent or sec-agent"
       ;;
   esac
 
@@ -68,6 +68,7 @@ cat <<'EOF'
   litellm-masterkey                  masterkey  LiteLLM Admin UI password & master API key
   litellm-pm-agent-key               api_key    Virtual key scoped to model route: pm-agent
   litellm-dev-agent-key              api_key    Virtual key scoped to model route: dev-agent
+  litellm-test-agent-key             api_key    Virtual key scoped to model route: test-agent
   litellm-sec-agent-key              api_key    Virtual key scoped to model route: sec-agent
   ai-postgres-litellm-credentials    password   PostgreSQL user 'litellm' (database: litellm)
   ai-postgres-temporal-credentials   password   PostgreSQL user 'temporal' (temporal DBs)
@@ -76,6 +77,7 @@ cat <<'EOF'
   task access -- --copy master       # Admin UI password / master key
   task access -- --copy pm-agent     # pm-agent virtual key (gemma4:12b)
   task access -- --copy dev-agent    # dev-agent virtual key (gemma4:e4b)
+  task access -- --copy test-agent   # test-agent virtual key (gemma4:e4b)
   task access -- --copy sec-agent    # sec-agent virtual key (gemma4:e4b)
 
 == Call LiteLLM API from your Mac
