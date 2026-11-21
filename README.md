@@ -14,7 +14,7 @@ LiteLLM, Temporal and PostgreSQL in a k3d cluster on a Mac, with Ollama running 
 | Temporal server and Web UI | namespace `ai-platform` | `http://temporal.localhost:8080`, gRPC `localhost:7233` |
 | Ollama | natively on the Mac | from pods through the `ollama` Service |
 
-Model routes: `pm-agent` on gemma4:12b, `dev-agent` and `sec-agent` on gemma4:e4b. Every tool, chart, image, provider and GitHub Action is pinned exactly ([ADR 0002](docs/adr/0002-toolchain-versions-and-pinning.md)).
+Model routes: `pm-agent` on gemma4:12b, `dev-agent`, `test-agent` and `sec-agent` on gemma4:e4b. Every tool, chart, image, provider and GitHub Action is pinned exactly ([ADR 0002](docs/adr/0002-toolchain-versions-and-pinning.md)).
 
 ## Getting started
 

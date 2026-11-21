@@ -15,7 +15,7 @@ Agents must call models through one gateway, without sharing a master key or rea
 ## Decision
 
 - LiteLLM is installed from its OCI Helm chart; the old Helm repository URL no longer works. It stores data in the `litellm` database and runs migrations without Helm hooks.
-- Each agent (`pm-agent`, `dev-agent`, `sec-agent`) has one model route and one virtual key scoped to that route only. A key calling another agent's route gets HTTP 403.
+- Each agent (`pm-agent`, `dev-agent`, `test-agent`, `sec-agent`) has one model route and one virtual key scoped to that route only. A key calling another agent's route gets HTTP 403.
 - Routes are one Terraform variable, `model_routes`. Adding or changing one follows the `add-model-route` skill.
 - Each key is a write-only Kubernetes Secret, registered with LiteLLM by an in-cluster bootstrap Job. Keys therefore never pass through Terraform state or terminal output.
 - Prompt logging is on by default (`litellm_store_prompts`) so requests and responses can be read in the Admin UI. This is the owner's decision of 16 November 2026. It is safe because only local models are used, so prompts never leave the Mac. The variable can switch it to metadata only.

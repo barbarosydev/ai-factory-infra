@@ -4,7 +4,7 @@ nameOverride: "${release_name}"
 fullnameOverride: "${release_name}"
 
 podAnnotations:
-  checksum/config: "${sha256(jsonencode({ model_routes = model_routes, ollama_api_base = ollama_api_base, store_prompts = store_prompts_in_spend_logs }))}"
+  checksum/config: "${sha256(jsonencode({ model_routes = model_routes, ollama_api_base = ollama_api_base, store_prompts = store_prompts_in_spend_logs, secret_version = secret_version }))}"
 
 image:
   repository: ghcr.io/berriai/litellm
@@ -135,6 +135,19 @@ extraResources:
                       except urllib.error.HTTPError as e:
                           if e.code not in (400, 404):
                               raise
+
+                      if not exists:
+                          list_url = f"{base}/key/list?key_alias={urllib.parse.quote(agent)}"
+                          req = urllib.request.Request(list_url, headers=headers)
+                          with urllib.request.urlopen(req, timeout=10) as resp:
+                              listed = json.loads(resp.read().decode("utf-8"))
+                          if listed.get("keys"):
+                              del_payload = json.dumps({"key_aliases": [agent]}).encode("utf-8")
+                              del_req = urllib.request.Request(f"{base}/key/delete", data=del_payload, headers=headers, method="POST")
+                              with urllib.request.urlopen(del_req, timeout=15) as resp:
+                                  if resp.status != 200:
+                                      print(f"failed to delete superseded key for {agent}: HTTP {resp.status}", file=sys.stderr)
+                                      sys.exit(1)
 
                       endpoint = "/key/update" if exists else "/key/generate"
                       payload = json.dumps({

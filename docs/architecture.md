@@ -42,7 +42,7 @@ flowchart LR
 | **Traefik** | `kube-system` (`:8080`) | Bundled with k3s | Routes `http://litellm.localhost:8080` and `http://temporal.localhost:8080` over a single host port without `kubectl port-forward`. |
 | **CloudNativePG & PostgreSQL** | `ai-platform` (`terraform/modules/postgres`) | Operator chart `0.29.1`, Cluster chart `0.9.0`, PostgreSQL `16` | Runs one shared PostgreSQL instance (`ai-postgres-cluster`) with three isolated databases (`temporal`, `temporal_visibility`, `litellm`) and strict `pg_hba` per-role isolation (`temporal` and `litellm` users). |
 | **Model Backend Service** | `ai-platform` (`terraform/modules/model-backend`) | Kubernetes `Service/v1` | `ExternalName` Service named `ollama` pointing at `host.k3d.internal:11434`. Decouples LiteLLM from where the model server runs. |
-| **LiteLLM** | `ai-platform` (`terraform/modules/litellm`) | Chart & image `1.109.1` | OpenAI-compatible model gateway and Admin UI (`/ui`). Maps `pm-agent` -> `gemma4:12b` and `dev-agent` / `sec-agent` -> `gemma4:e4b`, with one scoped virtual API key per agent. |
+| **LiteLLM** | `ai-platform` (`terraform/modules/litellm`) | Chart & image `1.109.1` | OpenAI-compatible model gateway and Admin UI (`/ui`). Maps `pm-agent` -> `gemma4:12b` and `dev-agent` / `test-agent` / `sec-agent` -> `gemma4:e4b`, with one scoped virtual API key per agent. |
 | **Temporal** | `ai-platform` (`terraform/modules/temporal`) | Chart `1.8.0` (server `1.32.2`, UI `2.56.1`) | Durable workflow orchestrator (`frontend`, `history`, `matching`, `worker`, `web`) backed by PostgreSQL persistence and SQL visibility. Exposes gRPC on `localhost:7233` to the Mac and the Web UI on `http://temporal.localhost:8080`. |
 
 ## Network and port map
@@ -84,6 +84,6 @@ Requests and limits are set in the Terraform values templates: memory limits are
 | **k3d cluster (`k3d-ai-factory-server-0` + `serverlb`)** | **2.63 GiB** (`22.5%` of limit) | 12.0 GiB Docker Desktop ceiling | Includes k3s control plane, containerd, CoreDNS, Traefik, ServiceLB, PostgreSQL (`186 MiB`), LiteLLM (`697 MiB`), and Temporal (`390 MiB`). |
 | **Ollama (idle, no models loaded)** | **~0.1 GiB** | — | Models unload automatically on `task down` or after idle timeout. |
 | **Ollama (`gemma4:12b` loaded)** | **~8.9 GiB** | — | Used by `pm-agent`. |
-| **Ollama (`gemma4:e4b` loaded)** | **~9.8 GiB** | — | Used by `dev-agent` and `sec-agent` (9.5 GB on disk). |
+| **Ollama (`gemma4:e4b` loaded)** | **~9.8 GiB** | — | Used by `dev-agent`, `test-agent` and `sec-agent` (9.5 GB on disk). |
 | **macOS, browser, IDE, Claude Code** | **~10.0 GiB** | — | Host OS and developer tools. |
 | **Free headroom** | **~14.5 GiB** (1 model) / **~4.7 GiB** (both models) | — | Comfortable margin without swap pressure. |

@@ -75,10 +75,10 @@ Then open `http://litellm.localhost:8080/ui` and sign in with:
 
 ### Call the LiteLLM API from your Mac
 
-Each agent has its own scoped virtual key in Kubernetes (`litellm-pm-agent-key`, `litellm-dev-agent-key`, `litellm-sec-agent-key`). Copy an agent key to your clipboard and call `/v1/chat/completions`:
+Each agent has its own scoped virtual key in Kubernetes (`litellm-pm-agent-key`, `litellm-dev-agent-key`, `litellm-test-agent-key`, `litellm-sec-agent-key`). Copy an agent key to your clipboard and call `/v1/chat/completions`:
 
 ```bash
-task access -- --copy pm-agent # or dev-agent, sec-agent
+task access -- --copy pm-agent # or dev-agent, test-agent, sec-agent
 
 curl -sS --noproxy '*' http://litellm.localhost:8080/v1/chat/completions \
   -H "Authorization: Bearer $(pbpaste)" \

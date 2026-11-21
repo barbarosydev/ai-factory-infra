@@ -159,9 +159,10 @@ variable "model_routes" {
   description = "Map of agent route name to Ollama model tag."
   type        = map(string)
   default = {
-    "pm-agent"  = "gemma4:12b"
-    "dev-agent" = "gemma4:e4b"
-    "sec-agent" = "gemma4:e4b"
+    "pm-agent"   = "gemma4:12b"
+    "dev-agent"  = "gemma4:e4b"
+    "test-agent" = "gemma4:e4b"
+    "sec-agent"  = "gemma4:e4b"
   }
   nullable = false
 

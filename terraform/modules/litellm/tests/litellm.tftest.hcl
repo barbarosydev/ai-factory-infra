@@ -137,20 +137,30 @@ run "secret_version_bump_changes_every_key_revision" {
   command = plan
 
   variables {
-    secret_version = 2
+    secret_version = 5
   }
 
   assert {
     condition = alltrue([
       for s in concat([kubernetes_secret_v1.master_key], values(kubernetes_secret_v1.agent_key)) :
-      s.data_wo_revision == 2
+      s.data_wo_revision == 5
     ])
     error_message = "data_wo_revision must follow secret_version so a bump rotates every key."
   }
 
   assert {
-    condition     = startswith(yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name, "litellm-bootstrap-keys-v2-")
+    condition     = startswith(yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name, "litellm-bootstrap-keys-v5-")
     error_message = "A secret_version bump must rename the bootstrap-keys Job so it runs again."
+  }
+
+  assert {
+    condition     = yamldecode(helm_release.litellm.values[0]).podAnnotations["checksum/config"] == sha256(jsonencode({ model_routes = var.model_routes, ollama_api_base = var.ollama_api_base, store_prompts = var.store_prompts_in_spend_logs, secret_version = 5 }))
+    error_message = "podAnnotations checksum/config must include secret_version so rotation restarts the LiteLLM pod."
+  }
+
+  assert {
+    condition     = strcontains(yamldecode(helm_release.litellm.values[0]).extraResources[0].spec.template.spec.containers[0].command[2], "/key/delete")
+    error_message = "The bootstrap-keys Job must delete superseded keys by key_alias before regenerating on secret_version rotation."
   }
 }
 
@@ -163,8 +173,8 @@ run "image_bump_renames_bootstrap_keys_job" {
 
   assert {
     condition = (
-      yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name == "litellm-bootstrap-keys-v1-${substr(sha256(var.image_tag), 0, 8)}" &&
-      yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name != "litellm-bootstrap-keys-v1-${substr(sha256("1.79.0@sha256:0000000000000000000000000000000000000000000000000000000000000000"), 0, 8)}"
+      yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name == "litellm-bootstrap-keys-v${var.secret_version}-${substr(sha256(var.image_tag), 0, 8)}" &&
+      yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name != "litellm-bootstrap-keys-v${var.secret_version}-${substr(sha256("1.79.0@sha256:0000000000000000000000000000000000000000000000000000000000000000"), 0, 8)}"
     )
     error_message = "An image_tag bump must rename the bootstrap-keys Job so it does not collide with the finished Job within its 10-minute TTL."
   }
