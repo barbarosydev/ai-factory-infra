@@ -22,7 +22,8 @@ Check and report each item in a concise table (Component | Current Pin | Where P
    - Cluster & tools: tool pins in `mise.toml` (with checksums in `mise.lock`), k3s image tag+digest in `cluster/k3d-config.yaml` (must stay within 1 minor version of local `kubectl`), `PROBE_IMAGE` in `scripts/lib/common.sh`, and Terraform MCP server image tag+digest in `.mcp.json`.
 2. Security posture:
    - No unpinned `:latest` tags in any `.tf`, `.tftpl`, `.yaml`, `.json` or `.sh` file, and every running pod image in `ai-platform` carries `@sha256:` (`task kube -- get pods -n ai-platform -o jsonpath=...` over `.spec.containers[*].image` and `.spec.initContainers[*].image`).
-   - All `kubernetes_secret_v1` resources use `data_wo` and `data_wo_revision` (never `data` or `string_data`).
+   - All `kubernetes_secret_v1` resources use `data_wo` and `data_wo_revision` (never `data` or `string_data`), and bootstrap scripts pass virtual keys via HTTP headers rather than URL query parameters.
+   - Public OSS governance files (`LICENSE`, `SECURITY.md`, `.github/CODEOWNERS`) and ADR index links (`docs/adr/README.md`) are present and verified by `task lint`.
    - Run `task ci` to verify `tflint`, `terraform-docs`, `shellcheck`, hook tests and `gitleaks`.
 
 End with a short list of safe upgrades available and any compatibility caveats.
