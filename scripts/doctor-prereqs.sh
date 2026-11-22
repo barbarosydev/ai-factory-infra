@@ -33,7 +33,7 @@ OLLAMA_MAX_MODEL_GB=10   # warn when a loaded model is larger than this (GB)
 OLLAMA_URL="http://127.0.0.1:11434"
 # CLUSTER_NAME comes from scripts/lib/common.sh
 CLUSTER_PORTS=(8080 7233)   # published by the k3d cluster once it runs
-FREE_PORTS=(8080 4000 7233 5432)
+FREE_PORTS=(8080 7233)
 DOCKER_SETTINGS="$HOME/Library/Group Containers/group.com.docker/settings-store.json"
 
 # --- Tools -----------------------------------------------------------------

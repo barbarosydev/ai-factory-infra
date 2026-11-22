@@ -53,6 +53,7 @@ expect $k 2 "$REPO_ROOT" 'python3 -c "open(\"terraform/environments/local/terraf
 expect $k 2 "$REPO_ROOT" 'grep token .env'
 expect $k 0 "$REPO_ROOT" 'cat .env.example'
 expect $k 0 "$REPO_ROOT" 'temporal operator cluster health --address localhost:7233'
+expect $k 0 "$REPO_ROOT" 'temporal workflow list --address temporal.localhost:7233'
 expect $k 2 "$REPO_ROOT" 'temporal server start-dev'
 expect $k 2 "$REPO_ROOT" 'temporal workflow list --address prod.tmprl.cloud:7233'
 expect $k 2 "$REPO_ROOT" 'TEMPORAL_ADDRESS=prod.tmprl.cloud:7233 temporal workflow list'

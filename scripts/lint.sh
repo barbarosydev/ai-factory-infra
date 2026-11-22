@@ -161,6 +161,18 @@ run "actionlint" actionlint -no-color
 
 # --- Docs ------------------------------------------------------------------
 
+# shellcheck disable=SC2317,SC2329  # called through run
+public_oss_governance() {
+  local f
+  for f in LICENSE SECURITY.md .github/CODEOWNERS; do
+    [[ -s "$REPO_ROOT/$f" ]] || {
+      echo "missing or empty required public OSS governance file: $f" >&2
+      return 1
+    }
+  done
+}
+
+run "public OSS governance (LICENSE, SECURITY.md, .github/CODEOWNERS)" public_oss_governance
 run "doc links and paths" "$REPO_ROOT/scripts/lib/check_links.py"
 run "task commands in AGENTS.md and docs/runbook.md" "$REPO_ROOT/scripts/lib/check_commands.py"
 

@@ -100,7 +100,7 @@ SAFE_EXAMPLE = re.compile(r"\.(example|sample)(['\")]|\s|$)")
 SHELLS = {"bash", "sh", "zsh"}
 SUBSHELL = re.compile(r"\$\(([^()]*)\)|`([^`]*)`")
 OVERRIDE_VARS = {"KUBE_CONFIG_PATH", "KUBE_CONFIG_PATHS", "KUBE_CTX", "KUBE_CTX_CLUSTER", "KUBE_HOST"}
-ALLOWED_TEMPORAL_ADDRS = {"localhost:7233", "127.0.0.1:7233", "temporal-frontend:7233"}
+ALLOWED_TEMPORAL_ADDRS = {"localhost:7233", "127.0.0.1:7233", "temporal.localhost:7233", "temporal-frontend:7233"}
 
 
 def block(reason: str) -> None:

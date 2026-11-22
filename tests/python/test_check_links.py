@@ -80,6 +80,18 @@ class CheckLinksTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(check_links.main(["check_links.py", str(self.root)]), 0)
 
+    def test_adr_index_sync(self):
+        adr_dir = self.root / "docs" / "adr"
+        adr_dir.mkdir(parents=True)
+        (adr_dir / "0001-first.md").write_text("# 0001\n", encoding="utf-8")
+        (adr_dir / "README.md").write_text("# ADRs\n", encoding="utf-8")
+        self.assertEqual(
+            check_links.check_adr_index(self.root),
+            ["docs/adr/README.md: missing index link for 0001-first.md"],
+        )
+        (adr_dir / "README.md").write_text("# ADRs\n- [0001](0001-first.md)\n", encoding="utf-8")
+        self.assertEqual(check_links.check_adr_index(self.root), [])
+
 
 if __name__ == "__main__":
     unittest.main()

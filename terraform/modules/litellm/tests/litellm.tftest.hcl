@@ -162,6 +162,11 @@ run "secret_version_bump_changes_every_key_revision" {
     condition     = strcontains(yamldecode(helm_release.litellm.values[0]).extraResources[0].spec.template.spec.containers[0].command[2], "/key/delete")
     error_message = "The bootstrap-keys Job must delete superseded keys by key_alias before regenerating on secret_version rotation."
   }
+
+  assert {
+    condition     = !strcontains(yamldecode(helm_release.litellm.values[0]).extraResources[0].spec.template.spec.containers[0].command[2], "?key=")
+    error_message = "The bootstrap-keys Job must not pass virtual keys in URL query strings."
+  }
 }
 
 run "image_bump_renames_bootstrap_keys_job" {

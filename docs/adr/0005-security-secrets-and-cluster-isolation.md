@@ -22,6 +22,8 @@ In a repo worked on with an AI assistant, a secret can leak into a git commit, i
   - Out of AI context: deny rules and hooks that block reading state, kubeconfigs and Secret values, and writing keys into files (see [0006](0006-agent-harness.md)).
 - The cluster kubeconfig is stored only at `.kube/config` in the repo, and k3d never writes to the global one. Scripts, Terraform providers and `task kube` read only that file. The real AKS contexts are therefore unreachable, and lifecycle scripts fail if the global file changes.
 - Database passwords come from Terraform as write-only values, not from CloudNativePG, so one mechanism covers every secret.
+- The LiteLLM bootstrap Job inspects virtual keys via `Authorization: Bearer <key>` on `/key/info` rather than URL query parameters (`?key=...`), keeping virtual keys out of HTTP access logs.
+- Public repository governance files (`LICENSE`, `SECURITY.md`, `.github/CODEOWNERS`) are committed and enforced by `scripts/lint.sh`.
 
 ## Consequences
 
