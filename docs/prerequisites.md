@@ -95,7 +95,7 @@ If Docker Desktop is signed in to an organization, the organization can block im
 
 ## Ports
 
-These ports must be free before the first `task up`: 8080 (web pages through the cluster's ingress), 7233 (Temporal for workers on the Mac), 4000 (LiteLLM) and 5432 (PostgreSQL). Once the cluster runs, the check accepts 8080 and 7233 as used by the `ai-factory` cluster.
+These host ports must be free before the first `task up`: 8080 (web pages through the cluster's ingress) and 7233 (Temporal for workers on the Mac). Once the cluster runs, the check accepts both as used by the `ai-factory` cluster. LiteLLM's 4000 and PostgreSQL's 5432 ports are only exposed inside the cluster and do not need to be free on the Mac.
 
 ## What the check does not touch
 

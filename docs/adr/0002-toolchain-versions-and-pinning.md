@@ -10,7 +10,7 @@ Accepted
 
 ## Context
 
-The repo must rebuild from a fresh clone and give the same results on the Mac and in GitHub Actions. It is private and has one user, so it should add as little process as possible.
+The repo must rebuild from a fresh clone and give the same results on the Mac and in GitHub Actions. It is public and has a single maintainer, so it should add as little process as possible.
 
 ## Decision
 
@@ -24,7 +24,7 @@ The repo must rebuild from a fresh clone and give the same results on the Mac an
   - Providers: exact version through `.terraform.lock.hcl`, with hashes for the Mac and both Linux platforms.
   - GitHub Actions: a full commit SHA.
   The values live in `mise.toml`, `terraform/environments/local/variables.tf`, `cluster/k3d-config.yaml`, `.mcp.json` and `.github/workflows/ci.yml`; this record states the rule, not the numbers.
-- Upgrades go through the `upgrade-version` skill: a coding agent finds the new version and digest, bumps the pin and runs the checks, and the version and security auditor role reviews it. Renovate is not used: it needs an app or a deployed bot, a config and a PR stream, which is more than one private repo with one contributor needs while the agent covers the same work. Revisit when the repo goes public.
+- Upgrades go through the `upgrade-version` skill: a coding agent finds the new version and digest, bumps the pin and runs the checks, and the version and security auditor role reviews it. Renovate is not used: it needs an app or a deployed bot, a config and a PR stream, which is more process than this single-maintainer repo needs while the agent covers the same work. Revisit if maintenance needs change.
 - One `task ci` runs lint, the tests and gitleaks. pre-commit and GitHub Actions both call it, so they cannot drift apart.
 - Tool boundaries: tflint lints Terraform; `terraform test` checks module behaviour; Conftest (`policy/`, capped at about seven rules) checks repo-wide conventions across file types. A rule goes to the first tool that fits. Considered and not adopted for now: zizmor (a Conftest rule covers the workflow pins), shfmt, bats (the bash tests use plain scripts), markdownlint and lychee (a small stdlib link checker covers links). Revisit when the number of workflows or scripts grows enough to justify one.
 
