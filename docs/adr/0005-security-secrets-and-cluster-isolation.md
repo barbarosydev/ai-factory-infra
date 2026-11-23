@@ -32,5 +32,5 @@ In a repo worked on with an AI assistant, a secret can leak into a git commit, i
 
 ### Known limitations
 
-- GitHub secret scanning and push protection are off while the repo is private. Branch protection is not available on the current plan. gitleaks and the branch-guard hook cover the gap.
+- GitHub secret scanning, push protection and branch protection are not enabled for this public repository. gitleaks and the branch-guard hook provide local checks; enable hosted controls if repository settings or plan change.
 - A future cloud key would live in the macOS Keychain and enter Terraform as an environment variable at run time, never in a conversation.

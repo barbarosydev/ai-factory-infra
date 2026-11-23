@@ -89,7 +89,7 @@ Deliberately left out for now, each with the reason in an ADR:
 
 - Cloud model routes: local models only until API credit exists ([ADR 0004](docs/adr/0004-model-gateway-and-agent-routes.md)).
 - Renovate and a live-stack job in GitHub Actions: versions are bumped with the `upgrade-version` skill, and the live stack is verified on the Mac ([ADR 0002](docs/adr/0002-toolchain-versions-and-pinning.md), [ADR 0007](docs/adr/0007-operations-contract-and-verification.md)).
-- GitHub secret scanning, push protection and branch protection: not available on the current plan; gitleaks and the branch-guard hook cover the gap ([ADR 0005](docs/adr/0005-security-secrets-and-cluster-isolation.md)).
+- GitHub secret scanning, push protection and branch protection are not enabled for this repository; gitleaks and the branch-guard hook provide local checks ([ADR 0005](docs/adr/0005-security-secrets-and-cluster-isolation.md)).
 
 ## Docs
 

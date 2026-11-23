@@ -34,11 +34,14 @@ kube_dir="$(dirname "$KUBECONFIG")"
 mkdir -p "$kube_dir"
 chmod 700 "$kube_dir"
 tmp="$(mktemp "$kube_dir/config.XXXXXX")"
-trap 'rm -f "$tmp"' EXIT
+cleanup() {
+  rm -f "$tmp"
+  stack_unlock
+}
+trap cleanup EXIT
 k3d kubeconfig get "$CLUSTER_NAME" >"$tmp"
 chmod 600 "$tmp"
 mv "$tmp" "$KUBECONFIG"
-trap - EXIT
 
 contexts="$(kubectl --kubeconfig "$KUBECONFIG" config get-contexts -o name)"
 [[ "$contexts" == "$KUBE_CONTEXT" ]] || die "project kubeconfig should hold only $KUBE_CONTEXT, found: $contexts"
