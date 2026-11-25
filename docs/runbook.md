@@ -16,6 +16,7 @@
 | Check PostgreSQL | `task smoke:postgres` |
 | Check LiteLLM & models | `task smoke:litellm` |
 | Check Temporal & sample workflow | `task smoke:temporal` |
+| Check Arize Phoenix & OTLP trace query | `task smoke:observability` |
 | Look at the cluster | `task kube -- get pods -A` |
 | Start from scratch | `task clean` then `task up` |
 | Deep clean (cluster + caches + optional models) | `task clean:all` |
@@ -55,11 +56,12 @@ Each wait names what it waited for and the command that shows why. The common on
 
 | Service | URL | Authentication |
 | --- | --- | --- |
-| LiteLLM Admin UI | `http://litellm.localhost:8080/ui` | Username: `admin`, Password: the `masterkey` value in Secret `litellm-masterkey` |
+| LiteLLM Admin UI | `http://litellm.localhost:8080/ui` (`/ui/usage/`, `/ui/logs/`) | Username: `admin`, Password: the `masterkey` value in Secret `litellm-masterkey` |
 | LiteLLM OpenAI-compatible API | `http://litellm.localhost:8080/v1` | `Authorization: Bearer <key>` using an agent virtual key (`litellm-<agent>-key`) or the master key |
 | LiteLLM Swagger / OpenAPI docs | `http://litellm.localhost:8080/` | Master key or virtual key in the Swagger **Authorize** dialog |
 | Temporal Web UI | `http://temporal.localhost:8080` (`http://temporal.localhost:8080/namespaces/default/workflows`) | None (open in local sandbox) |
 | Temporal gRPC (Mac workers & CLI) | `localhost:7233` | None (cleartext gRPC in local sandbox) |
+| Arize Phoenix UI & OTLP HTTP | `http://phoenix.localhost:8080` (`POST /v1/traces`) | None (loopback-only trusted local machine; 3-day retention policy) |
 
 ### Log in to the LiteLLM Admin UI (`http://litellm.localhost:8080/ui`)
 

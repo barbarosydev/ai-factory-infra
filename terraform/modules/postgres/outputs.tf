@@ -10,7 +10,7 @@ output "rw_service_name" {
 
 output "databases" {
   description = "Names of the application databases provisioned in the PostgreSQL cluster."
-  value       = ["temporal", "temporal_visibility", "litellm"]
+  value       = ["temporal", "temporal_visibility", "litellm", "phoenix"]
 }
 
 output "user_secret_names" {

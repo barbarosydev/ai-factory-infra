@@ -83,4 +83,8 @@ else
       kc rollout status "deployment/$deploy" -n ai-platform --timeout=300s
     done
   fi
+  if kc get deployment/phoenix -n ai-platform >/dev/null 2>&1; then
+    info "waiting for Arize Phoenix deployment"
+    kc rollout status deployment/phoenix -n ai-platform --timeout=300s
+  fi
 fi

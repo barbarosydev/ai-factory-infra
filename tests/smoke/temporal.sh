@@ -39,7 +39,8 @@ if (( jobs_ok < jobs_total )); then
   check_fail "temporal schema & namespace jobs" "expected all Jobs succeeded, found $jobs_ok of $jobs_total"
 elif (( jobs_ok >= 2 )); then
   check_pass "temporal schema & namespace jobs" "$jobs_ok Jobs succeeded"
-elif temporal operator namespace describe --namespace default --address "$GRPC_ADDR" >/dev/null 2>&1; then
+elif temporal operator namespace describe --namespace default --address "$GRPC_ADDR" >/dev/null 2>&1 \
+  || { sleep 1 && temporal operator namespace describe --namespace default --address "$GRPC_ADDR" >/dev/null 2>&1; }; then
   # schema.ttlSecondsAfterFinished (86400s) garbage-collects finished Jobs after 24h;
   # an active default namespace proves both schema setup and namespace registration succeeded.
   check_pass "temporal schema & namespace jobs" "reaped after 24h TTL (schema & default namespace active)"

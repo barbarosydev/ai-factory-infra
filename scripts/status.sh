@@ -42,7 +42,8 @@ else
 fi
 
 printf '\n== URLs\n'
-echo "LiteLLM gateway & UI: http://litellm.localhost:8080 (Admin UI: http://litellm.localhost:8080/ui)"
+echo "LiteLLM gateway & UI: http://litellm.localhost:8080 (Usage: http://litellm.localhost:8080/ui/usage/ | Logs: http://litellm.localhost:8080/ui/logs/)"
 echo "Temporal Web UI:      http://temporal.localhost:8080 (Workflows: http://temporal.localhost:8080/namespaces/default/workflows)"
+echo "Arize Phoenix UI:     http://phoenix.localhost:8080 (OTLP HTTP: http://phoenix.localhost:8080/v1/traces)"
 echo "Temporal gRPC:        localhost:7233"
 echo "Ollama:               $OLLAMA_URL"

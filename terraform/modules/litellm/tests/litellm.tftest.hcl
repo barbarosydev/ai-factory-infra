@@ -154,8 +154,13 @@ run "secret_version_bump_changes_every_key_revision" {
   }
 
   assert {
-    condition     = yamldecode(helm_release.litellm.values[0]).podAnnotations["checksum/config"] == sha256(jsonencode({ model_routes = var.model_routes, ollama_api_base = var.ollama_api_base, store_prompts = var.store_prompts_in_spend_logs, secret_version = 5 }))
-    error_message = "podAnnotations checksum/config must include secret_version so rotation restarts the LiteLLM pod."
+    condition     = yamldecode(helm_release.litellm.values[0]).podAnnotations["checksum/config"] == sha256(jsonencode({ model_routes = var.model_routes, ollama_api_base = var.ollama_api_base, store_prompts = var.store_prompts_in_spend_logs, spend_logs_retention = var.spend_logs_retention, input_cost_per_token = var.input_cost_per_token, output_cost_per_token = var.output_cost_per_token, secret_version = 5 }))
+    error_message = "podAnnotations checksum/config must include secret_version and logging settings so changes restart the LiteLLM pod."
+  }
+
+  assert {
+    condition     = yamldecode(helm_release.litellm.values[0]).proxy_config.general_settings.maximum_spend_logs_retention_period == "3d" && yamldecode(helm_release.litellm.values[0]).proxy_config.general_settings.store_prompts_in_spend_logs == false
+    error_message = "LiteLLM must default to metadata-only spend logs (store_prompts_in_spend_logs = false) with 3d retention."
   }
 
   assert {

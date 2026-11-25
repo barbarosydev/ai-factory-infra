@@ -57,3 +57,23 @@ output "temporal_frontend_service" {
   description = "Kubernetes Service name for the Temporal gRPC frontend."
   value       = module.temporal.frontend_service_name
 }
+
+output "phoenix_service" {
+  description = "Kubernetes Service name for Arize Phoenix."
+  value       = module.observability.service_name
+}
+
+output "phoenix_url" {
+  description = "Local HTTP URL for the Arize Phoenix UI via Traefik."
+  value       = module.observability.ingress_url
+}
+
+output "phoenix_otlp_http_base_url" {
+  description = "Host OTLP HTTP base URL for Arize Phoenix via Traefik."
+  value       = module.observability.otlp_http_base_url
+}
+
+output "phoenix_otlp_http_traces_endpoint" {
+  description = "Full host OTLP HTTP/protobuf traces ingestion endpoint for Arize Phoenix."
+  value       = module.observability.otlp_http_traces_endpoint
+}

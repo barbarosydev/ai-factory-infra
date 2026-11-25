@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted (amended by [0008](0008-arize-phoenix-and-opentelemetry-observability.md))
 
 ## Date
 
@@ -14,7 +14,7 @@ This repo builds the infrastructure that a future AI factory will run on, on one
 
 ## Decision
 
-- Scope: the repo provides the platform only (cluster, PostgreSQL, LiteLLM, Temporal, Ollama access). It contains no factory agents, no cloud models and no cloud cluster.
+- Scope: the repo provides the platform only (cluster, PostgreSQL, LiteLLM, Temporal, Arize Phoenix trace UI/receiver, Ollama access). It contains no factory agents, no cloud models and no cloud cluster.
 - Docker Desktop is the container runtime. Its CPU, memory, swap and disk limits are set as a ceiling, and its built-in Kubernetes is off so there is only one cluster. `task doctor:prereqs` checks this.
 - One k3d cluster, `ai-factory`, with a single k3s server. It is cheap to stop and start, and its volumes survive `task down`.
 - Ollama runs natively on the Mac, because containers on macOS cannot use the Apple GPU. Pods reach it only through the `ollama` Service, which points at `host.k3d.internal`. Moving models elsewhere later changes only the `model-backend` module.
