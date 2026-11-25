@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted (amended by [0008](0008-arize-phoenix-and-opentelemetry-observability.md))
 
 ## Date
 
@@ -14,8 +14,8 @@ Temporal and LiteLLM both need PostgreSQL. The Temporal chart no longer bundles 
 
 ## Decision
 
-- One CloudNativePG server (operator plus cluster) holds three databases: `temporal`, `temporal_visibility` and `litellm`. CloudNativePG is the standard Kubernetes PostgreSQL operator and behaves the same on k3d and in the cloud.
-- Two login roles, `temporal` and `litellm`. Custom `pg_hba` rules let each role reach only its own databases and reject the rest.
+- One CloudNativePG server (operator plus cluster) holds four databases: `temporal`, `temporal_visibility`, `litellm` and `phoenix`. CloudNativePG is the standard Kubernetes PostgreSQL operator and behaves the same on k3d and in the cloud.
+- Three login roles, `temporal`, `litellm` and `phoenix`. Custom `pg_hba` rules let each role reach only its own databases and reject the rest.
 - Terraform generates the database passwords as ephemeral write-only values, so they never reach state. CloudNativePG does not generate them.
 - Temporal runs on PostgreSQL for both the default and the visibility store (SQL visibility, no Elasticsearch), with one replica per service.
 - Schema setup and namespace creation are plain Jobs, not Helm hooks, which can deadlock under `helm_release`. `scripts/terraform.sh` waits for them.

@@ -42,7 +42,7 @@ fi
 # --- Databases -------------------------------------------------------------
 
 dbs="$(kc get databases.postgresql.cnpg.io -n "$NS" -o jsonpath='{.items[*].spec.name}' 2>/dev/null || true)"
-for db in temporal temporal_visibility litellm; do
+for db in temporal temporal_visibility litellm phoenix; do
   if [[ " $dbs " == *" $db "* ]]; then
     check_pass "database $db" "declared in CloudNativePG"
   else
@@ -64,23 +64,31 @@ overrides="$(jq -cn --arg pod "$pod" --arg img "$PG_IMAGE" '{
         PGPASSWORD=\"$TEMPORAL_PW\" psql -h ai-postgres-cluster-rw -U temporal -d temporal -c \"SELECT 1\" >/dev/null && echo ok:temporal:temporal
         PGPASSWORD=\"$TEMPORAL_PW\" psql -h ai-postgres-cluster-rw -U temporal -d temporal_visibility -c \"SELECT 1\" >/dev/null && echo ok:temporal:temporal_visibility
         if PGPASSWORD=\"$TEMPORAL_PW\" psql -h ai-postgres-cluster-rw -U temporal -d litellm -c \"SELECT 1\" >/dev/null 2>&1; then exit 1; else echo denied:temporal:litellm; fi
+        if PGPASSWORD=\"$TEMPORAL_PW\" psql -h ai-postgres-cluster-rw -U temporal -d phoenix -c \"SELECT 1\" >/dev/null 2>&1; then exit 1; else echo denied:temporal:phoenix; fi
         PGPASSWORD=\"$LITELLM_PW\" psql -h ai-postgres-cluster-rw -U litellm -d litellm -c \"SELECT 1\" >/dev/null && echo ok:litellm:litellm
         if PGPASSWORD=\"$LITELLM_PW\" psql -h ai-postgres-cluster-rw -U litellm -d temporal -c \"SELECT 1\" >/dev/null 2>&1; then exit 1; else echo denied:litellm:temporal; fi
         if PGPASSWORD=\"$LITELLM_PW\" psql -h ai-postgres-cluster-rw -U litellm -d temporal_visibility -c \"SELECT 1\" >/dev/null 2>&1; then exit 1; else echo denied:litellm:temporal_visibility; fi
+        if PGPASSWORD=\"$LITELLM_PW\" psql -h ai-postgres-cluster-rw -U litellm -d phoenix -c \"SELECT 1\" >/dev/null 2>&1; then exit 1; else echo denied:litellm:phoenix; fi
+        PGPASSWORD=\"$PHOENIX_PW\" psql -h ai-postgres-cluster-rw -U phoenix -d phoenix -c \"SELECT 1\" >/dev/null && echo ok:phoenix:phoenix
+        if PGPASSWORD=\"$PHOENIX_PW\" psql -h ai-postgres-cluster-rw -U phoenix -d temporal -c \"SELECT 1\" >/dev/null 2>&1; then exit 1; else echo denied:phoenix:temporal; fi
+        if PGPASSWORD=\"$PHOENIX_PW\" psql -h ai-postgres-cluster-rw -U phoenix -d litellm -c \"SELECT 1\" >/dev/null 2>&1; then exit 1; else echo denied:phoenix:litellm; fi
       "],
       env: [
         {name: "TEMPORAL_PW", valueFrom: {secretKeyRef: {name: "ai-postgres-temporal-credentials", key: "password"}}},
-        {name: "LITELLM_PW",  valueFrom: {secretKeyRef: {name: "ai-postgres-litellm-credentials",  key: "password"}}}
+        {name: "LITELLM_PW",  valueFrom: {secretKeyRef: {name: "ai-postgres-litellm-credentials",  key: "password"}}},
+        {name: "PHOENIX_PW",  valueFrom: {secretKeyRef: {name: "ai-postgres-phoenix-credentials",  key: "password"}}}
       ]
     }]
   }
 }')"
 
 if out="$(kc run "$pod" --rm -i --restart=Never -n "$NS" --image="$PG_IMAGE" --overrides="$overrides" 2>/dev/null)" \
-  && grep -q "denied:temporal:litellm" <<<"$out" \
-  && grep -q "denied:litellm:temporal" <<<"$out"; then
-  check_pass "role temporal" "connects to temporal & temporal_visibility; rejected from litellm"
-  check_pass "role litellm" "connects to litellm; rejected from temporal & temporal_visibility"
+  && grep -q "denied:temporal:phoenix" <<<"$out" \
+  && grep -q "denied:litellm:phoenix" <<<"$out" \
+  && grep -q "denied:phoenix:litellm" <<<"$out"; then
+  check_pass "role temporal" "connects to temporal & temporal_visibility; rejected from litellm & phoenix"
+  check_pass "role litellm" "connects to litellm; rejected from temporal, temporal_visibility & phoenix"
+  check_pass "role phoenix" "connects to phoenix; rejected from temporal & litellm"
 else
   check_fail "role isolation" "psql check failed inside $NS"
 fi

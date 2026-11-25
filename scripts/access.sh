@@ -51,7 +51,7 @@ fi
 
 cat <<'EOF'
 == Web UIs & Endpoints
-  LiteLLM Admin UI:      http://litellm.localhost:8080/ui
+  LiteLLM Admin UI:      http://litellm.localhost:8080/ui (Usage: /ui/usage/ | Logs: /ui/logs/)
     Username:            admin
     Password:            stored in Secret litellm-masterkey (key: masterkey)
   LiteLLM Swagger UI:    http://litellm.localhost:8080/
@@ -60,6 +60,9 @@ cat <<'EOF'
     Authentication:      none (open in local sandbox)
   Temporal Web UI API:   http://temporal.localhost:8080/api/v1/namespaces/default/workflows
   Temporal gRPC (Mac):   localhost:7233 (no TLS / no auth in local sandbox)
+  Arize Phoenix UI:      http://phoenix.localhost:8080
+    Authentication:      none (loopback-only local sandbox; 3-day retention policy)
+  Arize Phoenix OTLP:    http://phoenix.localhost:8080/v1/traces (HTTP/protobuf)
   Ollama (host):         http://127.0.0.1:11434
 
 == Kubernetes Secrets (namespace: ai-platform)
@@ -72,6 +75,7 @@ cat <<'EOF'
   litellm-sec-agent-key              api_key    Virtual key scoped to model route: sec-agent
   ai-postgres-litellm-credentials    password   PostgreSQL user 'litellm' (database: litellm)
   ai-postgres-temporal-credentials   password   PostgreSQL user 'temporal' (temporal DBs)
+  ai-postgres-phoenix-credentials    password   PostgreSQL user 'phoenix' (database: phoenix)
 
 == Copy a Key to Clipboard (nothing printed to terminal)
   task access -- --copy master       # Admin UI password / master key

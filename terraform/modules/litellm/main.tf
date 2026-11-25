@@ -80,6 +80,9 @@ resource "helm_release" "litellm" {
       ingress_host                = var.ingress_host
       agent_max_budget            = var.agent_max_budget
       store_prompts_in_spend_logs = var.store_prompts_in_spend_logs
+      spend_logs_retention        = var.spend_logs_retention
+      input_cost_per_token        = var.input_cost_per_token
+      output_cost_per_token       = var.output_cost_per_token
       secret_version              = var.secret_version
     })
   ]

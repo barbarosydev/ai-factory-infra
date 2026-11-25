@@ -58,3 +58,17 @@ module "temporal" {
     module.postgres,
   ]
 }
+
+module "observability" {
+  source = "../../modules/observability"
+
+  namespace      = kubernetes_namespace_v1.ai_platform.metadata[0].name
+  image_name     = var.phoenix_image_name
+  db_endpoint    = module.postgres.rw_service_name
+  db_secret_name = module.postgres.user_secret_names["phoenix"]
+  retention_days = var.phoenix_retention_days
+
+  depends_on = [
+    module.postgres,
+  ]
+}

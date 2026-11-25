@@ -4,7 +4,7 @@
 #
 # Usage:
 #   scripts/doctor.sh [--json] [--only <suites>]      (task doctor)
-#   where <suites> is a comma-separated list of: prereqs,cluster,postgres,litellm,temporal,state
+#   where <suites> is a comma-separated list of: prereqs,cluster,postgres,litellm,temporal,observability,state
 # Exit code: 0 when no check failed, 1 otherwise. WARN never fails.
 set -euo pipefail
 
@@ -20,7 +20,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --only)
-      [[ $# -ge 2 ]] || die "usage: task doctor -- --only <prereqs|cluster|postgres|litellm|temporal|state>"
+      [[ $# -ge 2 ]] || die "usage: task doctor -- --only <prereqs|cluster|postgres|litellm|temporal|observability|state>"
       only_filter="$2"
       shift 2
       ;;
@@ -44,8 +44,8 @@ should_run() {
 if [[ -n "$only_filter" ]]; then
   for token in ${only_filter//,/ }; do
     case "$token" in
-      prereqs | cluster | postgres | litellm | temporal | state) ;;
-      *) die "unknown suite '$token' in --only (choose from: prereqs,cluster,postgres,litellm,temporal,state)" ;;
+      prereqs | cluster | postgres | litellm | temporal | observability | state) ;;
+      *) die "unknown suite '$token' in --only (choose from: prereqs,cluster,postgres,litellm,temporal,observability,state)" ;;
     esac
   done
 fi
@@ -112,7 +112,12 @@ if should_run temporal; then
   run_suite "$REPO_ROOT/tests/smoke/temporal.sh"
 fi
 
-# 6. Terraform state holds no secret values (prints counts and addresses, never values)
+# 6. Arize Phoenix deployment, policy, Web UI, OTLP HTTP ingestion and span query
+if should_run observability; then
+  run_suite "$REPO_ROOT/tests/smoke/observability.sh"
+fi
+
+# 7. Terraform state holds no secret values (prints counts and addresses, never values)
 if should_run state; then
   run_suite "$REPO_ROOT/scripts/state-check.sh"
 fi

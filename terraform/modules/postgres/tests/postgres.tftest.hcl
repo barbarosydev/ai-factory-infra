@@ -100,8 +100,9 @@ run "cluster_values_declare_databases_roles_image_and_resources" {
       temporal            = "temporal"
       temporal_visibility = "temporal"
       litellm             = "litellm"
+      phoenix             = "phoenix"
     }
-    error_message = "The cluster must declare temporal and temporal_visibility owned by temporal, and litellm owned by litellm."
+    error_message = "The cluster must declare temporal, temporal_visibility, litellm and phoenix with isolated owners."
   }
 
   assert {
@@ -111,8 +112,9 @@ run "cluster_values_declare_databases_roles_image_and_resources" {
       } == {
       temporal = "ai-postgres-temporal-credentials"
       litellm  = "ai-postgres-litellm-credentials"
+      phoenix  = "ai-postgres-phoenix-credentials"
     }
-    error_message = "The temporal and litellm roles must be non-superuser logins reading the module's credential Secrets."
+    error_message = "The temporal, litellm and phoenix roles must be non-superuser logins reading the module's credential Secrets."
   }
 
   assert {
@@ -122,6 +124,8 @@ run "cluster_values_declare_databases_roles_image_and_resources" {
         "host all temporal all reject",
         "host litellm litellm all scram-sha-256",
         "host all litellm all reject",
+        "host phoenix phoenix all scram-sha-256",
+        "host all phoenix all reject",
       ] : contains(yamldecode(helm_release.cnpg_cluster.values[0]).cluster.postgresql.pg_hba, rule)
     ])
     error_message = "pg_hba must restrict each role to its own databases."
@@ -132,7 +136,7 @@ run "role_secrets_are_write_only_and_labelled" {
   command = plan
 
   assert {
-    condition     = toset(keys(kubernetes_secret_v1.db_user)) == toset(["temporal", "litellm"])
+    condition     = toset(keys(kubernetes_secret_v1.db_user)) == toset(["temporal", "litellm", "phoenix"])
     error_message = "There must be exactly one credential Secret per role."
   }
 

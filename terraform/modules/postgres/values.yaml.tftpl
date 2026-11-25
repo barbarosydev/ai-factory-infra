@@ -30,6 +30,8 @@ cluster:
       - host all temporal all reject
       - host litellm litellm all scram-sha-256
       - host all litellm all reject
+      - host phoenix phoenix all scram-sha-256
+      - host all phoenix all reject
 
   roles:
     - name: temporal
@@ -44,6 +46,12 @@ cluster:
       superuser: false
       passwordSecret:
         name: "${cluster_name}-litellm-credentials"
+    - name: phoenix
+      ensure: present
+      login: true
+      superuser: false
+      passwordSecret:
+        name: "${cluster_name}-phoenix-credentials"
 
 databases:
   - name: temporal
@@ -57,4 +65,8 @@ databases:
   - name: litellm
     ensure: present
     owner: litellm
+    databaseReclaimPolicy: retain
+  - name: phoenix
+    ensure: present
+    owner: phoenix
     databaseReclaimPolicy: retain

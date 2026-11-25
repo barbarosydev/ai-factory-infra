@@ -42,12 +42,15 @@ No modules.
 | <a name="input_db_secret_name"></a> [db\_secret\_name](#input\_db\_secret\_name) | Kubernetes Secret name containing PostgreSQL username and password. | `string` | n/a | yes |
 | <a name="input_image_tag"></a> [image\_tag](#input\_image\_tag) | LiteLLM image tag and multi-arch index digest (X.Y.Z@sha256:...) for ghcr.io/berriai/litellm. | `string` | n/a | yes |
 | <a name="input_ingress_host"></a> [ingress\_host](#input\_ingress\_host) | Hostname for the Traefik Ingress exposing LiteLLM. | `string` | `"litellm.localhost"` | no |
+| <a name="input_input_cost_per_token"></a> [input\_cost\_per\_token](#input\_input\_cost\_per\_token) | Local reference input cost per token in USD so /ui/usage/ spend and key budget charts populate meaningfully on local Ollama models. | `number` | `2e-7` | no |
 | <a name="input_model_routes"></a> [model\_routes](#input\_model\_routes) | Map of agent route name to Ollama model tag. | `map(string)` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Kubernetes namespace where LiteLLM is deployed. | `string` | n/a | yes |
 | <a name="input_ollama_api_base"></a> [ollama\_api\_base](#input\_ollama\_api\_base) | In-cluster HTTP base URL for the Ollama Service. | `string` | n/a | yes |
+| <a name="input_output_cost_per_token"></a> [output\_cost\_per\_token](#input\_output\_cost\_per\_token) | Local reference output cost per token in USD so /ui/usage/ spend and key budget charts populate meaningfully on local Ollama models. | `number` | `6e-7` | no |
 | <a name="input_release_name"></a> [release\_name](#input\_release\_name) | Helm release name for LiteLLM. | `string` | `"litellm"` | no |
 | <a name="input_secret_version"></a> [secret\_version](#input\_secret\_version) | Increment to rotate the LiteLLM master key and agent virtual keys. | `number` | `4` | no |
-| <a name="input_store_prompts_in_spend_logs"></a> [store\_prompts\_in\_spend\_logs](#input\_store\_prompts\_in\_spend\_logs) | Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI. | `bool` | `true` | no |
+| <a name="input_spend_logs_retention"></a> [spend\_logs\_retention](#input\_spend\_logs\_retention) | Retention window for LiteLLM spend and daily tag usage logs (e.g. 3d, 7d, 24h). | `string` | `"3d"` | no |
+| <a name="input_store_prompts_in_spend_logs"></a> [store\_prompts\_in\_spend\_logs](#input\_store\_prompts\_in\_spend\_logs) | Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI. | `bool` | `false` | no |
 
 ## Outputs
 

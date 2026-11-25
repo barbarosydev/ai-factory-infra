@@ -31,6 +31,7 @@ task apply
 | ---- | ------ | ------- |
 | <a name="module_litellm"></a> [litellm](#module\_litellm) | ../../modules/litellm | n/a |
 | <a name="module_model_backend"></a> [model\_backend](#module\_model\_backend) | ../../modules/model-backend | n/a |
+| <a name="module_observability"></a> [observability](#module\_observability) | ../../modules/observability | n/a |
 | <a name="module_postgres"></a> [postgres](#module\_postgres) | ../../modules/postgres | n/a |
 | <a name="module_temporal"></a> [temporal](#module\_temporal) | ../../modules/temporal | n/a |
 
@@ -51,9 +52,11 @@ task apply
 | <a name="input_kubeconfig_path"></a> [kubeconfig\_path](#input\_kubeconfig\_path) | Absolute path of the project kubeconfig (a checkout's .kube/config). Empty uses this checkout's own. Set by scripts/terraform.sh so git worktrees share one cluster. | `string` | `""` | no |
 | <a name="input_litellm_chart_version"></a> [litellm\_chart\_version](#input\_litellm\_chart\_version) | Pinned LiteLLM Helm chart and container image version. | `string` | `"1.109.1"` | no |
 | <a name="input_litellm_image_tag"></a> [litellm\_image\_tag](#input\_litellm\_image\_tag) | LiteLLM image tag and multi-arch index digest (ghcr.io/berriai/litellm); the version must equal litellm\_chart\_version. | `string` | `"1.109.1@sha256:11175975a3093e05e92faee2fe2fe3412a3ae2fcaa849eb0fe25d5f0d8bcb2e9"` | no |
-| <a name="input_litellm_store_prompts"></a> [litellm\_store\_prompts](#input\_litellm\_store\_prompts) | Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI. | `bool` | `true` | no |
+| <a name="input_litellm_store_prompts"></a> [litellm\_store\_prompts](#input\_litellm\_store\_prompts) | Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI (false = metadata-only by default). | `bool` | `false` | no |
 | <a name="input_model_routes"></a> [model\_routes](#input\_model\_routes) | Map of agent route name to Ollama model tag. | `map(string)` | <pre>{<br/>  "dev-agent": "gemma4:e4b",<br/>  "pm-agent": "gemma4:12b",<br/>  "sec-agent": "gemma4:e4b",<br/>  "test-agent": "gemma4:e4b"<br/>}</pre> | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Kubernetes namespace for the AI platform stack. | `string` | `"ai-platform"` | no |
+| <a name="input_phoenix_image_name"></a> [phoenix\_image\_name](#input\_phoenix\_image\_name) | Arize Phoenix container image pinned by exact tag and multi-arch index digest (arizephoenix/phoenix:version-X.Y.Z@sha256:...). | `string` | `"arizephoenix/phoenix:version-22.0.1@sha256:cc8c5e545389a6aae9523beaf92eb067fdaeae59d2166093d60856f89bf7ee34"` | no |
+| <a name="input_phoenix_retention_days"></a> [phoenix\_retention\_days](#input\_phoenix\_retention\_days) | Default trace retention policy in days configured on Arize Phoenix. | `number` | `3` | no |
 | <a name="input_postgres_image_name"></a> [postgres\_image\_name](#input\_postgres\_image\_name) | PostgreSQL container image as repository:MAJOR.MINOR@sha256:digest (multi-arch index digest). The major must equal postgres\_version. | `string` | `"ghcr.io/cloudnative-pg/postgresql:18.6@sha256:899d3ed526b659d77935dde0e6bf2d69dbbf17d3d8c6486ca8cfd04bd3c18533"` | no |
 | <a name="input_postgres_version"></a> [postgres\_version](#input\_postgres\_version) | PostgreSQL major version supported by Temporal 1.32 and CloudNativePG. | `string` | `"18"` | no |
 | <a name="input_temporal_admin_tools_image_tag"></a> [temporal\_admin\_tools\_image\_tag](#input\_temporal\_admin\_tools\_image\_tag) | temporalio/admin-tools image tag and multi-arch index digest; the version must equal the temporal\_server\_image\_tag version. | `string` | `"1.32.2@sha256:4a95866efba29d7e17ab012df5232795e8b0ad0f7d5f9d1ec4df321f7792a754"` | no |
@@ -70,6 +73,10 @@ task apply
 | <a name="output_litellm_url"></a> [litellm\_url](#output\_litellm\_url) | Local HTTP URL for LiteLLM via Traefik. |
 | <a name="output_namespace"></a> [namespace](#output\_namespace) | Kubernetes namespace hosting the AI platform stack. |
 | <a name="output_ollama_service"></a> [ollama\_service](#output\_ollama\_service) | Kubernetes Service name routing to Ollama on the Mac. |
+| <a name="output_phoenix_otlp_http_base_url"></a> [phoenix\_otlp\_http\_base\_url](#output\_phoenix\_otlp\_http\_base\_url) | Host OTLP HTTP base URL for Arize Phoenix via Traefik. |
+| <a name="output_phoenix_otlp_http_traces_endpoint"></a> [phoenix\_otlp\_http\_traces\_endpoint](#output\_phoenix\_otlp\_http\_traces\_endpoint) | Full host OTLP HTTP/protobuf traces ingestion endpoint for Arize Phoenix. |
+| <a name="output_phoenix_service"></a> [phoenix\_service](#output\_phoenix\_service) | Kubernetes Service name for Arize Phoenix. |
+| <a name="output_phoenix_url"></a> [phoenix\_url](#output\_phoenix\_url) | Local HTTP URL for the Arize Phoenix UI via Traefik. |
 | <a name="output_postgres_cluster_name"></a> [postgres\_cluster\_name](#output\_postgres\_cluster\_name) | Name of the CloudNativePG PostgreSQL cluster. |
 | <a name="output_postgres_databases"></a> [postgres\_databases](#output\_postgres\_databases) | Provisioned PostgreSQL databases. |
 | <a name="output_postgres_rw_service"></a> [postgres\_rw\_service](#output\_postgres\_rw\_service) | Kubernetes Service name for read-write PostgreSQL connections. |

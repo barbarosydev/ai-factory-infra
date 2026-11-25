@@ -122,8 +122,44 @@ variable "agent_max_budget" {
 variable "store_prompts_in_spend_logs" {
   description = "Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI."
   type        = bool
-  default     = true
+  default     = false
   nullable    = false
+}
+
+variable "spend_logs_retention" {
+  description = "Retention window for LiteLLM spend and daily tag usage logs (e.g. 3d, 7d, 24h)."
+  type        = string
+  default     = "3d"
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+(m|h|d)$", var.spend_logs_retention))
+    error_message = "spend_logs_retention must be a positive duration like 3d, 7d, or 24h."
+  }
+}
+
+variable "input_cost_per_token" {
+  description = "Local reference input cost per token in USD so /ui/usage/ spend and key budget charts populate meaningfully on local Ollama models."
+  type        = number
+  default     = 0.0000002
+  nullable    = false
+
+  validation {
+    condition     = var.input_cost_per_token >= 0
+    error_message = "input_cost_per_token must be non-negative."
+  }
+}
+
+variable "output_cost_per_token" {
+  description = "Local reference output cost per token in USD so /ui/usage/ spend and key budget charts populate meaningfully on local Ollama models."
+  type        = number
+  default     = 0.0000006
+  nullable    = false
+
+  validation {
+    condition     = var.output_cost_per_token >= 0
+    error_message = "output_cost_per_token must be non-negative."
+  }
 }
 
 variable "secret_version" {

@@ -106,10 +106,34 @@ variable "litellm_image_tag" {
 }
 
 variable "litellm_store_prompts" {
-  description = "Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI."
+  description = "Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI (false = metadata-only by default)."
   type        = bool
-  default     = true
+  default     = false
   nullable    = false
+}
+
+variable "phoenix_image_name" {
+  description = "Arize Phoenix container image pinned by exact tag and multi-arch index digest (arizephoenix/phoenix:version-X.Y.Z@sha256:...)."
+  type        = string
+  default     = "arizephoenix/phoenix:version-22.0.1@sha256:cc8c5e545389a6aae9523beaf92eb067fdaeae59d2166093d60856f89bf7ee34"
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^[a-z0-9./-]+:[a-zA-Z0-9._-]+@sha256:[0-9a-f]{64}$", var.phoenix_image_name)) && !can(regex("(^|:)latest(@|$)", var.phoenix_image_name))
+    error_message = "phoenix_image_name must be repository:tag@sha256:<64 hex> and must not use latest."
+  }
+}
+
+variable "phoenix_retention_days" {
+  description = "Default trace retention policy in days configured on Arize Phoenix."
+  type        = number
+  default     = 3
+  nullable    = false
+
+  validation {
+    condition     = var.phoenix_retention_days >= 1 && floor(var.phoenix_retention_days) == var.phoenix_retention_days
+    error_message = "phoenix_retention_days must be a positive integer."
+  }
 }
 
 variable "temporal_chart_version" {

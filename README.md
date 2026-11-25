@@ -9,9 +9,10 @@ LiteLLM, Temporal and PostgreSQL in a k3d cluster on a Mac, with Ollama running 
 | Part | Where | Reached at |
 | --- | --- | --- |
 | k3d cluster `ai-factory` (one k3s server) | Docker Desktop | project kubeconfig `.kube/config` only |
-| PostgreSQL (CloudNativePG, databases `temporal`, `temporal_visibility`, `litellm`) | namespace `ai-platform` | inside the cluster |
-| LiteLLM gateway and Admin UI | namespace `ai-platform` | `http://litellm.localhost:8080` |
+| PostgreSQL (CloudNativePG, databases `temporal`, `temporal_visibility`, `litellm`, `phoenix`) | namespace `ai-platform` | inside the cluster |
+| LiteLLM gateway and Admin UI (`/ui/usage/`, `/ui/logs/`) | namespace `ai-platform` | `http://litellm.localhost:8080` |
 | Temporal server and Web UI | namespace `ai-platform` | `http://temporal.localhost:8080`, gRPC `localhost:7233` |
+| Arize Phoenix trace UI & OTLP receiver (Elastic License 2.0) | namespace `ai-platform` | `http://phoenix.localhost:8080` (`/v1/traces`) |
 | Ollama | natively on the Mac | from pods through the `ollama` Service |
 
 Model routes: `pm-agent` on gemma4:12b, `dev-agent`, `test-agent` and `sec-agent` on gemma4:e4b. Every tool, chart, image, provider and GitHub Action is pinned exactly ([ADR 0002](docs/adr/0002-toolchain-versions-and-pinning.md)).

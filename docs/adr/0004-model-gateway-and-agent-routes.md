@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted (amended by [0008](0008-arize-phoenix-and-opentelemetry-observability.md))
 
 ## Date
 
@@ -18,7 +18,7 @@ Agents must call models through one gateway, without sharing a master key or rea
 - Each agent (`pm-agent`, `dev-agent`, `test-agent`, `sec-agent`) has one model route and one virtual key scoped to that route only. A key calling another agent's route gets HTTP 403.
 - Routes are one Terraform variable, `model_routes`. Adding or changing one follows the `add-model-route` skill.
 - Each key is a write-only Kubernetes Secret, registered with LiteLLM by an in-cluster bootstrap Job. Keys therefore never pass through Terraform state or terminal output.
-- Prompt logging is on by default (`litellm_store_prompts`) so requests and responses can be read in the Admin UI. This is the owner's decision of 16 November 2026. It is safe because only local models are used, so prompts never leave the Mac. The variable can switch it to metadata only.
+- Prompt logging defaults to metadata-only (`litellm_store_prompts = false`) with 3-day spend/tag retention (`maximum_spend_logs_retention_period: "3d"`) and local reference token pricing (`model_info`) so `/ui/usage/` charts and virtual-key budgets populate meaningfully; set `litellm_store_prompts = true` when inspecting raw prompts locally (see [0008](0008-arize-phoenix-and-opentelemetry-observability.md)).
 - Models are from the gemma4 family. The `qwen3.5-coder` tag does not exist in the Ollama library, and larger models do not fit beside the cluster.
 
 ## Consequences

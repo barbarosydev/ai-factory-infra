@@ -6,6 +6,9 @@ locals {
     litellm = {
       databases = ["litellm"]
     }
+    phoenix = {
+      databases = ["phoenix"]
+    }
   }
 }
 
