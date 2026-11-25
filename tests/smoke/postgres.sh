@@ -54,6 +54,11 @@ done
 
 pod="pg-smoke-$$"
 overrides="$(jq -cn --arg pod "$pod" --arg img "$PG_IMAGE" '{
+  metadata: {
+    labels: {
+      "ai-factory/smoke-probe": "true"
+    }
+  },
   spec: {
     containers: [{
       name: $pod,

@@ -1,8 +1,17 @@
 # ai-factory-infra
 
-Personal async multi-agent software factory: the local platform it runs on.
+Personal async multi-agent software factory: the **Terraform & Helm** Kubernetes platform it runs on.
 
-LiteLLM, Temporal and PostgreSQL in a k3d cluster on a Mac, with Ollama running natively for the GPU. Terraform and Helm install everything; `task` runs everything. No external API keys: only local models. See [docs/architecture.md](docs/architecture.md).
+Everything is provisioned declaratively via **Terraform** (`terraform/environments/local` + 6 tested modules) and **Helm** inside a local `k3d` cluster on Apple Silicon, with **CloudNativePG PostgreSQL 18**, **Temporal**, **LiteLLM**, **Arize Phoenix**, zero-trust **Kubernetes `NetworkPolicy`** isolation, and **Ollama** running natively on the Metal GPU. No external API keys: only local models. See [docs/architecture.md](docs/architecture.md).
+
+## Platform Highlights
+
+- **100% Terraform-Managed Local Cloud**: Reproducible `task up` / `task plan` / `task apply` lifecycle using write-only Secrets (`ephemeral "random_password"` + `data_wo`), exact digest pinning, and `terraform test` module suites (`mock_provider`).
+- **Database & Network Zero-Trust**: One shared CloudNativePG PostgreSQL 18 server enforces strict `pg_hba` per-role isolation (`temporal`, `litellm`, `phoenix`), backed by 9 Kubernetes `NetworkPolicy` resources (`default-deny-all`, DNS-only egress, Phoenix isolated to Postgres `:5432` only, LiteLLM egress restricted to Postgres and host Ollama `:11434`).
+- **End-to-End Observability & Verification**: `task doctor` runs **77 automated checks** across prerequisites, Postgres role isolation, LiteLLM key scoping, Temporal gRPC/Web, Arize Phoenix OTLP protobuf ingestion + readback, `NetworkPolicy` enforcement, and `terraform.tfstate` secret-absence verification.
+
+![Arize Phoenix trace waterfall](docs/images/phoenix-trace-waterfall.png)
+![Temporal Web UI workflow executions](docs/images/temporal-workflows.png)
 
 ## What runs
 

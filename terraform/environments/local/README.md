@@ -31,6 +31,7 @@ task apply
 | ---- | ------ | ------- |
 | <a name="module_litellm"></a> [litellm](#module\_litellm) | ../../modules/litellm | n/a |
 | <a name="module_model_backend"></a> [model\_backend](#module\_model\_backend) | ../../modules/model-backend | n/a |
+| <a name="module_network_policies"></a> [network\_policies](#module\_network\_policies) | ../../modules/network-policies | n/a |
 | <a name="module_observability"></a> [observability](#module\_observability) | ../../modules/observability | n/a |
 | <a name="module_postgres"></a> [postgres](#module\_postgres) | ../../modules/postgres | n/a |
 | <a name="module_temporal"></a> [temporal](#module\_temporal) | ../../modules/temporal | n/a |
