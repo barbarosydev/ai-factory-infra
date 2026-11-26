@@ -1,17 +1,31 @@
 # ai-factory-infra
 
-Personal async multi-agent software factory: the **Terraform & Helm** Kubernetes platform it runs on.
+[![CI](https://github.com/barbarosydev/ai-factory-infra/actions/workflows/ci.yml/badge.svg)](https://github.com/barbarosydev/ai-factory-infra/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?logo=terraform&logoColor=white)](terraform/environments/local/main.tf)
+[![k3d](https://img.shields.io/badge/Kubernetes-k3d-326CE5?logo=kubernetes&logoColor=white)](cluster/k3d-config.yaml)
+[![CloudNativePG](https://img.shields.io/badge/Postgres_18-CloudNativePG-336791?logo=postgresql&logoColor=white)](terraform/modules/postgres/main.tf)
+[![Temporal](https://img.shields.io/badge/Temporal-1.32-111111?logo=temporal&logoColor=white)](terraform/modules/temporal/main.tf)
+[![LiteLLM](https://img.shields.io/badge/Gateway-LiteLLM-0F766E)](terraform/modules/litellm/main.tf)
+[![Arize Phoenix](https://img.shields.io/badge/Observability-Arize_Phoenix-FF6F00)](terraform/modules/observability/main.tf)
 
-Everything is provisioned declaratively via **Terraform** (`terraform/environments/local` + 6 tested modules) and **Helm** inside a local `k3d` cluster on Apple Silicon, with **CloudNativePG PostgreSQL 18**, **Temporal**, **LiteLLM**, **Arize Phoenix**, zero-trust **Kubernetes `NetworkPolicy`** isolation, and **Ollama** running natively on the Metal GPU. No external API keys: only local models. See [docs/architecture.md](docs/architecture.md).
+Personal async multi-agent software factory ([`ai-factory`](https://github.com/barbarosydev/ai-factory)): the **100% Terraform & Helm** Kubernetes platform it runs on.
+
+Everything is provisioned declaratively via **Terraform** (`terraform/environments/local` + 6 tested modules) and **Helm** inside a local `k3d` cluster on Apple Silicon, with **CloudNativePG PostgreSQL 18**, **Temporal**, **LiteLLM**, **Arize Phoenix**, zero-trust **Kubernetes `NetworkPolicy`** isolation, Conftest Rego policy enforcement, and **Ollama** running natively on the Metal GPU. No external API keys: only local models. See [docs/architecture.md](docs/architecture.md).
 
 ## Platform Highlights
 
-- **100% Terraform-Managed Local Cloud**: Reproducible `task up` / `task plan` / `task apply` lifecycle using write-only Secrets (`ephemeral "random_password"` + `data_wo`), exact digest pinning, and `terraform test` module suites (`mock_provider`).
+- **100% Terraform-Managed Local Cloud**: Reproducible `task up` / `task plan` / `task apply` lifecycle using write-only Secrets (`ephemeral "random_password"` + `data_wo`), exact digest pinning (`@sha256:...`), and `terraform test` module suites (`mock_provider`).
 - **Database & Network Zero-Trust**: One shared CloudNativePG PostgreSQL 18 server enforces strict `pg_hba` per-role isolation (`temporal`, `litellm`, `phoenix`), backed by 9 Kubernetes `NetworkPolicy` resources (`default-deny-all`, DNS-only egress, Phoenix isolated to Postgres `:5432` only, LiteLLM egress restricted to Postgres and host Ollama `:11434`).
-- **End-to-End Observability & Verification**: `task doctor` runs **77 automated checks** across prerequisites, Postgres role isolation, LiteLLM key scoping, Temporal gRPC/Web, Arize Phoenix OTLP protobuf ingestion + readback, `NetworkPolicy` enforcement, and `terraform.tfstate` secret-absence verification.
+- **Policy-as-Code & End-to-End Verification**: Conftest Rego policies ([policy/](policy/README.md)) enforce digest pinning, loopback-only k3d bindings, write-only secrets, and project-kubeconfig isolation; `task doctor` runs **77 automated checks** across prerequisites, Postgres role isolation, LiteLLM key scoping, Temporal gRPC/Web, Arize Phoenix OTLP protobuf ingestion + readback, `NetworkPolicy` enforcement, and `terraform.tfstate` secret-absence verification.
 
-![Arize Phoenix trace waterfall](docs/images/phoenix-trace-waterfall.png)
-![Temporal Web UI workflow executions](docs/images/temporal-workflows.png)
+## Live Platform Telemetry
+
+| Arize Phoenix Trace Waterfall | Arize Phoenix Trace & Token Table |
+| --- | --- |
+| ![Arize Phoenix trace waterfall](docs/images/phoenix-trace-waterfall.png) | ![Arize Phoenix traces table](docs/images/phoenix-traces-table.png) |
+| **Temporal Workflow Gantt Timeline** | **Temporal Completed Workflows** |
+| ![Temporal Web UI workflow timeline](docs/images/temporal-workflow-timeline.png) | ![Temporal Web UI workflow executions](docs/images/temporal-workflows.png) |
 
 ## What runs
 
