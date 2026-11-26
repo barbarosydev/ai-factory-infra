@@ -50,6 +50,7 @@ flowchart LR
 | **LiteLLM** | `ai-platform` (`terraform/modules/litellm`) | Chart & image `1.109.1` | OpenAI-compatible model gateway and Admin UI (`/ui`). Maps `pm-agent` -> `gemma4:12b` and `dev-agent` / `test-agent` / `sec-agent` -> `gemma4:e4b`, with one scoped virtual API key per agent. |
 | **Temporal** | `ai-platform` (`terraform/modules/temporal`) | Chart `1.8.0` (server `1.32.2`, UI `2.56.1`) | Durable workflow orchestrator (`frontend`, `history`, `matching`, `worker`, `web`) backed by PostgreSQL persistence and SQL visibility. Exposes gRPC on `localhost:7233` to the Mac and the Web UI on `http://temporal.localhost:8080`. |
 | **Arize Phoenix** | `ai-platform` (`terraform/modules/observability`) | Image `version-22.0.1` (Elastic License 2.0) | Self-hosted OpenTelemetry / OpenInference trace store and UI (`http://phoenix.localhost:8080`, `POST /v1/traces`) backed by the isolated `phoenix` PostgreSQL database with 3-day trace retention and loopback-only no-auth. |
+| **Network Policies** | `ai-platform` (`terraform/modules/network-policies`) | 9 `NetworkPolicy` resources | `default-deny-all` + least-privilege ingress/egress across Traefik, CloudNativePG, LiteLLM, Temporal, Phoenix (Postgres-only egress), Jobs, and smoke probes ([ADR 0009](adr/0009-kubernetes-network-policies-and-zero-trust.md)). |
 
 ## Network and port map
 

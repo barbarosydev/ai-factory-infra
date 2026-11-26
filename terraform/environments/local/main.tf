@@ -72,3 +72,16 @@ module "observability" {
     module.postgres,
   ]
 }
+
+module "network_policies" {
+  source = "../../modules/network-policies"
+
+  namespace = kubernetes_namespace_v1.ai_platform.metadata[0].name
+
+  depends_on = [
+    module.postgres,
+    module.litellm,
+    module.temporal,
+    module.observability,
+  ]
+}

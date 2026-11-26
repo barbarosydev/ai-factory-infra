@@ -93,6 +93,11 @@ except urllib.error.HTTPError as e:
 '
 
 overrides="$(jq -cn --arg pod "$pod" --arg img "$LITELLM_IMAGE" --arg py "$py_script" '{
+  metadata: {
+    labels: {
+      "ai-factory/smoke-probe": "true"
+    }
+  },
   spec: {
     containers: [{
       name: $pod,

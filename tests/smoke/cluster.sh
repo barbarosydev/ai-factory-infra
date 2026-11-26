@@ -70,6 +70,13 @@ else
   check_fail "node" "not Ready: task kube -- describe nodes"
 fi
 
+netpol_count="$(kc get networkpolicy -n ai-platform -o json 2>/dev/null | jq -r '.items | length' || echo 0)"
+if [[ "${netpol_count:-0}" -ge 9 ]]; then
+  check_pass "network policies" "${netpol_count} NetworkPolicies active in ai-platform (default-deny + least-privilege)"
+else
+  check_fail "network policies" "expected >= 9 NetworkPolicies in ai-platform, got ${netpol_count:-0}"
+fi
+
 code="$(curl -s --noproxy '*' --max-time 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/ || true)"
 if [[ "$code" == "404" ]]; then
   check_pass "ingress :8080" "Traefik answers on port 8080 (404 for an unknown host)"

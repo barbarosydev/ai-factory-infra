@@ -12,3 +12,4 @@ Each record has the same sections: Status, Date, Context, Decision (reasons incl
 - [0006. Agent harness](0006-agent-harness.md)
 - [0007. Operations contract and verification](0007-operations-contract-and-verification.md)
 - [0008. Arize Phoenix observability and LiteLLM usage overview](0008-arize-phoenix-and-opentelemetry-observability.md)
+- [0009. Kubernetes NetworkPolicies and zero-trust pod isolation](0009-kubernetes-network-policies-and-zero-trust.md)
