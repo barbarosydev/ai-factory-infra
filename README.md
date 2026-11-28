@@ -15,9 +15,9 @@ Everything is provisioned declaratively via **Terraform** (`terraform/environmen
 
 ## Platform Highlights
 
-- **100% Terraform-Managed Local Cloud**: Reproducible `task up` / `task plan` / `task apply` lifecycle using write-only Secrets (`ephemeral "random_password"` + `data_wo`), exact digest pinning (`@sha256:...`), and `terraform test` module suites (`mock_provider`).
+- **100% Terraform-Managed Local Cloud**: Reproducible `task up` / `task plan` / `task apply` lifecycle using write-only Secrets (`ephemeral "random_password"` + `data_wo`), exact digest pinning (`@sha256:...`), `ollama_chat/` native `/api/chat` routing with LiteLLM router retries, 7-day Phoenix & LiteLLM spend retention, and `terraform test` module suites (`mock_provider`).
 - **Database & Network Zero-Trust**: One shared CloudNativePG PostgreSQL 18 server enforces strict `pg_hba` per-role isolation (`temporal`, `litellm`, `phoenix`), backed by 9 Kubernetes `NetworkPolicy` resources (`default-deny-all`, DNS-only egress, Phoenix isolated to Postgres `:5432` only, LiteLLM egress restricted to Postgres and host Ollama `:11434`).
-- **Policy-as-Code & End-to-End Verification**: Conftest Rego policies ([policy/](policy/README.md)) enforce digest pinning, loopback-only k3d bindings, write-only secrets, and project-kubeconfig isolation; `task doctor` runs **77 automated checks** across prerequisites, Postgres role isolation, LiteLLM key scoping, Temporal gRPC/Web, Arize Phoenix OTLP protobuf ingestion + readback, `NetworkPolicy` enforcement, and `terraform.tfstate` secret-absence verification.
+- **Policy-as-Code & End-to-End Verification**: Conftest Rego policies ([policy/](policy/README.md)) enforce digest pinning, loopback-only k3d bindings, write-only secrets, and project-kubeconfig isolation; `task doctor` runs **78 automated checks** across prerequisites, Postgres role isolation, LiteLLM key scoping, Temporal gRPC/Web, Arize Phoenix OTLP protobuf ingestion + readback, `NetworkPolicy` enforcement, and `terraform.tfstate` secret-absence verification.
 
 ## Live Platform Telemetry
 
@@ -66,9 +66,10 @@ task up
 ```
 
 ```bash
-task doctor
-task status
-task access
+task doctor           # full verification (-- --fast skips live LLM probes)
+task status           # pods, memory, Ollama VRAM & context length
+task access -- --open # open LiteLLM, Temporal, and Phoenix Web UIs
+task logs -- litellm -f
 ```
 
 ```bash

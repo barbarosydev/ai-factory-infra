@@ -63,7 +63,7 @@ findings="$(jq -r '
       (
         $at | paths(type == "string" and length > 0) as $p
         | ([$p[] | select(type == "string")] | last // "") as $k
-        | select($k | test("password|secret|token|master_key|api_key"; "i"))
+        | select($k | test("password|secret|token|master_?key|api_?key|credential|private_key"; "i"))
         | select($k | allowed | not)
         | "\($ia)\t\($p | map(tostring) | join("."))"
       )

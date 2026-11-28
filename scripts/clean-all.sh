@@ -21,7 +21,7 @@ stack_lock "task clean:all"
 "$REPO_ROOT/scripts/cluster-clean.sh"
 
 tf_dir="$REPO_ROOT/terraform/environments/local"
-rm -rf "$tf_dir/.terraform" "$REPO_ROOT/.tflint.d"
+rm -rf "$tf_dir/.terraform" "$REPO_ROOT"/terraform/modules/*/.terraform "$REPO_ROOT/.tflint.d"
 info "removed Terraform provider caches (.terraform.lock.hcl kept)"
 
 if [[ "$model_action" == "ask" && -t 0 ]]; then

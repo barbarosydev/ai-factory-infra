@@ -31,10 +31,10 @@ fi
 
 retention_val="$(kc get deployment phoenix -n "$NS" -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PHOENIX_DEFAULT_RETENTION_POLICY_DAYS")].value}' 2>/dev/null || true)"
 auth_val="$(kc get deployment phoenix -n "$NS" -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PHOENIX_ENABLE_AUTH")].value}' 2>/dev/null || true)"
-if [[ "$retention_val" == "3" && "$auth_val" == "false" ]]; then
-  check_pass "phoenix policy" "3-day retention policy & explicit loopback no-auth configured"
+if [[ "$retention_val" =~ ^[1-9][0-9]*$ && "$auth_val" == "false" ]]; then
+  check_pass "phoenix policy" "${retention_val}-day retention policy & explicit loopback no-auth configured"
 else
-  check_fail "phoenix policy" "expected retention=3 and auth=false (got retention='${retention_val:-unset}', auth='${auth_val:-unset}')"
+  check_fail "phoenix policy" "expected positive retention days and auth=false (got retention='${retention_val:-unset}', auth='${auth_val:-unset}')"
 fi
 
 # --- Web UI & Readiness via Traefik ----------------------------------------

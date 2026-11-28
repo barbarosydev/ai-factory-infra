@@ -105,7 +105,7 @@ variable "http_port" {
 variable "retention_days" {
   description = "Default trace retention policy in days applied by Phoenix."
   type        = number
-  default     = 3
+  default     = 7
   nullable    = false
 
   validation {

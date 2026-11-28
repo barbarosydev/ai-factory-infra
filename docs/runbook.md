@@ -6,12 +6,13 @@
 | Lint and secret scan | `task ci` (`task lint` for linters, policies and module tests only) |
 | Start everything (and run doctor) | `task up` |
 | Preview or apply Terraform changes | `task plan` / `task apply` |
-| Full platform health check | `task doctor` (`task doctor -- --json` for JSON output; includes `task state:check`, which fails if Terraform state holds a secret value) |
+| Full platform health check | `task doctor` (`-- --fast` skips live model completions, `-- --only <suites>` runs a subset, `-- --json` prints JSON; includes `task state:check`) |
 | Stop, keep data | `task down` |
 | Stop and start again | `task restart` |
 | Stop only one part | `task stop:cluster` or `task stop:ollama` |
 | See what runs & memory use | `task status` |
-| UIs, secret names and API commands | `task access` (`task access -- --copy master` copies Admin UI password) |
+| UIs, secret names and API commands | `task access` (`-- --copy master` copies Admin UI password, `-- --open all` opens all Web UIs in macOS browser) |
+| Inspect or tail component logs | `task logs -- <litellm\|temporal\|phoenix\|postgres\|ollama\|cnpg> [-f] [--tail=N]` |
 | Check the cluster | `task smoke:cluster` (add `-- --lifecycle` to also test down and up) |
 | Check PostgreSQL | `task smoke:postgres` |
 | Check LiteLLM & models | `task smoke:litellm` |
@@ -61,7 +62,7 @@ Each wait names what it waited for and the command that shows why. The common on
 | LiteLLM Swagger / OpenAPI docs | `http://litellm.localhost:8080/` | Master key or virtual key in the Swagger **Authorize** dialog |
 | Temporal Web UI | `http://temporal.localhost:8080` (`http://temporal.localhost:8080/namespaces/default/workflows`) | None (open in local sandbox) |
 | Temporal gRPC (Mac workers & CLI) | `localhost:7233` | None (cleartext gRPC in local sandbox) |
-| Arize Phoenix UI & OTLP HTTP | `http://phoenix.localhost:8080` (`POST /v1/traces`) | None (loopback-only trusted local machine; 3-day retention policy) |
+| Arize Phoenix UI & OTLP HTTP | `http://phoenix.localhost:8080` (`POST /v1/traces`) | None (loopback-only trusted local machine; 7-day retention policy) |
 
 ### Log in to the LiteLLM Admin UI (`http://litellm.localhost:8080/ui`)
 

@@ -24,6 +24,10 @@ cluster:
   enableSuperuserAccess: true
 
   postgresql:
+    parameters:
+      max_connections: "150"
+      shared_buffers: "256MB"
+      work_mem: "4MB"
     # Restrict each role to its own database(s) before CNPG's default fallback rule.
     pg_hba:
       - host temporal,temporal_visibility temporal all scram-sha-256

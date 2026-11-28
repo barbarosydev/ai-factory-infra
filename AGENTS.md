@@ -17,9 +17,10 @@ Use `task` for everything; `task --list` shows all tasks. Logic lives in `script
 | --- | --- |
 | `task up` | Start Ollama, check prerequisites, create or resume the cluster, apply Terraform, and run `task doctor` |
 | `task down` | Stop the cluster and unload Ollama models; data is kept |
-| `task doctor` | Full health check across prerequisites, cluster, Postgres, Ollama, LiteLLM, Temporal, Web UIs and the state secret check (`-- --json` for JSON, `-- --only <suites>` for a subset) |
+| `task doctor` | Full health check across prerequisites, cluster, Postgres, Ollama, LiteLLM, Temporal, observability, Web UIs and state secrets (`-- --fast`, `-- --json`, `-- --only <suites>`) |
 | `task status` | Cluster, pods, container/pod memory use, loaded models and URLs |
-| `task access` | UIs, secret names, API curl examples, and `-- --copy <target>` to clipboard |
+| `task access` | UIs, secret names, API curl examples, `-- --copy <target>` to clipboard, and `-- --open [litellm\|temporal\|phoenix\|all]` |
+| `task logs -- <component>` | Inspect or follow logs for `litellm`, `temporal`, `phoenix`, `postgres`, `ollama`, or `cnpg` |
 | `task plan` / `task apply` | Terraform plan or apply for `terraform/environments/local` |
 | `task smoke:cluster` | Cluster smoke test; `-- --lifecycle` also runs down and up |
 | `task smoke:postgres` | PostgreSQL cluster, databases and per-role login isolation check |

@@ -8,6 +8,6 @@ set -euo pipefail
 source "$(dirname "$0")/lib/common.sh"
 require_cmd kubectl
 
-[[ -f "$KUBECONFIG" ]] || die "no project kubeconfig at .kube/config yet: run task up"
+[[ -f "$KUBECONFIG" ]] || die "no project kubeconfig at $KUBECONFIG yet: run task up"
 
 exec kubectl --kubeconfig "$KUBECONFIG" --context "$KUBE_CONTEXT" "$@"

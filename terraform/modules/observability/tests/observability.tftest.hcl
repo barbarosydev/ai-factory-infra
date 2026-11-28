@@ -43,7 +43,7 @@ run "deployment_service_and_ingress_follow_project_conventions" {
       PHOENIX_POSTGRES_HOST                  = "ai-postgres-cluster-rw"
       PHOENIX_POSTGRES_PORT                  = "5432"
       PHOENIX_POSTGRES_DB                    = "phoenix"
-      PHOENIX_DEFAULT_RETENTION_POLICY_DAYS  = "3"
+      PHOENIX_DEFAULT_RETENTION_POLICY_DAYS  = "7"
       PHOENIX_ENABLE_AUTH                    = "false"
       PHOENIX_TELEMETRY_ENABLED              = "false"
       PHOENIX_ALLOW_EXTERNAL_RESOURCES       = "false"
@@ -51,7 +51,12 @@ run "deployment_service_and_ingress_follow_project_conventions" {
       PHOENIX_DISABLE_AGENT_ASSISTANT        = "true"
       PHOENIX_ENABLE_MCP_SERVER              = "false"
     }
-    error_message = "Phoenix must configure PostgreSQL, 3-day retention, no-auth, and air-gapped telemetry settings."
+    error_message = "Phoenix must configure PostgreSQL, 7-day retention, no-auth, and air-gapped telemetry settings."
+  }
+
+  assert {
+    condition     = kubernetes_deployment_v1.phoenix.spec[0].template[0].spec[0].container[0].security_context[0].allow_privilege_escalation == false
+    error_message = "Phoenix container must disallow privilege escalation."
   }
 
   assert {

@@ -26,6 +26,11 @@ variable "operator_chart_version" {
   type        = string
   default     = "0.29.1"
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.operator_chart_version))
+    error_message = "operator_chart_version must be an exact semantic version (X.Y.Z)."
+  }
 }
 
 variable "operator_image_tag" {
@@ -44,6 +49,11 @@ variable "cluster_chart_version" {
   type        = string
   default     = "0.9.0"
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.cluster_chart_version))
+    error_message = "cluster_chart_version must be an exact semantic version (X.Y.Z)."
+  }
 }
 
 variable "postgres_version" {

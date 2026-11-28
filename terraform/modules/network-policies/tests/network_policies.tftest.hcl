@@ -38,3 +38,17 @@ run "empty_namespace_is_rejected" {
 
   expect_failures = [var.namespace]
 }
+
+run "invalid_cidrs_are_rejected" {
+  command = plan
+
+  variables {
+    cluster_pod_cidr = "not-a-cidr"
+    service_cidr     = "999.999.0.0/16"
+  }
+
+  expect_failures = [
+    var.cluster_pod_cidr,
+    var.service_cidr,
+  ]
+}

@@ -19,7 +19,7 @@ People and agents run the same scripts many times and trust their result. A scri
   - Waits for a condition with a timeout, never a fixed sleep (`wait_until` in `scripts/lib/common.sh`).
   - Exit codes mean one thing: 0 means no real failure, non-zero means failure. A WARN never fails.
   - Checks print fixed `PASS`, `WARN` or `FAIL` lines, or JSON with `--json`, through the shared check functions.
-- `task doctor` is the aggregate of the smoke suites (prerequisites, cluster, Postgres, LiteLLM, Temporal, state). `--only` runs a subset. It is the required health check after every change.
+- `task doctor` is the aggregate of the smoke suites (prerequisites, cluster, Postgres, LiteLLM, Temporal, observability, state). `--only` runs a subset and `--fast` skips live model completions for rapid health checks. It is the required health check after every change.
 - `task doctor` also checks that Terraform state holds no secret values (suite `state`, counts and names only); a FAIL blocks the pull request.
 - CI runs `task ci`: static checks, the Terraform module tests, the policies, the hook, script and Python tests, and gitleaks over the whole history.
 - Only the Mac can verify the live stack. That includes the cluster, the databases and model completions, which need Ollama and the GPU. A live-stack job in GitHub Actions is not added while the repo has one contributor and one machine; revisit when a second machine or contributor appears.

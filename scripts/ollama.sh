@@ -49,8 +49,12 @@ case "${1:-}" in
       # The app's quit dialog cancels an AppleScript quit, so send TERM instead.
       pkill -TERM -x Ollama
     fi
+    if pgrep -f 'ollama serve' >/dev/null 2>&1; then
+      info "stopping standalone ollama serve process"
+      pkill -TERM -f 'ollama serve' || true # process may exit as app shuts down
+    fi
     ollama_stopped() { ! ollama_answering; }
-    wait_until 30 "Ollama to stop (it may run outside the app: check ps aux | grep 'ollama serve')" ollama_stopped
+    wait_until 30 "Ollama to stop (check ps aux | grep 'ollama serve')" ollama_stopped
     info "Ollama is stopped"
     ;;
   *)

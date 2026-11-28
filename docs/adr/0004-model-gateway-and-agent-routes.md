@@ -18,7 +18,8 @@ Agents must call models through one gateway, without sharing a master key or rea
 - Each agent (`pm-agent`, `dev-agent`, `test-agent`, `sec-agent`) has one model route and one virtual key scoped to that route only. A key calling another agent's route gets HTTP 403.
 - Routes are one Terraform variable, `model_routes`. Adding or changing one follows the `add-model-route` skill.
 - Each key is a write-only Kubernetes Secret, registered with LiteLLM by an in-cluster bootstrap Job. Keys therefore never pass through Terraform state or terminal output.
-- Prompt logging defaults to metadata-only (`litellm_store_prompts = false`) with 3-day spend/tag retention (`maximum_spend_logs_retention_period: "3d"`) and local reference token pricing (`model_info`) so `/ui/usage/` charts and virtual-key budgets populate meaningfully; set `litellm_store_prompts = true` when inspecting raw prompts locally (see [0008](0008-arize-phoenix-and-opentelemetry-observability.md)).
+- Routes use LiteLLM's `ollama_chat/<model>` provider (`POST /api/chat`) instead of legacy `ollama/<model>` so Gemma 4 tool calling, thinking tokens, and multimodal vision images work natively, with `drop_params: true`, `request_timeout: 300`, and bounded router retries (`num_retries: 2`) for transient cold-load stalls.
+- Prompt logging defaults to metadata-only (`litellm_store_prompts = false`) with 7-day spend/tag retention (`maximum_spend_logs_retention_period: "7d"`) and rolling 7-day virtual-key budgets (`budget_duration: "7d"`) plus local reference token pricing (`model_info`) so `/ui/usage/` charts and virtual-key budgets populate meaningfully; set `litellm_store_prompts = true` when inspecting raw prompts locally (see [0008](0008-arize-phoenix-and-opentelemetry-observability.md)).
 - Models are from the gemma4 family. The `qwen3.5-coder` tag does not exist in the Ollama library, and larger models do not fit beside the cluster.
 
 ## Consequences

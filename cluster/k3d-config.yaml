@@ -15,7 +15,7 @@ kubeAPI:
   # The API server is reachable from this Mac only. k3d picks a free host port.
   hostIP: 127.0.0.1
 ports:
-  # Web pages through the built-in Traefik ingress: litellm.localhost:8080, temporal.localhost:8080.
+  # Web pages through the built-in Traefik ingress: litellm.localhost:8080, temporal.localhost:8080, phoenix.localhost:8080.
   - port: 127.0.0.1:8080:80
     nodeFilters:
       - loadbalancer

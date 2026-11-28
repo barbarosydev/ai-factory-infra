@@ -30,6 +30,7 @@ MOCK_VALUES: dict[str, str] = {
     "chart_version": "1.109.1",
     "image_tag": "1.109.1@sha256:0000000000000000000000000000000000000000000000000000000000000000",
     "image_hash": "00000000",
+    "bootstrap_hash": "00000000",
     "masterkey_secret_name": "litellm-masterkey",
     "db_endpoint": "ai-postgres-cluster-rw",
     "db_port": "5432",
@@ -42,7 +43,7 @@ MOCK_VALUES: dict[str, str] = {
     "ingress_host": "service.localhost",
     "agent_max_budget": "100",
     "store_prompts_in_spend_logs": "false",
-    "spend_logs_retention": "3d",
+    "spend_logs_retention": "7d",
     "input_cost_per_token": "0.0000002",
     "output_cost_per_token": "0.0000006",
     "secret_version": "1",
@@ -59,12 +60,21 @@ def extract_main_tf_template_calls(main_tf: pathlib.Path) -> dict[str, set[str]]
     text = main_tf.read_text(encoding="utf-8")
     calls: dict[str, set[str]] = {}
     pattern = re.compile(
-        r'templatefile\(\s*"\$\{path\.module\}/([^"]+\.yaml\.tftpl)"\s*,\s*\{([^}]*)\}\s*\)',
+        r'templatefile\(\s*"\$\{path\.module\}/([^"]+\.yaml\.tftpl)"\s*,\s*\{',
         re.DOTALL,
     )
     for match in pattern.finditer(text):
         tpl_name = match.group(1)
-        body = match.group(2)
+        pos = match.end()
+        depth = 1
+        while pos < len(text) and depth > 0:
+            ch = text[pos]
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+            pos += 1
+        body = text[match.end() : pos - 1]
         keys = set(re.findall(r"(?m)^\s*([a-zA-Z0-9_]+)\s*=", body))
         calls[tpl_name] = keys
     return calls

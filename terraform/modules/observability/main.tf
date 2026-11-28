@@ -139,6 +139,13 @@ resource "kubernetes_deployment_v1" "phoenix" {
             }
           }
 
+          security_context {
+            allow_privilege_escalation = false
+            capabilities {
+              drop = ["ALL"]
+            }
+          }
+
           startup_probe {
             http_get {
               path = "/healthz"

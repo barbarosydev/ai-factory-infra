@@ -26,6 +26,11 @@ variable "chart_version" {
   type        = string
   default     = "1.109.1"
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.chart_version))
+    error_message = "chart_version must be an exact semantic version (X.Y.Z)."
+  }
 }
 
 variable "image_tag" {
@@ -129,7 +134,7 @@ variable "store_prompts_in_spend_logs" {
 variable "spend_logs_retention" {
   description = "Retention window for LiteLLM spend and daily tag usage logs (e.g. 3d, 7d, 24h)."
   type        = string
-  default     = "3d"
+  default     = "7d"
   nullable    = false
 
   validation {

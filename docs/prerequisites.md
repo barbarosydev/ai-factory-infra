@@ -23,7 +23,7 @@ Open Docker Desktop, Settings, Resources, and set:
 | Setting | Value | Why |
 | --- | --- | --- |
 | CPU limit | 8 | Every pod can start in parallel; the rest stays with macOS and Ollama |
-| Memory limit | 12 GB | More than twice the expected use of about 2.6 GiB measured (see `docs/architecture.md`) |
+| Memory limit | 12 GB | More than twice the expected use of about 3.05 GiB measured (see `docs/architecture.md`) |
 | Swap | 2 GB | Absorbs short spikes, such as Temporal's first schema setup |
 | Disk usage limit | 511 GB (at least 100 GB) | A ceiling only; images and volumes take about 8 GB |
 

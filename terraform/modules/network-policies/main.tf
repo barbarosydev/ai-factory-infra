@@ -137,13 +137,6 @@ resource "kubernetes_network_policy_v1" "postgres" {
           }
         }
       }
-      from {
-        pod_selector {
-          match_labels = {
-            "ai-factory/smoke-probe" = "true"
-          }
-        }
-      }
     }
 
     egress {
@@ -571,6 +564,20 @@ resource "kubernetes_network_policy_v1" "smoke_probe" {
         pod_selector {
           match_labels = {
             "app.kubernetes.io/name" = "litellm"
+          }
+        }
+      }
+    }
+
+    egress {
+      ports {
+        port     = "7233"
+        protocol = "TCP"
+      }
+      to {
+        pod_selector {
+          match_labels = {
+            "app.kubernetes.io/name" = "temporal"
           }
         }
       }

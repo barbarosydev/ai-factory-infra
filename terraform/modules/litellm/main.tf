@@ -52,6 +52,18 @@ resource "kubernetes_secret_v1" "agent_key" {
   data_wo_revision = var.secret_version
 }
 
+locals {
+  bootstrap_hash = substr(
+    sha256(jsonencode({
+      image_tag        = var.image_tag
+      model_routes     = var.model_routes
+      agent_max_budget = var.agent_max_budget
+    })),
+    0,
+    8,
+  )
+}
+
 # atomic is intentionally false: the migration and virtual-key bootstrap Jobs
 # run alongside the Deployment without Helm hooks so a slow first image pull
 # does not roll back the release; scripts/terraform.sh waits on rollout and Jobs.
@@ -70,7 +82,7 @@ resource "helm_release" "litellm" {
     templatefile("${path.module}/values.yaml.tftpl", {
       release_name                = var.release_name
       image_tag                   = var.image_tag
-      image_hash                  = substr(sha256(var.image_tag), 0, 8)
+      bootstrap_hash              = local.bootstrap_hash
       masterkey_secret_name       = kubernetes_secret_v1.master_key.metadata[0].name
       db_endpoint                 = var.db_endpoint
       db_name                     = var.db_name

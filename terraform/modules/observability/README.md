@@ -40,7 +40,7 @@ No modules.
 | <a name="input_image_name"></a> [image\_name](#input\_image\_name) | Arize Phoenix container image pinned by exact tag and multi-arch index digest (repository:tag@sha256:...). | `string` | n/a | yes |
 | <a name="input_ingress_host"></a> [ingress\_host](#input\_ingress\_host) | Hostname for the Traefik Ingress exposing Arize Phoenix. | `string` | `"phoenix.localhost"` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Kubernetes namespace where Arize Phoenix is deployed. | `string` | n/a | yes |
-| <a name="input_retention_days"></a> [retention\_days](#input\_retention\_days) | Default trace retention policy in days applied by Phoenix. | `number` | `3` | no |
+| <a name="input_retention_days"></a> [retention\_days](#input\_retention\_days) | Default trace retention policy in days applied by Phoenix. | `number` | `7` | no |
 | <a name="input_service_name"></a> [service\_name](#input\_service\_name) | Kubernetes Deployment and Service name for Arize Phoenix. | `string` | `"phoenix"` | no |
 
 ## Outputs

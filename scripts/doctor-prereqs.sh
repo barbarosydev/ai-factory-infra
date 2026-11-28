@@ -29,8 +29,9 @@ DOCKER_MIN_MEMORY_MIB=12000
 DOCKER_MIN_SWAP_MIB=2000
 DOCKER_MIN_DISK_MIB=100000
 REQUIRED_MODELS=("gemma4:12b" "gemma4:e4b")
-OLLAMA_MAX_MODEL_GB=10   # warn when a loaded model is larger than this (GB)
-OLLAMA_URL="http://127.0.0.1:11434"
+OLLAMA_MAX_MODEL_GB=10   # warn when a single loaded model is larger than this (GB)
+OLLAMA_MAX_TOTAL_GB=14   # warn when combined loaded models exceed this (GB)
+OLLAMA_URL="${OLLAMA_URL:-http://127.0.0.1:11434}"
 # CLUSTER_NAME comes from scripts/lib/common.sh
 CLUSTER_PORTS=(8080 7233)   # published by the k3d cluster once it runs
 FREE_PORTS=(8080 7233)
@@ -93,6 +94,7 @@ check_min() {
 
 check_min docker docker 29.0 docker version --format '{{.Client.Version}}'
 check_min ollama ollama 0.40 ollama --version
+check_min python3 python3 3.10 python3 --version
 
 check_pinned k3d            k3d            k3d version
 check_pinned kubectl        kubectl        kubectl version --client
@@ -200,14 +202,18 @@ if tags="$(curl -fsS --noproxy '*' --max-time 5 "$OLLAMA_URL/api/tags" 2>/dev/nu
     check_pass ollama-proxy "no proxy variables"
   fi
 
-  # A loaded model above the threshold may starve the k3d cluster of memory.
+  # A loaded model above the threshold (or combined loaded VRAM) may starve the k3d cluster.
   if ps_json="$(curl -fsS --noproxy '*' --max-time 5 "$OLLAMA_URL/api/ps" 2>/dev/null)"; then
     big="$(jq -r --argjson max "$OLLAMA_MAX_MODEL_GB" \
       '[.models[]? | select(.size > ($max * 1073741824)) | "\(.name) (\((.size / 1073741824 * 10 | round) / 10) GiB)"] | join(", ")' <<<"$ps_json")"
-    if [[ -z "$big" ]]; then
-      check_pass ollama-loaded "no loaded model above ${OLLAMA_MAX_MODEL_GB} GB"
-    else
+    total_bytes="$(jq -r '[.models[]?.size] | add // 0' <<<"$ps_json")"
+    total_gib="$(jq -rn --argjson b "$total_bytes" '($b / 1073741824 * 10 | round) / 10')"
+    if [[ -n "$big" ]]; then
       check_warn ollama-loaded "loaded model above ${OLLAMA_MAX_MODEL_GB} GB: $big; the cluster may run short of memory (task stop:ollama)"
+    elif (( total_bytes > OLLAMA_MAX_TOTAL_GB * 1073741824 )); then
+      check_warn ollama-loaded "combined loaded models (${total_gib} GiB) exceed ${OLLAMA_MAX_TOTAL_GB} GiB; unload when idle (task down)"
+    else
+      check_pass ollama-loaded "loaded models total ${total_gib} GiB (within ${OLLAMA_MAX_MODEL_GB} GB single / ${OLLAMA_MAX_TOTAL_GB} GB total budget)"
     fi
   fi
 else
