@@ -121,8 +121,16 @@ else
   check_fail "temporal Web UI" "expected HTTP 200 on $WEB_URL, got ${ui_code:-none}"
 fi
 
-ui_wf="$(curl -sS --noproxy '*' --max-time 10 "$WEB_URL/api/v1/namespaces/default/workflows?query=WorkflowId%3D%22${wf_id}%22" \
-  | jq -r --arg wf "$wf_id" '.executions[]? | select(.execution.workflowId == $wf) | .status' 2>/dev/null || true)"
+ui_wf=""
+ui_deadline=$((SECONDS + 10))
+while (( SECONDS < ui_deadline )); do
+  ui_wf="$(curl -sS --noproxy '*' --max-time 10 "$WEB_URL/api/v1/namespaces/default/workflows?query=WorkflowId%3D%22${wf_id}%22" \
+    | jq -r --arg wf "$wf_id" '.executions[]? | select(.execution.workflowId == $wf) | .status' 2>/dev/null || true)" # transient SQL visibility indexing lag: retry
+  if [[ "$ui_wf" == "WORKFLOW_EXECUTION_STATUS_COMPLETED" || "$ui_wf" == "Completed" ]]; then
+    break
+  fi
+  sleep 1
+done
 if [[ "$ui_wf" == "WORKFLOW_EXECUTION_STATUS_COMPLETED" || "$ui_wf" == "Completed" ]]; then
   check_pass "temporal Web UI workflow list" "lists $wf_id as $ui_wf"
 else

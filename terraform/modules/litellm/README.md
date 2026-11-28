@@ -49,7 +49,7 @@ No modules.
 | <a name="input_output_cost_per_token"></a> [output\_cost\_per\_token](#input\_output\_cost\_per\_token) | Local reference output cost per token in USD so /ui/usage/ spend and key budget charts populate meaningfully on local Ollama models. | `number` | `6e-7` | no |
 | <a name="input_release_name"></a> [release\_name](#input\_release\_name) | Helm release name for LiteLLM. | `string` | `"litellm"` | no |
 | <a name="input_secret_version"></a> [secret\_version](#input\_secret\_version) | Increment to rotate the LiteLLM master key and agent virtual keys. | `number` | `4` | no |
-| <a name="input_spend_logs_retention"></a> [spend\_logs\_retention](#input\_spend\_logs\_retention) | Retention window for LiteLLM spend and daily tag usage logs (e.g. 3d, 7d, 24h). | `string` | `"3d"` | no |
+| <a name="input_spend_logs_retention"></a> [spend\_logs\_retention](#input\_spend\_logs\_retention) | Retention window for LiteLLM spend and daily tag usage logs (e.g. 3d, 7d, 24h). | `string` | `"7d"` | no |
 | <a name="input_store_prompts_in_spend_logs"></a> [store\_prompts\_in\_spend\_logs](#input\_store\_prompts\_in\_spend\_logs) | Whether LiteLLM stores request/response prompt payloads in spend logs for the Admin UI. | `bool` | `false` | no |
 
 ## Outputs

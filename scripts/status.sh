@@ -36,7 +36,7 @@ fi
 printf '\n== Ollama\n'
 if ollama_answering; then
   curl -fsS --noproxy '*' --max-time 5 "$OLLAMA_URL/api/ps" \
-    | jq -r '"loaded models: " + (if (.models | length) == 0 then "none" else ([.models[] | "\(.name) (\((.size / 1073741824 * 10 | round) / 10) GiB)"] | join(", ")) end)'
+    | jq -r '"loaded models: " + (if (.models | length) == 0 then "none" else ([.models[] | "\(.name) (\((.size / 1073741824 * 10 | round) / 10) GiB, VRAM \(((.size_vram // .size) / 1073741824 * 10 | round) / 10) GiB, ctx \(.context_length // "?"))"] | join(", ")) end)'
 else
   echo "not running"
 fi

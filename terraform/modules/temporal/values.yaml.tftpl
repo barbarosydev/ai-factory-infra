@@ -32,8 +32,8 @@ server:
             user: "${db_user}"
             existingSecret: "${db_secret_name}"
             secretKey: password
-            maxConns: 20
-            maxIdleConns: 20
+            maxConns: 10
+            maxIdleConns: 4
             maxConnLifetime: "1h"
         visibility:
           sql:
@@ -47,8 +47,8 @@ server:
             user: "${db_user}"
             existingSecret: "${db_secret_name}"
             secretKey: password
-            maxConns: 20
-            maxIdleConns: 20
+            maxConns: 10
+            maxIdleConns: 4
             maxConnLifetime: "1h"
 
     namespaces:
@@ -66,14 +66,14 @@ server:
       # forwards Mac gRPC traffic (temporal CLI and SDK workers) to frontend.
       type: LoadBalancer
       port: ${grpc_port}
-    # Measured about 56 MiB RSS idle (docs/architecture.md).
+    # Measured about 56 MiB RSS idle (docs/architecture.md); 256Mi ceiling avoids spikes on large histories.
     resources:
       requests:
         cpu: 25m
         memory: 64Mi
       limits:
         cpu: 500m
-        memory: 128Mi
+        memory: 256Mi
 
   history:
     enabled: true
@@ -127,14 +127,14 @@ web:
     pullPolicy: IfNotPresent
   podLabels:
     app.kubernetes.io/part-of: ai-factory
-  # Measured about 32 MiB RSS idle (docs/architecture.md).
+  # Measured about 32 MiB RSS idle (docs/architecture.md); 128Mi ceiling handles full workflow timelines smoothly.
   resources:
     requests:
       cpu: 10m
       memory: 32Mi
     limits:
       cpu: 250m
-      memory: 64Mi
+      memory: 128Mi
   ingress:
     enabled: true
     className: traefik

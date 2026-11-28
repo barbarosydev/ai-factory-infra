@@ -41,6 +41,11 @@ variable "cnpg_operator_chart_version" {
   type        = string
   default     = "0.29.1"
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.cnpg_operator_chart_version))
+    error_message = "cnpg_operator_chart_version must be an exact semantic version (X.Y.Z)."
+  }
 }
 
 variable "cnpg_operator_image_tag" {
@@ -60,6 +65,11 @@ variable "cnpg_cluster_chart_version" {
   type        = string
   default     = "0.9.0"
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.cnpg_cluster_chart_version))
+    error_message = "cnpg_cluster_chart_version must be an exact semantic version (X.Y.Z)."
+  }
 }
 
 variable "postgres_version" {
@@ -91,6 +101,11 @@ variable "litellm_chart_version" {
   type        = string
   default     = "1.109.1"
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.litellm_chart_version))
+    error_message = "litellm_chart_version must be an exact semantic version (X.Y.Z)."
+  }
 }
 
 variable "litellm_image_tag" {
@@ -127,7 +142,7 @@ variable "phoenix_image_name" {
 variable "phoenix_retention_days" {
   description = "Default trace retention policy in days configured on Arize Phoenix."
   type        = number
-  default     = 3
+  default     = 7
   nullable    = false
 
   validation {
@@ -141,6 +156,11 @@ variable "temporal_chart_version" {
   type        = string
   default     = "1.8.0"
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.temporal_chart_version))
+    error_message = "temporal_chart_version must be an exact semantic version (X.Y.Z)."
+  }
 }
 
 variable "temporal_server_image_tag" {

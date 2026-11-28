@@ -87,16 +87,26 @@ run "values_route_each_agent_to_its_ollama_model" {
     condition = {
       for m in yamldecode(helm_release.litellm.values[0]).proxy_config.model_list : m.model_name => m.litellm_params.model
       } == {
-      pm-agent  = "ollama/gemma4:12b"
-      dev-agent = "ollama/gemma4:e4b"
-      sec-agent = "ollama/gemma4:e4b"
+      pm-agent  = "ollama_chat/gemma4:12b"
+      dev-agent = "ollama_chat/gemma4:e4b"
+      sec-agent = "ollama_chat/gemma4:e4b"
     }
-    error_message = "Each agent route must map to its Ollama model."
+    error_message = "Each agent route must map to its Ollama model via ollama_chat/."
   }
 
   assert {
     condition     = alltrue([for m in yamldecode(helm_release.litellm.values[0]).proxy_config.model_list : m.litellm_params.api_base == "http://ollama:11434"])
     error_message = "Every route must reach Ollama only through the ollama Service."
+  }
+
+  assert {
+    condition     = yamldecode(helm_release.litellm.values[0]).proxy_config.litellm_settings.drop_params == true && yamldecode(helm_release.litellm.values[0]).proxy_config.router_settings.num_retries == 2
+    error_message = "LiteLLM must enable drop_params and router retries for Ollama resilience."
+  }
+
+  assert {
+    condition     = can(yamldecode(helm_release.litellm.values[0]).extraResources[0].spec.template.spec.containers[0].resources.limits.memory)
+    error_message = "The bootstrap-keys Job must declare explicit resource limits."
   }
 }
 
@@ -159,8 +169,8 @@ run "secret_version_bump_changes_every_key_revision" {
   }
 
   assert {
-    condition     = yamldecode(helm_release.litellm.values[0]).proxy_config.general_settings.maximum_spend_logs_retention_period == "3d" && yamldecode(helm_release.litellm.values[0]).proxy_config.general_settings.store_prompts_in_spend_logs == false
-    error_message = "LiteLLM must default to metadata-only spend logs (store_prompts_in_spend_logs = false) with 3d retention."
+    condition     = yamldecode(helm_release.litellm.values[0]).proxy_config.general_settings.maximum_spend_logs_retention_period == "7d" && yamldecode(helm_release.litellm.values[0]).proxy_config.general_settings.store_prompts_in_spend_logs == false
+    error_message = "LiteLLM must default to metadata-only spend logs (store_prompts_in_spend_logs = false) with 7d retention."
   }
 
   assert {
@@ -183,10 +193,10 @@ run "image_bump_renames_bootstrap_keys_job" {
 
   assert {
     condition = (
-      yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name == "litellm-bootstrap-keys-v${var.secret_version}-${substr(sha256(var.image_tag), 0, 8)}" &&
-      yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name != "litellm-bootstrap-keys-v${var.secret_version}-${substr(sha256("1.79.0@sha256:0000000000000000000000000000000000000000000000000000000000000000"), 0, 8)}"
+      yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name == "litellm-bootstrap-keys-v${var.secret_version}-${substr(sha256(jsonencode({ image_tag = var.image_tag, model_routes = var.model_routes, agent_max_budget = var.agent_max_budget })), 0, 8)}" &&
+      yamldecode(helm_release.litellm.values[0]).extraResources[0].metadata.name != "litellm-bootstrap-keys-v${var.secret_version}-${substr(sha256(jsonencode({ image_tag = "1.79.0@sha256:0000000000000000000000000000000000000000000000000000000000000000", model_routes = var.model_routes, agent_max_budget = var.agent_max_budget })), 0, 8)}"
     )
-    error_message = "An image_tag bump must rename the bootstrap-keys Job so it does not collide with the finished Job within its 10-minute TTL."
+    error_message = "An image_tag or model_routes change must rename the bootstrap-keys Job so it does not collide with the finished Job within its 10-minute TTL."
   }
 }
 

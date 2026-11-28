@@ -24,7 +24,7 @@ import re
 import subprocess
 import sys
 
-KNOWN_FOLDERS = ("docs/", "scripts/", "tests/", "terraform/", "cluster/", ".claude/", "policy/")
+KNOWN_FOLDERS = ("docs/", "scripts/", "tests/", "terraform/", "cluster/", ".claude/", "policy/", ".github/")
 SKIPPED_SCHEMES = ("http:", "https:", "mailto:")
 PLACEHOLDER_CHARS = "*<{$"
 
@@ -79,6 +79,12 @@ def check_file(root: pathlib.Path, md_file: pathlib.Path) -> list[tuple[int, str
         if in_fence:
             continue
         for match in LINK_RE.finditer(line):
+            target = match.group(1)
+            if target.startswith(SKIPPED_SCHEMES) or target.startswith("#"):
+                continue
+            if not link_target_exists(md_file, target):
+                broken.append((lineno, target))
+        for match in IMAGE_RE.finditer(line):
             target = match.group(1)
             if target.startswith(SKIPPED_SCHEMES) or target.startswith("#"):
                 continue

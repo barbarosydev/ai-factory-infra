@@ -5,12 +5,14 @@
 # Usage:
 #   scripts/access.sh                        (task access)
 #   scripts/access.sh --copy <target>        (task access -- --copy master|pm-agent|dev-agent|test-agent|sec-agent)
+#   scripts/access.sh --open [litellm|temporal|phoenix|all]
 set -euo pipefail
 
 # shellcheck source=scripts/lib/common.sh
 source "$(dirname "$0")/lib/common.sh"
 
 copy_target=""
+open_target=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --copy)
@@ -18,11 +20,39 @@ while [[ $# -gt 0 ]]; do
       copy_target="$2"
       shift 2
       ;;
+    --open)
+      if [[ $# -ge 2 && "$2" != --* ]]; then
+        open_target="$2"
+        shift 2
+      else
+        open_target="all"
+        shift
+      fi
+      ;;
     *)
-      die "unknown argument: $1 (usage: task access [-- --copy <master|pm-agent|dev-agent|test-agent|sec-agent>])"
+      die "unknown argument: $1 (usage: task access [-- --copy <target> | --open [litellm|temporal|phoenix|all]])"
       ;;
   esac
 done
+
+if [[ -n "$open_target" ]]; then
+  require_cmd open
+  case "$open_target" in
+    litellm) open "http://litellm.localhost:8080/ui" ;;
+    temporal) open "http://temporal.localhost:8080/namespaces/default/workflows" ;;
+    phoenix) open "http://phoenix.localhost:8080" ;;
+    all)
+      open "http://phoenix.localhost:8080"
+      open "http://temporal.localhost:8080/namespaces/default/workflows"
+      open "http://litellm.localhost:8080/ui"
+      ;;
+    *)
+      die "unknown open target '$open_target': choose litellm, temporal, phoenix, or all"
+      ;;
+  esac
+  info "opened $open_target UI in default browser"
+  exit 0
+fi
 
 if [[ -n "$copy_target" ]]; then
   require_cmd kubectl pbcopy base64
@@ -61,9 +91,13 @@ cat <<'EOF'
   Temporal Web UI API:   http://temporal.localhost:8080/api/v1/namespaces/default/workflows
   Temporal gRPC (Mac):   localhost:7233 (no TLS / no auth in local sandbox)
   Arize Phoenix UI:      http://phoenix.localhost:8080
-    Authentication:      none (loopback-only local sandbox; 3-day retention policy)
+    Authentication:      none (loopback-only local sandbox; 7-day retention policy)
   Arize Phoenix OTLP:    http://phoenix.localhost:8080/v1/traces (HTTP/protobuf)
   Ollama (host):         http://127.0.0.1:11434
+
+== Open UIs in Browser
+  task access -- --open all          # Opens Phoenix, Temporal, and LiteLLM UIs
+  task access -- --open phoenix      # or temporal, litellm
 
 == Kubernetes Secrets (namespace: ai-platform)
   Secret Name                        Key        Purpose

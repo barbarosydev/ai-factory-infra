@@ -9,7 +9,7 @@ tasks:
     silent: true
 
   up:
-    desc: Start Ollama, check prerequisites, create or resume the cluster, and apply Terraform
+    desc: Start Ollama, check prerequisites, create or resume the cluster, apply Terraform, and run task doctor
     cmds:
       - ./scripts/up.sh
 
@@ -50,9 +50,14 @@ tasks:
       - ./scripts/status.sh
 
   access:
-    desc: "Show UIs, secret names and API commands; task access -- --copy <master|pm-agent|dev-agent|test-agent|sec-agent> copies a key to clipboard"
+    desc: "Show UIs, secret names and API commands; -- --copy <target> copies a key; -- --open [litellm|temporal|phoenix|all] opens UIs"
     cmds:
       - ./scripts/access.sh {{.CLI_ARGS}}
+
+  logs:
+    desc: "Inspect or stream logs for a platform component (litellm|temporal|phoenix|postgres|ollama|cnpg), e.g. task logs -- litellm -f"
+    cmds:
+      - ./scripts/logs.sh {{.CLI_ARGS}}
 
   clean:
     desc: Delete the cluster, the project kubeconfig and Terraform state; databases are lost
@@ -67,7 +72,7 @@ tasks:
       - ./scripts/clean-all.sh {{.CLI_ARGS}}
 
   doctor:
-    desc: Full health check across prerequisites, cluster, Postgres, Ollama, LiteLLM, Temporal, observability and Web UIs
+    desc: "Full health check across all suites; supports -- --fast, -- --only <suites>, and -- --json"
     cmds:
       - ./scripts/doctor.sh {{.CLI_ARGS}}
 
@@ -107,7 +112,7 @@ tasks:
       - ./scripts/doctor-prereqs.sh {{.CLI_ARGS}}
 
   lint:
-    desc: terraform fmt, validate and tflint; shellcheck; JSON and YAML syntax
+    desc: Terraform fmt, validate, tflint, terraform-docs and module tests; shellcheck; ruff; JSON/YAML; Conftest policies; actionlint; doc checks
     cmds:
       - ./scripts/lint.sh
 

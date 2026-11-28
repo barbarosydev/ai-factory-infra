@@ -81,9 +81,18 @@ run "values_set_resources_for_every_service" {
   assert {
     condition = yamldecode(helm_release.temporal.values[0]).web.resources == {
       requests = { cpu = "10m", memory = "32Mi" }
-      limits   = { cpu = "250m", memory = "64Mi" }
+      limits   = { cpu = "250m", memory = "128Mi" }
     }
     error_message = "The Web UI must set its resource requests and limits."
+  }
+
+  assert {
+    condition = alltrue([
+      for store in ["default", "visibility"] :
+      yamldecode(helm_release.temporal.values[0]).server.config.persistence.datastores[store].sql.maxConns <= 10 &&
+      yamldecode(helm_release.temporal.values[0]).server.config.persistence.datastores[store].sql.maxIdleConns <= 4
+    ])
+    error_message = "Temporal SQL pools must stay bounded to avoid oversubscribing PostgreSQL max_connections."
   }
 }
 

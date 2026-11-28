@@ -3,8 +3,9 @@
 # LiteLLM completions & virtual key scope, Temporal gRPC & sample workflow, and Web UIs.
 #
 # Usage:
-#   scripts/doctor.sh [--json] [--only <suites>]      (task doctor)
+#   scripts/doctor.sh [--json] [--fast] [--only <suites>]      (task doctor)
 #   where <suites> is a comma-separated list of: prereqs,cluster,postgres,litellm,temporal,observability,state
+#   --fast  skip live LLM completion probes in litellm smoke suite (verifies keys via /v1/models)
 # Exit code: 0 when no check failed, 1 otherwise. WARN never fails.
 set -euo pipefail
 
@@ -13,10 +14,15 @@ source "$(dirname "$0")/lib/common.sh"
 require_cmd jq kubectl python3
 
 only_filter=""
+fast_mode=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --json)
       JSON_OUTPUT=1
+      shift
+      ;;
+    --fast)
+      fast_mode=1
       shift
       ;;
     --only)
@@ -29,7 +35,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     *)
-      echo "unknown argument: $1 (usage: scripts/doctor.sh [--json] [--only <suites>])" >&2
+      echo "unknown argument: $1 (usage: scripts/doctor.sh [--json] [--fast] [--only <suites>])" >&2
       exit 2
       ;;
   esac
@@ -42,7 +48,8 @@ should_run() {
 }
 
 if [[ -n "$only_filter" ]]; then
-  for token in ${only_filter//,/ }; do
+  IFS=',' read -ra tokens <<<"$only_filter"
+  for token in "${tokens[@]}"; do
     case "$token" in
       prereqs | cluster | postgres | litellm | temporal | observability | state) ;;
       *) die "unknown suite '$token' in --only (choose from: prereqs,cluster,postgres,litellm,temporal,observability,state)" ;;
@@ -51,8 +58,10 @@ if [[ -n "$only_filter" ]]; then
 fi
 
 run_suite() {
-  local script="$1" out status check detail
-  out="$("$script" --json 2>/dev/null || true)" # exits 1 on FAIL; JSON checked next
+  local script="$1"
+  shift
+  local out status check detail
+  out="$("$script" --json "$@" 2>/dev/null || true)" # exits 1 on FAIL; JSON checked next
   if [[ -z "$out" ]] || ! jq -e '.checks' <<<"$out" >/dev/null 2>&1; then
     check_fail "$(basename "$script" .sh)" "suite did not return valid JSON: run $script"
     return
@@ -102,9 +111,13 @@ if should_run postgres; then
   run_suite "$REPO_ROOT/tests/smoke/postgres.sh"
 fi
 
-# 4. LiteLLM gateway, Admin UI, model completions and virtual key isolation
+# 4. LiteLLM gateway, Admin UI, model completions (or --fast /v1/models) and virtual key isolation
 if should_run litellm; then
-  run_suite "$REPO_ROOT/tests/smoke/litellm.sh"
+  if (( fast_mode )); then
+    run_suite "$REPO_ROOT/tests/smoke/litellm.sh" --fast
+  else
+    run_suite "$REPO_ROOT/tests/smoke/litellm.sh"
+  fi
 fi
 
 # 5. Temporal deployments, schema/namespace Jobs, host gRPC, Mac workflow and Web UI

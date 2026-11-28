@@ -55,14 +55,21 @@ proxy_config:
 %{ for agent, model in model_routes ~}
     - model_name: ${agent}
       litellm_params:
-        model: ollama/${model}
+        model: ollama_chat/${model}
         api_base: ${ollama_api_base}
       model_info:
         input_cost_per_token: ${input_cost_per_token}
         output_cost_per_token: ${output_cost_per_token}
 %{ endfor ~}
   litellm_settings:
+    drop_params: true
+    request_timeout: 300
     turn_off_message_logging: ${!store_prompts_in_spend_logs}
+  router_settings:
+    num_retries: 2
+    retry_after: 2
+    allowed_fails: 3
+    cooldown_time: 30
   general_settings:
     master_key: os.environ/PROXY_MASTER_KEY
     store_prompts_in_spend_logs: ${store_prompts_in_spend_logs}
@@ -74,17 +81,31 @@ extraResources:
   - apiVersion: batch/v1
     kind: Job
     metadata:
-      name: "${release_name}-bootstrap-keys-v${secret_version}-${image_hash}"
+      name: "${release_name}-bootstrap-keys-v${secret_version}-${bootstrap_hash}"
+      labels:
+        app.kubernetes.io/part-of: ai-factory
+        app.kubernetes.io/component: litellm
     spec:
       backoffLimit: 6
       ttlSecondsAfterFinished: 600
       template:
+        metadata:
+          labels:
+            app.kubernetes.io/part-of: ai-factory
+            app.kubernetes.io/component: litellm
         spec:
           restartPolicy: OnFailure
           containers:
             - name: bootstrap-keys
               image: "ghcr.io/berriai/litellm:${image_tag}"
               imagePullPolicy: IfNotPresent
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
               env:
                 - name: PROXY_URL
                   value: "http://${release_name}:4000"
@@ -164,6 +185,7 @@ extraResources:
                           "key_alias": agent,
                           "models": [agent],
                           "max_budget": ${agent_max_budget},
+                          "budget_duration": "7d",
                           "user_id": "ai-factory",
                           "metadata": {"role": agent, "app": "ai-factory"},
                       }).encode("utf-8")

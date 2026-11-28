@@ -31,6 +31,6 @@ This repo builds the infrastructure that a future AI factory will run on, on one
 
 - After a stopped cluster resumes, pods cannot resolve `host.k3d.internal` for about 90 seconds. `scripts/cluster-setup.sh` waits for it.
 - A Docker Desktop sign-in to an organization with registry rules can block image pulls. Probe pods therefore use the official `busybox` image, and `task doctor:prereqs` warns while signed in.
-- Routing uses the Ingress API, not the Gateway API. Ingress is enough for two hostnames.
+- Routing uses the Ingress API, not the Gateway API. Ingress is enough for three hostnames (`litellm`, `temporal`, `phoenix`).
 - `curl` through a configured proxy needs `--noproxy '*'` for `*.localhost`.
 - See the [runbook](../runbook.md) for fixes.

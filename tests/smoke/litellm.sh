@@ -2,7 +2,8 @@
 # Smoke test for the ollama Service, LiteLLM, Admin UI, completions and virtual key isolation.
 # Prints one PASS/WARN/FAIL line per check; never reads or prints Secret values.
 #
-# Usage: tests/smoke/litellm.sh [--json]      (task smoke:litellm)
+# Usage: tests/smoke/litellm.sh [--json] [--fast]      (task smoke:litellm)
+#   --fast  verify Service, Deployment, Admin UI, and /v1/models virtual key scope without loading LLMs
 # Exit code: 0 when no check failed.
 set -euo pipefail
 
@@ -10,9 +11,11 @@ set -euo pipefail
 source "$(dirname "$0")/../../scripts/lib/common.sh"
 require_cmd kubectl jq curl
 
+fast_mode=0
 for arg in "$@"; do
   case "$arg" in
     --json) JSON_OUTPUT=1 ;;
+    --fast) fast_mode=1 ;;
     *) echo "unknown argument: $arg" >&2; exit 2 ;;
   esac
 done
@@ -48,9 +51,21 @@ fi
 pod="litellm-smoke-$$"
 py_script='
 import json, os, sys, time, urllib.error, urllib.request
+fast = os.environ.get("FAST_MODE") == "1"
 base = "http://litellm:4000/v1/chat/completions"
+models_url = "http://litellm:4000/v1/models"
 for agent in ["pm-agent", "dev-agent", "test-agent", "sec-agent"]:
     key = os.environ["KEY_" + agent.upper().replace("-", "_")]
+    if fast:
+        req = urllib.request.Request(models_url, headers={"Authorization": "Bearer " + key})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            ids = [m.get("id") for m in json.loads(resp.read()).get("data", [])]
+            if resp.status == 200 and agent in ids:
+                print(f"OK:{agent}:models")
+                continue
+        print(f"FAIL:{agent}")
+        sys.exit(1)
+
     body = json.dumps({
         "model": agent,
         "messages": [{"role": "user", "content": "Reply with OK."}],
@@ -89,10 +104,14 @@ try:
     print("FAIL:isolation")
     sys.exit(1)
 except urllib.error.HTTPError as e:
-    print(f"DENIED:{e.code}")
+    if e.code in (400, 401, 403):
+        print(f"DENIED:{e.code}")
+    else:
+        print(f"FAIL:unexpected-http-{e.code}")
+        sys.exit(1)
 '
 
-overrides="$(jq -cn --arg pod "$pod" --arg img "$LITELLM_IMAGE" --arg py "$py_script" '{
+overrides="$(jq -cn --arg pod "$pod" --arg img "$LITELLM_IMAGE" --arg py "$py_script" --arg fast "$fast_mode" '{
   metadata: {
     labels: {
       "ai-factory/smoke-probe": "true"
@@ -105,6 +124,7 @@ overrides="$(jq -cn --arg pod "$pod" --arg img "$LITELLM_IMAGE" --arg py "$py_sc
       imagePullPolicy: "IfNotPresent",
       command: ["python3", "-c", $py],
       env: [
+        {name: "FAST_MODE",      value: $fast},
         {name: "KEY_PM_AGENT",   valueFrom: {secretKeyRef: {name: "litellm-pm-agent-key",   key: "api_key"}}},
         {name: "KEY_DEV_AGENT",  valueFrom: {secretKeyRef: {name: "litellm-dev-agent-key",  key: "api_key"}}},
         {name: "KEY_TEST_AGENT", valueFrom: {secretKeyRef: {name: "litellm-test-agent-key", key: "api_key"}}},
@@ -117,17 +137,21 @@ overrides="$(jq -cn --arg pod "$pod" --arg img "$LITELLM_IMAGE" --arg py "$py_sc
 if out="$(kc run "$pod" --rm -i --restart=Never -n "$NS" --image="$LITELLM_IMAGE" --overrides="$overrides" 2>/dev/null)"; then
   for agent in pm-agent dev-agent test-agent sec-agent; do
     if grep -q "OK:${agent}:" <<<"$out"; then
-      check_pass "route $agent" "HTTP 200 non-empty completion with scoped virtual key"
+      if (( fast_mode )); then
+        check_pass "route $agent" "HTTP 200 authorized on /v1/models (--fast)"
+      else
+        check_pass "route $agent" "HTTP 200 non-empty completion with scoped virtual key"
+      fi
     else
-      check_fail "route $agent" "completion failed"
+      check_fail "route $agent" "completion or /v1/models check failed"
     fi
   done
-  if grep -q "DENIED:" <<<"$out"; then
+  if grep -Eq "DENIED:(400|401|403)$" <<<"$out"; then
     code="${out##*DENIED:}"
     code="${code%%$'\n'*}"
     check_pass "virtual key scope" "pm-agent key rejected on dev-agent (HTTP $code)"
   else
-    check_fail "virtual key scope" "pm-agent key was not rejected on dev-agent"
+    check_fail "virtual key scope" "pm-agent key was not cleanly rejected with 400/401/403 on dev-agent"
   fi
 else
   check_fail "litellm completions" "smoke pod failed in $NS"
